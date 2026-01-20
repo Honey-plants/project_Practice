@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 import time
 import cv2
 import numpy as np
 #보정모델과 결과에대한 이미지와 meta에대한 데이터클래스(RectifyResult)
-from .backends import DoctrBackend, DewarpNetBackend, DocUNetBackend, RectifyResult ,AutoBackend
+from .backends import AutoBackend, DewarpNetBackend, DocUNetBackend, DoctrBackend, RectifyResult
 #좌표값을 건드리지않고 기본적으로 할수있는 보정에관한 객체및옵션값들
 from .photometric import (
     EnhanceConfig,

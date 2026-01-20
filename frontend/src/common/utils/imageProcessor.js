@@ -1,7 +1,5 @@
-import imageCompression from "browser-image-compression";
 
-export async function resizeAndCompressImage(blob, maxWidth = 1024) {
-  // 1. 이미지 객체 생성
+export async function resizeImage(blob, maxWidth = 1024) {
   const img = document.createElement("img");
   const url = URL.createObjectURL(blob);
   img.src = url;
