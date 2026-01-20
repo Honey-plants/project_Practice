@@ -1,12 +1,31 @@
-# .dockerignore (repo root)
+# OS/IDE
 .git
-**/.git
-**/node_modules
-**/.venv
-**/__pycache__
+.vscode
+.idea
+
+# Python
+**/__pycache__/
 **/*.pyc
-**/.pytest_cache
-**/dist
-**/build
-k8s
-secrets
+.venv/
+venv/
+
+# Node
+**/node_modules/
+**/dist/
+**/build/
+
+# Docker artifacts
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# 중요: 소스는 제외하지 말 것
+!backend/**
+!frontend/**
+!ai/**
+!k8s/**
+!README.md
+!pyproject.toml
+!poetry.lock
+!requirements.txt
+!AI/**

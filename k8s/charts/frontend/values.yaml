@@ -14,7 +14,7 @@ autoscaling:
 
 image:
   repository: ghcr.io/mingoo684/cicdex1-frontend
-  tag: "sha-REPLACE_ME"
+  tag: $TAG
   pullPolicy: IfNotPresent
 
 service:
