@@ -8,15 +8,17 @@ def normalize_ocr_lines(result_item):
     """
     Convert PaddleOCR v3.x output to a consistent format: (bbox, text, score)
     """
-    rec_texts = result_item['text']
-    rec_polys = result_item['bbox']
+    rec_texts = result_item['rec_texts']
+    rec_scores = result_item['rec_scores']
+    rec_polys = result_item['rec_polys']
 
     tokens = []
-    for text, score, poly in zip(rec_texts, rec_polys):
+    for text, score, poly in zip(rec_texts, rec_scores, rec_polys):
         x_coords = poly[:, 0]
         y_coords = poly[:, 1]
         tokens.append({
             'text': text,
+            'score': score,
             'x_min': int(x_coords.min()),
             'x_max': int(x_coords.max()),
             'y_min': int(y_coords.min()),
@@ -52,7 +54,8 @@ def join_split_tokens(tokens, y_threshold=15):
     current_line.sort(key=lambda x: x['x_min'])
     lines.append(" ".join([t['text'] for t in current_line]))
 
-    print("lines", lines)
+    # with open("lines_joined_10.json", "w", encoding="utf-8") as f:
+    #     json.dump(lines, f, ensure_ascii=False, indent=2)
     return lines
 
 
@@ -118,9 +121,6 @@ def find_location(query):
         items = response.json().get('items')
         if items:
             place = items[0]
-            print(f"상호명: {place['title'].replace('<b>', '').replace('</b>', '')}")
-            print(f"주소: {place['roadAddress']}")
-            print(f"좌표(X, Y): {place['mapx']}, {place['mapy']}")
             return place
         else:
             print("결과를 찾을 수 없습니다.")
@@ -131,6 +131,8 @@ def find_location(query):
 # 메뉴명 추출
 # ==============================================
 
+PRICE_RE = re.compile(r"\d{1,3}(,\d{3})+")
+
 def extract_menu_items(lines):
     menu_items = []
 
@@ -139,24 +141,59 @@ def extract_menu_items(lines):
 
     in_menu_section = False
 
-    for line in lines:
-        # 1. Start condition (단가/수량 등 찾기)
+    for i, line in enumerate(lines):
+        line = line.strip()
+
+        # 1️Start condition
         if not in_menu_section and any(k in line for k in START_KEYWORDS):
             in_menu_section = True
             continue
 
-        # 2. Stop condition
-        if in_menu_section and any(k in line for k in STOP_KEYWORDS):
-            break
-
         if not in_menu_section:
             continue
 
-        name_tokens = line.split(" ")[0]
+        # 2️Stop condition
+        if any(k in line for k in STOP_KEYWORDS):
+            break
 
-        menu_items.append(name_tokens)
-    print("menu", menu_items)
-    return menu_items
+        # 메타 제거
+        if line.startswith("[") and "]" in line:
+            continue
+
+        # START 키워드 줄 제거 (← 핵심 추가)
+        if any(k in line for k in START_KEYWORDS):
+            continue
+
+        # 가격 줄
+        if PRICE_RE.search(line):
+            name = re.sub(PRICE_RE, "", line)
+            name = re.sub(r"\d+", "", name)
+            name = re.sub(r"[^가-힣 ]", "", name).strip()
+
+            if re.search(r"[가-힣]{2,}", name):
+                menu_items.append(name)
+                continue
+
+            if i > 0:
+                prev = lines[i - 1]
+                prev = re.sub(r"[^가-힣 ]", "", prev).strip()
+                if re.search(r"[가-힣]{2,}", prev):
+                    menu_items.append(prev)
+            continue
+
+        # 🔑 가격 없는 줄 (메뉴 후보)
+        name_tokens = re.sub(r"[^가-힣 ]", "", line).strip()
+        if re.search(r"[가-힣]{2,}", name_tokens):
+            menu_items.append(name_tokens)
+
+    # 중복 제거
+    result = []
+    for m in menu_items:
+        if m not in result:
+            result.append(m)
+
+    return result
+
 
 def is_menu_token(token_text, menu_lines):
     return any(token_text in line for line in menu_lines)
@@ -169,13 +206,10 @@ def build_receipt_json(ocr_lines):
 
     # 1. Normalize OCR tokens
     tokens = normalize_ocr_lines(ocr_lines)
-
     # 2. Merge tokens into readable lines
     lines = join_split_tokens(tokens)
-
     # 3. Extract phone number
     phone = extract_phone(lines)
-    print("phone:", phone)
 
     # 4. Extract menu items
     menu_ko = extract_menu_items(lines)
