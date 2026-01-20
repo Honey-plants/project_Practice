@@ -7,24 +7,24 @@ metadata:
   name: {{ $fullName }}
   labels:
     {{- include "frontend.labels" . | nindent 4 }}
-  {{- with .Values.httpRoute.annotations }}
+    {{- with .Values.httpRoute.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
 spec:
   parentRefs:
     {{- with .Values.httpRoute.parentRefs }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with .Values.httpRoute.hostnames }}
+    {{- with .Values.httpRoute.hostnames }}
   hostnames:
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
   rules:
     {{- range .Values.httpRoute.rules }}
     {{- with .matches }}
     - matches:
-      {{- toYaml . | nindent 8 }}
+       {{- toYaml . | nindent 8 }}
     {{- end }}
     {{- with .filters }}
       filters:

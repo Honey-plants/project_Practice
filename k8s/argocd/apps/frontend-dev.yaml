@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: frontend-dev
+  namespace: argocd
+spec:
+  project: project-app
+  source:
+    repoURL: https://github.com/mingoo684/cicdex1.git
+    targetRevision: main
+    path: k8s/charts/frontend
+    helm:
+      valueFiles:
+        - ../../env/dev/frontend-values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
