@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./features/main/pages/HomePage";
 import CameraPage from "./features/main/pages/CameraPage";
 import PreviewPage from "./features/main/pages/PreviewPage";
@@ -22,10 +22,15 @@ export default function AppRouter() {
         <Route path="/result" element={<ResultPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/:memberId" element={<ProfilePage />} />
+
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/review" element={<ReviewPage />} />
         <Route path="/review/new" element={<ReviewWritePage />} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
