@@ -1,22 +1,12 @@
+# menu_assistant/worker/worker_app/pipeline/steps/step_04_rag_match.py
 from __future__ import annotations
-
-"""menu_assistant.worker.worker_app.pipeline.steps.step_04_rag_match
-
-Step04는 "실행(입출력/스키마 정리)"만 담당합니다.
-
-- 입력: <data_dir>/runs/<run_id>/normalize/normalize.json
-- 출력: <run_dir>/rag_match/rag_match.json
-
-실제 RAG 매칭 로직(Chroma 검색 + exact-match + 점수 융합 + 상태판정)은
-menu_assistant.worker.worker_app.rag.retrieval 로 통합되어 있습니다.
-"""
 
 import argparse
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
-from menu_assistant.worker.worker_app.rag.retrieval import match_menu_item
+from menu_assistant.worker.worker_app.rag.retrieval import match_menu_norm
 
 
 def _read_json(path: Path) -> Any:
@@ -34,112 +24,13 @@ def _resolve_run_dir(data_dir: Path, run_id: str) -> Path:
     return data_dir / "runs" / run_id
 
 
-def _safe_list(v: Any) -> List[Any]:
-    return v if isinstance(v, list) else []
-
-
-def _select_items_from_normalize(normalized: Any) -> Tuple[List[Dict[str, Any]], Dict[int, Dict[str, Any]]]:
-    """normalize.json 스키마 호환: items_merged + items_normalized(idx_map) 우선."""
-    idx_map: Dict[int, Dict[str, Any]] = {}
-    if isinstance(normalized, dict):
-        norm_list = normalized.get("items_normalized")
-        if isinstance(norm_list, list):
-            for it in norm_list:
-                if isinstance(it, dict) and "idx" in it:
-                    try:
-                        idx_map[int(it["idx"])] = it
-                    except Exception:
-                        continue
-        if isinstance(normalized.get("items_merged"), list):
-            return normalized["items_merged"], idx_map
-        for k in ("items", "lines", "results"):
-            if isinstance(normalized.get(k), list):
-                return normalized[k], idx_map
-        raise ValueError(f"normalize json schema not supported. keys={list(normalized.keys())}")
-    if isinstance(normalized, list):
-        return normalized, idx_map
-    raise ValueError("normalize json must be list or dict")
-
-
-def _merge_signals_from_item(item: Dict[str, Any], idx_map: Dict[int, Dict[str, Any]]) -> Dict[str, Any]:
-    """Step04가 retrieval에 넘길 신호(variants/menu_jaccard/detail_parts/is_set)를 구성."""
-    text = str(item.get("text") or "")
-    menu_jaccard = str(item.get("menu_jaccard") or "")
-
-    variants: List[str] = []
-    for key in ("menu_name_variants_norm", "menu_variants_norm"):
-        v = item.get(key)
-        if isinstance(v, list) and v:
-            variants = [str(x).strip() for x in v if str(x).strip()]
-            break
-    if not variants and text.strip():
-        variants = [text.strip()]
-
-    detail_parts: List[str] = []
-    d = item.get("detail_parts_norm")
-    if isinstance(d, list):
-        detail_parts = [str(x).strip() for x in d if str(x).strip()]
-
-    is_set = item.get("is_set") if isinstance(item.get("is_set"), bool) else None
-
-    members = _safe_list(item.get("members"))
-    if members and idx_map:
-        for mid in members:
-            try:
-                src = idx_map.get(int(mid))
-            except Exception:
-                src = None
-            if not src:
-                continue
-            vv = src.get("menu_name_variants_norm")
-            if isinstance(vv, list):
-                for x in vv:
-                    xs = str(x).strip()
-                    if xs:
-                        variants.append(xs)
-            dd = src.get("detail_parts_norm")
-            if isinstance(dd, list):
-                for x in dd:
-                    xs = str(x).strip()
-                    if xs:
-                        detail_parts.append(xs)
-            sv = src.get("is_set")
-            if is_set is None and isinstance(sv, bool):
-                is_set = sv
-
-    # dedup (order-preserving)
-    seen = set()
-    uniq_variants: List[str] = []
-    for x in variants:
-        if x and x not in seen:
-            uniq_variants.append(x)
-            seen.add(x)
-    variants = uniq_variants
-
-    seen = set()
-    uniq_detail: List[str] = []
-    for x in detail_parts:
-        if x and x not in seen:
-            uniq_detail.append(x)
-            seen.add(x)
-    detail_parts = uniq_detail
-
-    return {
-        "text": text,
-        "variants": variants,
-        "menu_jaccard": menu_jaccard,
-        "detail_parts_norm": detail_parts,
-        "is_set": is_set,
-    }
-
-
 def run_step_04_rag_match(
     run_dir: Path,
-    top_k: int = 20,
-    rerank_top_k: int = 5,
+    top_k: int = 5,
+    embed_ambiguous: float = 0.90,
+    jamo_threshold: float = 0.85,
     score_threshold: float = 0.55,
-    ambiguous_gap: float = 0.03,
-    use_rerank: bool = True,
+    save_top_n: int = 2,
     include_debug: bool = False,
 ) -> Path:
     normalize_path = run_dir / "normalize" / "normalize.json"
@@ -151,46 +42,59 @@ def run_step_04_rag_match(
             raise FileNotFoundError(f"normalize output not found: {normalize_path}")
 
     normalized = _read_json(normalize_path)
-    merged_items, idx_map = _select_items_from_normalize(normalized)
+
+    # Step03 표준 스키마: {"items":[{raw_menu, poly, menu_norm}]}
+    items = None
+    if isinstance(normalized, dict) and isinstance(normalized.get("items"), list):
+        items = normalized["items"]
+    elif isinstance(normalized, dict):
+        # 과거 스키마 호환(있을 수 있으니)
+        for k in ("items_merged", "lines", "results"):
+            if isinstance(normalized.get(k), list):
+                items = normalized[k]
+                break
+    elif isinstance(normalized, list):
+        items = normalized
+
+    if not isinstance(items, list):
+        raise ValueError(f"normalize json schema not supported: {type(normalized)}")
 
     out_items: List[Dict[str, Any]] = []
-    stats = {"CONFIRMED": 0, "AMBIGUOUS": 0, "NOT_FOUND": 0, "TOTAL": 0}
+    stats = {"EXACT": 0, "AMBIGUOUS": 0, "NOT_FOUND": 0, "TOTAL": 0}
 
-    for item in merged_items:
-        if not isinstance(item, dict):
+    for it in items:
+        if not isinstance(it, dict):
             continue
 
-        if item.get("menu_candidate") is False:
-            rag = {
-                "status": "NOT_FOUND",
-                "used_query": None,
-                "best_match": None,
-                "candidates": [],
-                "debug": {"reason": "filtered_non_menu_candidate"} if include_debug else None,
-            }
-        else:
-            sig = _merge_signals_from_item(item, idx_map)
-            rag = match_menu_item(
-                variants=sig["variants"],
-                menu_jaccard=sig.get("menu_jaccard") or "",
-                detail_parts_norm=sig.get("detail_parts_norm") or [],
-                is_set=sig.get("is_set"),
-                top_k=top_k,
-                rerank_top_k=rerank_top_k,
-                score_threshold=score_threshold,
-                ambiguous_gap=ambiguous_gap,
-                use_rerank=use_rerank,
-                include_debug=include_debug,
-            )
+        menu_norm = str(it.get("menu_norm") or "").strip()
 
-        merged = dict(item)
+        rag = match_menu_norm(
+            menu_norm=menu_norm,
+            top_k=int(top_k),
+            embed_ambiguous=float(embed_ambiguous),
+            jamo_threshold=float(jamo_threshold),
+            score_threshold=float(score_threshold),
+            save_top_n=int(save_top_n),
+            include_debug=include_debug,
+        )
+
+        merged = dict(it)
         merged["rag_match"] = rag
+
+        # 최종 결정된 메뉴가 있으면, 그 메뉴명을 "menu_final"로 별도 저장(사용 편의)
+        merged["menu_final"] = rag.get("decided_menu")
+
+        # 알러지/재료는 best_match에서 바로 끌어올 수도 있음
+        bm = rag.get("best_match") or {}
+        merged["ingredients_ko"] = bm.get("ingredients_ko") if isinstance(bm, dict) else None
+        merged["alg_tags"] = bm.get("alg_tags") if isinstance(bm, dict) else None
+
         out_items.append(merged)
 
         stats["TOTAL"] += 1
-        s = rag.get("status") or "NOT_FOUND"
-        if s in stats:
-            stats[s] += 1
+        st = rag.get("status") or "NOT_FOUND"
+        if st in stats:
+            stats[st] += 1
         else:
             stats["NOT_FOUND"] += 1
 
@@ -198,6 +102,13 @@ def run_step_04_rag_match(
     payload = {
         "run_dir": str(run_dir),
         "input_normalize": str(normalize_path),
+        "config": {
+            "top_k": int(top_k),
+            "embed_ambiguous": float(embed_ambiguous),
+            "jamo_threshold": float(jamo_threshold),
+            "score_threshold": float(score_threshold),
+            "save_top_n": int(save_top_n),
+        },
         "stats": stats,
         "items": out_items,
     }
@@ -206,22 +117,29 @@ def run_step_04_rag_match(
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Step04 RAG match (runner only)")
+    p = argparse.ArgumentParser(description="Step04 RAG match (menu_norm-only, menu-only compare, exact/amb/jamo)")
     p.add_argument("--run_id", type=str, required=False)
     p.add_argument("--data_dir", type=str, default=None)
     p.add_argument("--run_dir", type=str, default=None)
-    p.add_argument("--top_k", type=int, default=20)
-    p.add_argument("--rerank_top_k", type=int, default=5)
+
+    p.add_argument("--top_k", type=int, default=5)
+    p.add_argument("--embed_ambiguous", type=float, default=0.90)
+    p.add_argument("--jamo_threshold", type=float, default=0.85)
     p.add_argument("--score_threshold", type=float, default=0.55)
-    p.add_argument("--ambiguous_gap", type=float, default=0.03)
+    p.add_argument("--save_top_n", type=int, default=2)
+
+    # orchestrator 호환용(받기만 하고 사용하지 않음)
+    p.add_argument("--rerank_top_k", type=int, default=0)
     p.add_argument("--use_rerank", action="store_true")
     p.add_argument("--no_rerank", action="store_true")
+
     p.add_argument("--include_debug", action="store_true")
     return p
 
 
 def main() -> None:
     args = build_parser().parse_args()
+
     repo_root = Path(__file__).resolve().parents[4]  # menu_assistant/
     default_data_dir = repo_root / "data"
     data_dir = Path(args.data_dir) if args.data_dir else default_data_dir
@@ -233,19 +151,13 @@ def main() -> None:
             raise ValueError("Either --run_dir or --run_id must be provided.")
         run_dir = _resolve_run_dir(data_dir, args.run_id)
 
-    use_rerank = True
-    if args.no_rerank:
-        use_rerank = False
-    if args.use_rerank:
-        use_rerank = True
-
     out_path = run_step_04_rag_match(
         run_dir=run_dir,
         top_k=args.top_k,
-        rerank_top_k=args.rerank_top_k,
+        embed_ambiguous=args.embed_ambiguous,
+        jamo_threshold=args.jamo_threshold,
         score_threshold=args.score_threshold,
-        ambiguous_gap=args.ambiguous_gap,
-        use_rerank=use_rerank,
+        save_top_n=args.save_top_n,
         include_debug=args.include_debug,
     )
     print(f"[Step04] wrote: {out_path}")

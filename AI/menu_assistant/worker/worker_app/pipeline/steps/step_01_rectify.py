@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 
@@ -25,7 +24,8 @@ def main():
     parser.add_argument("--input", required=True, help="Path to original image")
     # run_id 는 파일명을 지정해주고싶을때 ,data_dir 은 결과값 저장위치,(menu_assistant/data/runs/{run_id}/rectify/rectified.jpg)
     parser.add_argument("--run_id", default=None, help="Run ID (default: timestamp)")
-    parser.add_argument("--data_dir", default="menu_assistant/data/runs", help="Base output dir")
+    # NOTE: output path convention is kept as: <data_dir>/runs/<run_id>/rectify/rectified.jpg
+    parser.add_argument("--data_dir", default="menu_assistant/data", help="Base output dir")
     #default none 값은 photometric-only(조명/노이즈/대비 등)만 조정 choices에 있는 모델을 선택 가능
     parser.add_argument("--backend", default="auto", choices=["none", "doctr", "dewarpnet", "docunet","auto"])
     #가중치 값을 사용하거나 cuda 이용할시에 주는 옵션
@@ -41,7 +41,7 @@ def main():
     args = parser.parse_args()
     #run_id 값을 cli때 지정한값을 쓰거나 위에 구성해놓은 타임스탭형식으로쓸수있게 표현
     run_id = args.run_id or _default_run_id()
-    #주소값에 대한설정 위에서 설정한 base = {data_dir}/{run_id}
+    # 주소값에 대한설정: <data_dir>/runs/<run_id>
     base = Path(args.data_dir) / "runs" / run_id
     input_dir = base / "input"
     rectify_dir = base / "rectify"
