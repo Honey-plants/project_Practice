@@ -1,5 +1,5 @@
 # 0) 통합 실행코드
-python menu_assistant/worker/worker_app/pipeline/orchestrator.py --image Upload_Images/image13.jpg --use-rerank --top-k 20 --rerank-top-k 5
+python menu_assistant/worker/worker_app/pipeline/orchestrator.py --image Upload_Images/image13.jpg
 
 
 # 1) 보정만 수행 (photometric-only)
@@ -7,7 +7,7 @@ python -m menu_assistant.worker.worker_app.pipeline.steps.step_01_rectify --inpu
 backend = [doctr,dewarpnet,docunet]
 python -m menu_assistant.worker.worker_app.pipeline.steps.step_01_rectify --input Upload_Images/image1.jpg --backend doctr
 python -m menu_assistant.worker.worker_app.pipeline.steps.step_01_rectify --input Upload_Images/image1.jpg --backend docunet
-python -m menu_assistant.worker.worker_app.pipeline.steps.step_01_rectify --input Upload_Images/image8.jpg --backend auto
+python -m AI.menu_assistant.worker.worker_app.pipeline.steps.step_01_rectify --input Upload_Images/image8.jpg --backend auto
 # 2) paddleocr 작동
 python -m menu_assistant.worker.worker_app.pipeline.steps.step_02_ocr --run_id 20260112_181356 --dump_raw
   --image menu_assistant/data/runs/20260112_181356/rectify/rectified.jpg ^
@@ -39,3 +39,4 @@ python menu_assistant/data/datasets/raw/reduce_Dataset.py ^
   --mapping_out "C:\Users\201\Desktop\PGHfolder\Final_project\AI\menu_assistant\data\datasets\raw\menu_representatives_250_mapping.json" ^
   --target_n 250
 """
+
