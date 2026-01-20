@@ -1,7 +1,19 @@
 replicaCount: 1
 
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 80
+
+
 image:
-  repository: ghcr.io/OWNER/REPO/api
+  repository: ghcr.io/mingoo684/cicdex1-api
   tag: "sha-REPLACE_ME"
   pullPolicy: IfNotPresent
 
@@ -10,17 +22,21 @@ service:
   port: 8000
 
 ingress:
-  enabled: true
+  enabled: false
   className: nginx
   host: app.local
-  path: /api
-  pathType: Prefix
+  path: /api(/|$)(.*)
+  pathType: ImplementationSpecific
+
+httpRoute:
+  enabled: false
+
 
 resources: {}
 
 env:
   APP_ENV: "dev"
-  DB_HOST: "rds-endpoint.example.amazonaws.com"
+  DB_HOST: "database-1.c7oeqq6c6a58.ap-northeast-2.rds.amazonaws.com"
   DB_PORT: "3306"
   DB_NAME: "app_db"
   DB_USER: "app_user"
