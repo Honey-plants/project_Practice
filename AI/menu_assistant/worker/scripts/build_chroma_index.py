@@ -51,7 +51,7 @@ DEFAULT_DATASET_PATH = (
     / "data"
     / "datasets"
     / "raw"
-    / "menu_representative_korean_dedup_plus_cuisines.json"
+    / "menu_final_with_allergen_plus_770.json"
 )
 DEFAULT_CHROMA_DIR = BASE_DIR / "data" / "chroma"
 

@@ -22,6 +22,7 @@ DEFAULT_EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-
 DEFAULT_TOP_K = 5
 DEFAULT_SAVE_TOP_N = 2
 
+
 # Decision thresholds (menu-only embedding)
 #
 # We keep the existing CLI contract:
@@ -108,6 +109,8 @@ _VCOUNT = 21
 _TCOUNT = 28
 _NCOUNT = _VCOUNT * _TCOUNT
 _SCOUNT = _LCOUNT * _NCOUNT
+# retrieval.py 상단 (CONFIG 영역 근처)
+JAMO_HARD_CUTOFF = 0.5
 
 
 def _hangul_to_jamo(s: str) -> str:
@@ -318,6 +321,25 @@ def match_menu_norm(
     # Precompute best jamo among candidates
     best_j = max(cands, key=lambda x: x.jamo_score)
 
+    # >>> HARD CUTOFF: jamo < 0.5 => NOT_FOUND <<<
+    if float(best_j.jamo_score) < JAMO_HARD_CUTOFF:
+        return {
+            "status": "NOT_FOUND_BELOW_THRESHOLD",
+            "used_query": used_query,
+            "decided_menu": None,
+            "best_match": None,
+            "candidates": [
+                {
+                    "id": c.id,
+                    "menu": c.menu,
+                    "embed_score": c.embed_score,
+                    "jamo_score": c.jamo_score,
+                }
+                for c in cands[:save_top_n]
+            ],
+            "decision_method": "JAMO_HARD_CUTOFF",
+            "debug": dbg if include_debug else None,
+        }
     # Decision policy (priority): EXACT > EMBED_CONFIRMED > EMBED_AMBIGUOUS > JAMO_CONFIRMED > JAMO_AMBIGUOUS > FAIL
     qn = _norm_space(used_query)
     tn = _norm_space(top1.menu)
