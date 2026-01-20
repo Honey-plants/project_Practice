@@ -141,7 +141,7 @@ def main():
 
     # 2) (선택) 사용자가 프로젝트 runs 구조에서 돌릴 때를 대비한 fallback 템플릿
     #    --run-id를 주면 runs/<run-id>/rag_match/rag_match.json을 자동으로 잡아줌
-    DEFAULT_RUN_ID = "20260116_173543"
+    DEFAULT_RUN_ID = "20260116_191831"
     BASE_RUNS_DIR = Path(r"C:\Users\201\Desktop\PGHfolder\Final_project\AI\menu_assistant\data\runs")
 
     ap = argparse.ArgumentParser()

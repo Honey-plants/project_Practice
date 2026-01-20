@@ -1,3 +1,31 @@
+"""menu_assistant.worker.scripts.build_chroma_index
+
+ChromaDB 인덱스 빌드 스크립트.
+
+호환성 목표
+- retrieval.py는 아래 메타데이터 키를 사용합니다.
+  - menu (str)
+  - variants (csv str 또는 list)
+  - ingredients_ko (csv str 또는 list)
+  - alg_tags (csv str 또는 list)
+  - source (str)
+- 임베딩 모델/컬렉션/퍼시스트 디렉터리는 build와 retrieval이 동일해야 합니다.
+
+기본 경로 정책
+- 본 파일의 위치가 menu_assistant/worker/scripts/ 아래에 있는 것을 전제로,
+  `BASE_DIR = <...>/menu_assistant` 를 자동 계산합니다.
+
+권장 실행 예시(Windows)
+python C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\worker\\scripts\\build_chroma_index.py ^
+  --dataset "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\data\\datasets\\raw\\menu_representative_korean_dedup_plus_cuisines.json" ^
+  --chroma_dir "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\data\\chroma" ^
+  --collection "menu_index" ^
+  --embed_model "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+"""
+
+from __future__ import annotations
+
+import argparse
 import json
 from pathlib import Path
 from typing import Any, Dict, List
@@ -6,22 +34,29 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
-# ==============================
-# CONFIG
-# ==============================
-COLLECTION_NAME = "menu_index"
-BATCH_SIZE = 2000  # max batch size 이하로 안전하게
-EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 # ==============================
-# PATHS (✅ menu_assistant 기준 고정)
+# DEFAULT CONFIG (retrieval.py와 동일 권장)
+# ==============================
+DEFAULT_COLLECTION_NAME = "menu_index"
+DEFAULT_BATCH_SIZE = 2000
+DEFAULT_EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+
+# ==============================
+# DEFAULT PATHS (menu_assistant 기준)
 # ==============================
 BASE_DIR = Path(__file__).resolve().parents[2]  # menu_assistant/
-DATA_PATH = BASE_DIR / "data" /"datasets"/"raw"/ "menu_representative_korean_dedup_plus_cuisines.json"
-CHROMA_DIR = BASE_DIR / "data" / "chroma"
+DEFAULT_DATASET_PATH = (
+    BASE_DIR
+    / "data"
+    / "datasets"
+    / "raw"
+    / "menu_representative_korean_dedup_plus_cuisines.json"
+)
+DEFAULT_CHROMA_DIR = BASE_DIR / "data" / "chroma"
 
 
-def safe_str_list(x: Any) -> List[str]:
+def _safe_str_list(x: Any) -> List[str]:
     if x is None:
         return []
     if isinstance(x, list):
@@ -30,72 +65,130 @@ def safe_str_list(x: Any) -> List[str]:
     return [s] if s else []
 
 
-def chunked(n: int, size: int):
+def _chunked(n: int, size: int):
     for i in range(0, n, size):
         yield i, min(i + size, n)
 
 
-def main():
-    print(f"[INFO] DATA_PATH: {DATA_PATH}")
-    if not DATA_PATH.exists():
-        raise FileNotFoundError(f"Dataset not found: {DATA_PATH}")
+def _build_argparser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description="Build ChromaDB index for menu dataset")
+    p.add_argument(
+        "--dataset",
+        default=str(DEFAULT_DATASET_PATH),
+        help="Path to dataset JSON (list of records)",
+    )
+    p.add_argument(
+        "--chroma_dir",
+        default=str(DEFAULT_CHROMA_DIR),
+        help="Chroma persist directory",
+    )
+    p.add_argument(
+        "--collection",
+        default=DEFAULT_COLLECTION_NAME,
+        help="Chroma collection name (must match retrieval.py)",
+    )
+    p.add_argument(
+        "--embed_model",
+        default=DEFAULT_EMBED_MODEL,
+        help="SentenceTransformer model name (must match retrieval.py)",
+    )
+    p.add_argument(
+        "--batch_size",
+        type=int,
+        default=DEFAULT_BATCH_SIZE,
+        help="Insert batch size",
+    )
+    p.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="Delete existing collection before build",
+    )
+    p.add_argument(
+        "--source",
+        default="menu_dataset",
+        help="metadata['source'] value",
+    )
+    return p
 
-    with open(DATA_PATH, "r", encoding="utf-8") as f:
+
+def main() -> None:
+    args = _build_argparser().parse_args()
+
+    dataset_path = Path(args.dataset)
+    chroma_dir = Path(args.chroma_dir)
+    collection_name = str(args.collection)
+    embed_model = str(args.embed_model)
+    batch_size = int(args.batch_size)
+    source = str(args.source)
+
+    print(f"[INFO] BASE_DIR      : {BASE_DIR}")
+    print(f"[INFO] DATASET_PATH  : {dataset_path}")
+    print(f"[INFO] CHROMA_DIR    : {chroma_dir}")
+    print(f"[INFO] COLLECTION    : {collection_name}")
+    print(f"[INFO] EMBED_MODEL   : {embed_model}")
+    print(f"[INFO] BATCH_SIZE    : {batch_size}")
+
+    if not dataset_path.exists():
+        raise FileNotFoundError(f"Dataset not found: {dataset_path}")
+
+    with open(dataset_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     if not isinstance(data, list):
-        raise ValueError("menu_final_with_allergen.json must be a list")
+        raise ValueError("Dataset JSON must be a list of records")
 
     print(f"[INFO] Loaded records: {len(data)}")
-    CHROMA_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"[INFO] CHROMA_DIR: {CHROMA_DIR}")
 
-    emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name=EMBED_MODEL
-    )
+    chroma_dir.mkdir(parents=True, exist_ok=True)
+
+    emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embed_model)
 
     # Persist 보장: PersistentClient 우선
     if hasattr(chromadb, "PersistentClient"):
-        client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+        client = chromadb.PersistentClient(path=str(chroma_dir))
     else:
-        client = chromadb.Client(Settings(persist_directory=str(CHROMA_DIR), anonymized_telemetry=False))
+        client = chromadb.Client(
+            Settings(persist_directory=str(chroma_dir), anonymized_telemetry=False)
+        )
 
-    # 재빌드: 컬렉션 삭제 후 생성
-    try:
-        client.delete_collection(COLLECTION_NAME)
-        print("[INFO] Existing collection deleted.")
-    except Exception:
-        pass
+    if args.rebuild:
+        try:
+            client.delete_collection(collection_name)
+            print("[INFO] Existing collection deleted.")
+        except Exception:
+            print("[INFO] No existing collection to delete (or delete failed).")
 
-    collection = client.get_or_create_collection(
-        name=COLLECTION_NAME,
-        embedding_function=emb_fn,
-    )
+    collection = client.get_or_create_collection(name=collection_name, embedding_function=emb_fn)
 
     ids: List[str] = []
     documents: List[str] = []
     metadatas: List[Dict[str, Any]] = []
 
-    # ✅ 문서는 메뉴명 중심으로 단순화 (매칭 품질 ↑)
+    # 문서는 '메뉴명 + variants' 중심으로 임베딩 (retrieval의 menu_norm/variants 비교와 정합)
     for idx, item in enumerate(data):
         menu = str(item.get("menu", "")).strip()
         if not menu:
             continue
 
-        ingredients = safe_str_list(item.get("ingredients_ko"))
-        alg_tags = safe_str_list(item.get("alg_tags") or item.get("ALG_TAG"))  # ✅ 호환
-        variants = safe_str_list(item.get("variants"))  # ✅ 400 데이터셋 기준
+        ingredients = _safe_str_list(item.get("ingredients_ko"))
+        # 호환: alg_tags 또는 ALG_TAG
+        alg_tags = _safe_str_list(item.get("alg_tags") or item.get("ALG_TAG"))
+        variants = _safe_str_list(item.get("variants"))
 
-        ids.append(str(item.get("id") or f"menu_{idx}"))  # ✅ id가 있으면 사용
-        documents.append(" ".join([menu] + variants))  # ✅ menu+variants 임베딩
+        rid = str(item.get("id") or f"menu_{idx}")
+        doc = " ".join([menu] + variants).strip()
 
+        ids.append(rid)
+        documents.append(doc)
         metadatas.append(
             {
                 "menu": menu,
+                # retrieval._split_csv는 csv string 또는 list 모두 처리 가능.
+                # 여기서는 csv string으로 저장하여 Chroma metadata 크기를 줄인다.
                 "variants": ", ".join(variants),
                 "ingredients_ko": ", ".join(ingredients),
                 "alg_tags": ", ".join(alg_tags),
-                "source": "representative_korean_menu_400",
+                "source": source,
             }
         )
 
@@ -104,8 +197,7 @@ def main():
     if total == 0:
         raise ValueError("No insertable records. Check dataset field 'menu'.")
 
-    print(f"[INFO] Inserting in batches (BATCH_SIZE={BATCH_SIZE})...")
-    for s, e in chunked(total, BATCH_SIZE):
+    for s, e in _chunked(total, batch_size):
         collection.add(
             ids=ids[s:e],
             documents=documents[s:e],
@@ -113,7 +205,7 @@ def main():
         )
         print(f"[INFO] Inserted {e}/{total}")
 
-    # ✅ 삽입 검증
+    # 삽입 검증
     try:
         cnt = collection.count()
     except Exception:
@@ -122,18 +214,16 @@ def main():
 
     print(f"[VERIFY] collection.count() = {cnt}")
     if cnt == 0:
-        raise RuntimeError("Build finished but collection is empty. Check persist directory / permissions.")
+        raise RuntimeError(
+            "Build finished but collection is empty. Check persist directory / permissions."
+        )
 
-    # 샘플 출력
     sample = collection.get(limit=3, include=["metadatas"])
     metas = sample.get("metadatas") or []
     print("[SAMPLE] ids:", sample.get("ids"))
     print("[SAMPLE] menus:", [m.get("menu") for m in metas])
 
     print("[SUCCESS] Chroma index build complete.")
-    print(f"[MODEL] {EMBED_MODEL}")
-    print(f"[COLLECTION] {COLLECTION_NAME}")
-    print(f"[CHROMA_DIR] {CHROMA_DIR}")
 
 
 if __name__ == "__main__":
