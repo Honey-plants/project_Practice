@@ -501,7 +501,7 @@ if __name__ == "__main__":
     p.add_argument("--run-step4", action="store_true", help="Run step4 (default: on)")
     p.add_argument("--no-step4", action="store_true", help="Skip step4")
 
-    p.add_argument("--top-k", type=int, default=20)
+    p.add_argument("--top-k", type=int, default=5)
     p.add_argument("--embed-ambiguous", type=float, default=0.90)
     p.add_argument("--jamo-threshold", type=float, default=0.85)
     p.add_argument("--score-threshold", type=float, default=0.55)

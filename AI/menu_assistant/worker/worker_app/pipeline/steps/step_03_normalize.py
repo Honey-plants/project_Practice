@@ -25,14 +25,27 @@ from typing import Any, Dict, List, Tuple
 
 
 _NON_MENU_HARD_KEYWORDS = [
+    # fixed hard blocks (policy / notice)
     "원산지", "국내산", "수입산",
     "포장", "배달", "환불", "결제",
     "문의", "전화",
     "알레르기", "알러지", "주의",
+
+    # menu-board notices / operational words
+    "공지", "안내", "참고", "유의", "필독",
+    "테이블", "카운터", "셀프", "리필", "무료", "서비스",
+    "주문", "주문서", "계산", "계산대", "결제", "포장가능", "배달가능",
+    "영업", "시간", "휴무", "브레이크", "라스트오더",
+
+    # choice / option phrases (typical set explanation)
+    "선택", "중선택", "메뉴북", "대신", "가능", "변경", "추가요금", "개당",
 ]
 
+# Titles / section headers (should be removed)
 _NON_MENU_TITLES = {
     "안주", "사이드", "추가", "추가메뉴", "사리", "음료", "음료수", "주류", "메뉴",
+    "세트", "세트메뉴", "코스", "런치", "디너", "세트구성", "구성",
+    "옵션", "선택", "추천", "베스트",
 }
 
 _KEEP_HANGUL_ONLY = re.compile(r"[^가-힣]+", re.UNICODE)
@@ -40,6 +53,67 @@ _WS_RE = re.compile(r"\s+", re.UNICODE)
 _SLASH_SPLIT_RE = re.compile(r"\s*/\s*", re.UNICODE)
 _HAS_DIGIT_RE = re.compile(r"\d", re.UNICODE)
 _HAS_WON_RE = re.compile(r"(원|₩)", re.UNICODE)
+
+# Extra non-menu detection (set/notice/instruction lines)
+# - We keep final output as menu_norm, but we filter early to reduce RAG noise.
+# - This is intentionally conservative: it targets set 구성/선택/안내문구.
+_NON_MENU_PATTERNS = [
+    re.compile(r"\bSET\b", re.IGNORECASE),
+    re.compile(r"\bMENU\b", re.IGNORECASE),
+    re.compile(r"\bfrom\b", re.IGNORECASE),
+    re.compile(r"\bor\b", re.IGNORECASE),
+    re.compile(r"\+\s*\d+\s*(천원|만원|원)", re.UNICODE),
+    re.compile(r"\d+\s*인\s*세트", re.UNICODE),
+    re.compile(r"\b\d+\s*잔\b", re.UNICODE),
+    re.compile(r"(중\s*선택|중선택|메뉴\s*선택|대신|가능|변경|추가요금|개당)", re.UNICODE),
+]
+
+# If a line is mostly a 'selection instruction', treat as non-menu.
+_SELECTION_HINTS = [
+    "선택", "중선택", "대신", "가능", "변경", "메뉴북", "메뉴", "옵션",
+]
+
+# Components often appearing in set descriptions. If the string contains these WITH selection hints,
+# it is very likely not a standalone menu name.
+_SET_COMPONENT_WORDS = {
+    "스프", "후식", "드링크", "와인", "샐러드", "샐러드", "파스타", "리조토", "피자",
+}
+
+
+def _contains_any(s: str, words) -> bool:
+    for w in words:
+        if w and w in s:
+            return True
+    return False
+
+
+def _looks_like_set_or_notice(raw_text: str, menu_norm: str) -> bool:
+    """Return True if the token likely represents set/notice/instruction rather than a menu item."""
+    t = _norm_space(raw_text)
+    if not t:
+        return True
+
+    # headers already handled by _NON_MENU_TITLES, but catch common English headings
+    for pat in _NON_MENU_PATTERNS:
+        if pat.search(t):
+            # If it contains actual Hangul menu and no selection hints, don't over-filter.
+            # Example: '찹스테이크' should pass, 'SET MENU', 'from 59,500', '파스타/.. 중 선택1' should not.
+            # Here, patterns mostly indicate instruction or set.
+            return True
+
+    # Strong selection / instruction signals
+    if _contains_any(t, _SELECTION_HINTS):
+        return True
+
+    # If raw text includes set component words AND looks like instruction, filter.
+    if _contains_any(menu_norm, _SET_COMPONENT_WORDS) and ("선택" in t or "중" in t or "or" in t.lower()):
+        return True
+
+    # Standalone set word or variants like '세트(2인)'
+    if "세트" in t or "세트" in menu_norm:
+        return True
+
+    return False
 
 
 def _norm_space(s: str) -> str:
@@ -73,6 +147,16 @@ def _poly_bbox(poly: List[List[float]]) -> Tuple[float, float, float, float]:
     xs = [p[0] for p in poly]
     ys = [p[1] for p in poly]
     return min(xs), min(ys), max(xs), max(ys)
+
+def _y_overlap_ratio(a: List[List[float]], b: List[List[float]]) -> float:
+    """Two bboxes' vertical overlap ratio over min height. 0.0 ~ 1.0"""
+    ax1, ay1, ax2, ay2 = _poly_bbox(a)
+    bx1, by1, bx2, by2 = _poly_bbox(b)
+    inter = max(0.0, min(ay2, by2) - max(ay1, by1))
+    ha = max(1.0, ay2 - ay1)
+    hb = max(1.0, by2 - by1)
+    denom = min(ha, hb)
+    return float(inter / denom) if denom > 0 else 0.0
 
 
 def _poly_center(poly: List[List[float]]) -> Tuple[float, float]:
@@ -189,18 +273,49 @@ def _should_merge_pair(
     lx1, ly1, lx2, ly2 = _poly_bbox(left["poly"])
     rx1, ry1, rx2, ry2 = _poly_bbox(right["poly"])
     dx = float(rx1 - lx2)
-    if dx < -1.0:
-        # 겹치거나 역전된 경우는 병합하지 않음(과병합 방지)
-        return False
-    if dx > float(gap_px):
+
+    # (가드1) 좌->우 순서가 깨진 '역전'은 병합 금지 (과병합 방지)
+    # right가 left보다 확실히 왼쪽에 있으면 reversed로 본다.
+
+    if float(rx2) <= float(lx1):
+
         return False
 
-    # 해상도 변화 안정화: gap / avg_height
+    # (가드2) 세로로 충분히 겹치지 않으면 병합 금지 (라인 섞임 방지)
+    # line_cluster가 y-center 기반이므로, 여기서 한 번 더 안정화한다.
+
+    if _y_overlap_ratio(left["poly"], right["poly"]) < 0.60:
+
+        return False
+
+    # (핵심) dx가 음수(겹침)인 경우를 제한적으로 허용
+    # - 너무 많이 겹치면(큰 음수) 다른 컬럼/라인 토큰을 빨아들일 위험이 있으므로 제한
     lh = _poly_height(left["poly"])
     rh = _poly_height(right["poly"])
     avg_h = (lh + rh) / 2.0
+
+    # overlap 허용치: min(절대 px, 상대 비율)
+    overlap_tol_px = 6.0
+    overlap_tol_ratio = 0.20  # avg_h의 20%까지 음수 dx 허용
+    overlap_tol = min(overlap_tol_px, float(avg_h) * overlap_tol_ratio)
+
+    if dx < 0.0:
+
+        if abs(dx) > overlap_tol:
+
+            return False
+      # 겹침은 허용하되, gap 제한은 '양수 dx'에만 적용
+    else:
+
+        if dx > float(gap_px):
+
+            return False
+      # 해상도 변화 안정화: gap / avg_height (양수 dx일 때만 의미가 큼)
+
     if avg_h > 0:
+
         if (dx / avg_h) > float(gap_ratio):
+
             return False
 
     return True
@@ -215,7 +330,8 @@ def _merge_line_once(
     """라인 내부 left-to-right 1회 병합"""
     if not line_items:
         return []
-    line = sorted(line_items, key=lambda d: _poly_center(d["poly"])[0])
+    # center-x는 겹침 케이스에서 순서가 흔들릴 수 있으므로 bbox x1 기준으로 안정화
+    line = sorted(line_items, key=lambda d: _poly_bbox(d["poly"])[0])
     out: List[Dict[str, Any]] = []
     i = 0
     while i < len(line):
@@ -288,6 +404,30 @@ def split_by_slash(raw_text: str) -> List[str]:
         return []
     if "/" not in t:
         return [t]
+    # ------------------------------------------------------------------
+    # Special case: "옵션/재료/토핑 나열 + 공백 + 메인메뉴"
+    # e.g., "새우/전복/문어 비프찹스테이크"  -> ["비프찹스테이크"]
+    #
+    # Rationale:
+    # naive split makes "문어 비프찹스테이크" -> normalize -> "문어비프찹스테이크"
+    # which is incorrect menu query for RAG.
+    # ------------------------------------------------------------------
+
+    if " " in t:
+        left, right = t.rsplit(" ", 1)
+  # left must contain slashes; right should look like a menu token after hangul-only normalize
+
+        if "/" in left:
+            right_norm = normalize_menu_korean_only(right)
+            left_norm = normalize_menu_korean_only(left.replace("/", ""))
+    # conservative guards:
+    # - right should contain meaningful Hangul
+    # - left should not be empty (it is option list)
+
+            if right_norm and left_norm:
+                return [right]
+
+    # Fallback: standard slash split
     parts = [p.strip() for p in _SLASH_SPLIT_RE.split(t)]
     return [p for p in parts if p]
 
@@ -316,6 +456,10 @@ def is_menu_candidate(raw_menu: str, menu_norm: str, score: float, cfg: Normaliz
     for kw in _NON_MENU_HARD_KEYWORDS:
         if kw in menu_norm or kw in t:
             return False
+    # set / notice / instruction filtering (reduces RAG noise)
+    if _looks_like_set_or_notice(raw_text=t, menu_norm=menu_norm):
+        return False
+
 
     return True
 
