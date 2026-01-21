@@ -1,4 +1,3 @@
-# menu_assistant/worker/worker_app/rag/retrieval.py
 from __future__ import annotations
 
 import os
@@ -11,7 +10,6 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
-
 # ==============================
 # CONFIG
 # ==============================
@@ -22,11 +20,27 @@ DEFAULT_CHROMA_DIR = BASE_DIR / "data" / "chroma"
 DEFAULT_EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 DEFAULT_TOP_K = 5
-DEFAULT_EMBED_AMBIGUOUS = 0.90          # 90% 이상이면 ambiguous
-DEFAULT_JAMO_THRESHOLD = 0.85           # 오타 허용 결정 임계치(운영에서 조정)
-DEFAULT_SCORE_THRESHOLD = 0.55          # 완전 실패 컷(필요 시)
-DEFAULT_SAVE_TOP_N = 2                  # json 저장 시 후보 상위 N개만 (원하면 1로)
+DEFAULT_SAVE_TOP_N = 2
 
+
+# Decision thresholds (menu-only embedding)
+#
+# We keep the existing CLI contract:
+#   - embed_ambiguous: lower bound for EMBED-based decision
+#   - jamo_threshold: lower bound for JAMO-based decision
+# and add confirmed tiers with separate defaults.
+DEFAULT_EMBED_CONFIRMED = 0.95      # >= 0.95 => CONFIRMED_EMBED
+DEFAULT_EMBED_AMBIGUOUS = 0.90      # >= 0.90 => AMBIGUOUS_EMBED
+
+DEFAULT_JAMO_CONFIRMED = 0.95       # >= 0.95 => CONFIRMED_JAMO
+DEFAULT_JAMO_AMBIGUOUS = 0.85       # >= 0.85 => AMBIGUOUS_JAMO
+
+# Backward-compatible alias (older CLI param name)
+DEFAULT_JAMO_THRESHOLD = DEFAULT_JAMO_AMBIGUOUS
+
+DEFAULT_SCORE_THRESHOLD = 0.55      # < threshold => NOT_FOUND_BELOW_THRESHOLD
+
+# Env overrides
 ENV_CHROMA_DIR = "MENU_ASSISTANT_CHROMA_DIR"
 ENV_COLLECTION = "MENU_ASSISTANT_COLLECTION"
 ENV_EMBED_MODEL = "MENU_ASSISTANT_EMBED_MODEL"
@@ -74,7 +88,7 @@ def _to_similarity(distance: Optional[float]) -> float:
 
 
 def _parse_metadata(md: Dict[str, Any]) -> Dict[str, Any]:
-    # 인덱스 메타 키는 build에서 유지되어야 함
+    # The build script should store these metadata keys.
     return {
         "menu": _norm_space(str(md.get("menu", ""))),
         "ingredients_ko": _split_csv(md.get("ingredients_ko", "")),
@@ -84,7 +98,7 @@ def _parse_metadata(md: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # ==============================
-# JAMO SIMILARITY (typo-robust)
+# JAMO SIMILARITY (typo robust)
 # ==============================
 _SBASE = 0xAC00
 _LBASE = 0x1100
@@ -95,6 +109,8 @@ _VCOUNT = 21
 _TCOUNT = 28
 _NCOUNT = _VCOUNT * _TCOUNT
 _SCOUNT = _LCOUNT * _NCOUNT
+# retrieval.py 상단 (CONFIG 영역 근처)
+JAMO_HARD_CUTOFF = 0.5
 
 
 def _hangul_to_jamo(s: str) -> str:
@@ -154,7 +170,7 @@ class Candidate:
     ingredients_ko: List[str]
     alg_tags: List[str]
     source: str = ""
-    jamo_score: float = 0.0  # query vs menu
+    jamo_score: float = 0.0
 
 
 class ChromaMenuRetriever:
@@ -190,6 +206,7 @@ class ChromaMenuRetriever:
             embedding_function=emb_fn,
         )
 
+        # Empty collection check
         try:
             cnt = self._collection.count()
         except Exception:
@@ -255,25 +272,33 @@ def match_menu_norm(
     menu_norm: str,
     *,
     top_k: int = DEFAULT_TOP_K,
-    embed_ambiguous: float = DEFAULT_EMBED_AMBIGUOUS,
-    jamo_threshold: float = DEFAULT_JAMO_THRESHOLD,
-    score_threshold: float = DEFAULT_SCORE_THRESHOLD,
     save_top_n: int = DEFAULT_SAVE_TOP_N,
+    embed_ambiguous: float = DEFAULT_EMBED_AMBIGUOUS,
+    embed_confirmed: float = DEFAULT_EMBED_CONFIRMED,
+    jamo_threshold: float = DEFAULT_JAMO_THRESHOLD,
+    jamo_confirmed: float = DEFAULT_JAMO_CONFIRMED,
+    score_threshold: float = DEFAULT_SCORE_THRESHOLD,
     include_debug: bool = False,
 ) -> Dict[str, Any]:
+    """Menu-only matching.
+
+    Statuses (more granular):
+      - EXACT: normalized exact match (menu_norm == top1.menu)
+      - CONFIRMED_EMBED: top1 embed_score >= embed_confirmed (and not EXACT)
+      - AMBIGUOUS_EMBED: top1 embed_score >= embed_ambiguous (and not EXACT/CONFIRMED_EMBED)
+      - CONFIRMED_JAMO: best jamo among top_k >= jamo_confirmed (and not decided by EXACT/EMBED)
+      - AMBIGUOUS_JAMO: best jamo among top_k >= jamo_threshold (and not decided by EXACT/EMBED)
+      - NOT_FOUND_EMPTY_QUERY: empty menu_norm after normalization
+      - NOT_FOUND_NO_CANDIDATES: chroma returned nothing
+      - NOT_FOUND_BELOW_THRESHOLD: top1 embed_score < score_threshold and no jamo decision
     """
-    결정 규칙:
-    1) exact(menu_norm == top1.menu) -> EXACT
-    2) else if top1.embed_score >= 0.90 -> AMBIGUOUS
-    3) else if max_jamo(top_k) >= jamo_threshold -> AMBIGUOUS (menu는 jamo 최고 후보로 결정)
-    4) else if top1.embed_score < score_threshold -> NOT_FOUND
-    """
+
     retriever = get_retriever()
     used_query, cands, dbg = retriever.query(menu_norm=menu_norm, top_k=int(top_k))
 
-    if not cands:
+    if not used_query:
         return {
-            "status": "NOT_FOUND",
+            "status": "NOT_FOUND_EMPTY_QUERY",
             "used_query": None,
             "decided_menu": None,
             "best_match": None,
@@ -281,62 +306,127 @@ def match_menu_norm(
             "debug": dbg if include_debug else None,
         }
 
-    top1 = cands[0]
-    q = used_query
+    if not cands:
+        return {
+            "status": "NOT_FOUND_NO_CANDIDATES",
+            "used_query": used_query,
+            "decided_menu": None,
+            "best_match": None,
+            "candidates": [],
+            "debug": dbg if include_debug else None,
+        }
 
-    # exact 판단: "menu_norm vs menu"만 비교
-    if _norm_space(q) and _norm_space(q) == _norm_space(top1.menu):
+    top1 = cands[0]
+
+    # Precompute best jamo among candidates
+    best_j = max(cands, key=lambda x: x.jamo_score)
+
+    # >>> HARD CUTOFF: jamo < 0.5 => NOT_FOUND <<<
+    if float(best_j.jamo_score) < JAMO_HARD_CUTOFF:
+        return {
+            "status": "NOT_FOUND_BELOW_THRESHOLD",
+            "used_query": used_query,
+            "decided_menu": None,
+            "best_match": None,
+            "candidates": [
+                {
+                    "id": c.id,
+                    "menu": c.menu,
+                    "embed_score": c.embed_score,
+                    "jamo_score": c.jamo_score,
+                }
+                for c in cands[:save_top_n]
+            ],
+            "decision_method": "JAMO_HARD_CUTOFF",
+            "debug": dbg if include_debug else None,
+        }
+    # Decision policy (priority): EXACT > EMBED_CONFIRMED > EMBED_AMBIGUOUS > JAMO_CONFIRMED > JAMO_AMBIGUOUS > FAIL
+    qn = _norm_space(used_query)
+    tn = _norm_space(top1.menu)
+    if qn and tn and qn == tn:
         status = "EXACT"
         decided = top1
+        decision_method = "EXACT"
         reason = "exact_match"
+    elif float(top1.embed_score) >= float(embed_confirmed):
+        status = "CONFIRMED_EMBED"
+        decided = top1
+        decision_method = "EMBED"
+        reason = "embed>=embed_confirmed"
+    elif float(top1.embed_score) >= float(embed_ambiguous):
+        status = "AMBIGUOUS_EMBED"
+        decided = top1
+        decision_method = "EMBED"
+        reason = "embed>=embed_ambiguous"
+    elif float(best_j.jamo_score) >= float(jamo_confirmed):
+        status = "CONFIRMED_JAMO"
+        decided = best_j
+        decision_method = "JAMO"
+        reason = "jamo>=jamo_confirmed"
+    elif float(best_j.jamo_score) >= float(jamo_threshold):
+        status = "AMBIGUOUS_JAMO"
+        decided = best_j
+        decision_method = "JAMO"
+        reason = "jamo>=jamo_threshold"
     else:
-        # jamo 최고 후보
-        best_j = max(cands, key=lambda x: x.jamo_score)
-        if float(top1.embed_score) >= float(embed_ambiguous):
-            status = "AMBIGUOUS"
-            decided = top1
-            reason = "embed>=0.90"
-        elif float(best_j.jamo_score) >= float(jamo_threshold):
-            status = "AMBIGUOUS"
-            decided = best_j
-            reason = "jamo_threshold"
-        elif float(top1.embed_score) < float(score_threshold):
-            status = "NOT_FOUND"
-            decided = None
-            reason = "below_score_threshold"
-        else:
-            status = "AMBIGUOUS"
-            decided = top1
-            reason = "fallback_top1"
+        status = "NOT_FOUND_BELOW_THRESHOLD"
+        decided = None
+        decision_method = "NONE"
+        reason = "no_decision"
 
-    # candidates 저장 (상위 N개만)
     save_n = max(1, int(save_top_n))
     cand_out = [asdict(c) for c in cands[:save_n]]
-
     best_out = asdict(decided) if decided is not None else None
 
     debug_out = None
     if include_debug:
         debug_out = dict(dbg or {})
+        best_j = max(cands, key=lambda x: x.jamo_score)
         debug_out.update(
             {
                 "reason": reason,
-                "embed_ambiguous": float(embed_ambiguous),
-                "jamo_threshold": float(jamo_threshold),
-                "score_threshold": float(score_threshold),
-                "top1_embed": float(top1.embed_score),
-                "top1_menu": top1.menu,
-                "top1_jamo": float(top1.jamo_score),
-                "best_jamo_menu": max(cands, key=lambda x: x.jamo_score).menu,
-                "best_jamo_score": float(max(cands, key=lambda x: x.jamo_score).jamo_score),
+                "thresholds": {
+                    "embed_confirmed": float(embed_confirmed),
+                    "embed_ambiguous": float(embed_ambiguous),
+                    "jamo_confirmed": float(jamo_confirmed),
+                    "jamo_threshold": float(jamo_threshold),
+                    "score_threshold": float(score_threshold),
+                },
+                "top1": {
+                    "menu": top1.menu,
+                    "embed": float(top1.embed_score),
+                    "jamo": float(top1.jamo_score),
+                },
+                "best_jamo": {
+                    "menu": best_j.menu,
+                    "embed": float(best_j.embed_score),
+                    "jamo": float(best_j.jamo_score),
+                },
+                "saved_candidates": int(save_n),
             }
         )
+
+    signals = {
+        "top1_menu": top1.menu,
+        "top1_embed": float(top1.embed_score),
+        "best_jamo_menu": best_j.menu,
+        "best_jamo_score": float(best_j.jamo_score),
+        "thresholds": {
+            "embed_confirmed": float(embed_confirmed),
+            "embed_ambiguous": float(embed_ambiguous),
+            "jamo_confirmed": float(jamo_confirmed),
+            "jamo_ambiguous": float(jamo_threshold),
+            "score_threshold": float(score_threshold),
+        },
+    }
 
     return {
         "status": status,
         "used_query": used_query,
         "decided_menu": (decided.menu if decided else None),
+        "decision_method": decision_method,
         "best_match": best_out,
         "candidates": cand_out,
+        "signals": signals,
         "debug": debug_out,
     }
