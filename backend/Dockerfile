@@ -112,5 +112,4 @@ EXPOSE 8000
 
 # Keep chart unchanged: uvicorn app.main:app
 CMD ["python", "-m", "uvicorn", "backend.app.main:app", "--host=0.0.0.0", "--port=8000"]
-#test
-asd
+
