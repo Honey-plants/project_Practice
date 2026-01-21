@@ -17,7 +17,7 @@ EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 # PATHS (✅ menu_assistant 기준 고정)
 # ==============================
 BASE_DIR = Path(__file__).resolve().parents[4]  # menu_assistant/
-DATA_PATH = BASE_DIR / "data" /"datasets"/"raw"/ "menu_seed_with_alg_tags_variants_v2.json"
+DATA_PATH = BASE_DIR / "data" /"datasets"/"raw"/ "menu_seed_with_alg_tags_variants_v3.json"
 CHROMA_DIR = BASE_DIR / "data" / "chroma"
 
 

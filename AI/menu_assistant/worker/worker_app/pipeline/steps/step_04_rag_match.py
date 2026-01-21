@@ -42,9 +42,7 @@ def run_step_04_rag_match(
     top_k: int = 5,
     save_top_n: int = 2,
     embed_ambiguous: float = 0.90,
-    embed_confirmed: float = 0.95,
     jamo_threshold: float = 0.85,
-    jamo_confirmed: float = 0.95,
     score_threshold: float = 0.55,
     include_debug: bool = False,
 ) -> Path:
@@ -60,12 +58,9 @@ def run_step_04_rag_match(
     items = _extract_items(normalized)
 
     out_items: List[Dict[str, Any]] = []
-    stats: Dict[str, int] = {
+    stats = {
         "EXACT": 0,
-        "CONFIRMED_EMBED": 0,
-        "AMBIGUOUS_EMBED": 0,
-        "CONFIRMED_JAMO": 0,
-        "AMBIGUOUS_JAMO": 0,
+        "CLOSE": 0,
         "NOT_FOUND_EMPTY_QUERY": 0,
         "NOT_FOUND_NO_CANDIDATES": 0,
         "NOT_FOUND_BELOW_THRESHOLD": 0,
@@ -78,14 +73,21 @@ def run_step_04_rag_match(
 
         menu_norm = str(it.get("menu_norm") or "").strip()
 
+        raw_menu = str(
+            it.get("raw_menu")
+            or it.get("menu_raw")
+            or it.get("text")
+            or it.get("menu")
+            or ""
+        ).strip()
+
         rag = match_menu_norm(
             menu_norm=menu_norm,
             top_k=int(top_k),
+            raw_menu=raw_menu,  # ✅ 추가
             save_top_n=int(save_top_n),
             embed_ambiguous=float(embed_ambiguous),
-            embed_confirmed=float(embed_confirmed),
             jamo_threshold=float(jamo_threshold),
-            jamo_confirmed=float(jamo_confirmed),
             score_threshold=float(score_threshold),
             include_debug=include_debug,
         )
@@ -95,8 +97,9 @@ def run_step_04_rag_match(
 
         # Convenience outputs for downstream
         merged["menu_final"] = rag.get("decided_menu")
-        bm = rag.get("best_match") or {}
-        if isinstance(bm, dict):
+
+        if rag.get("status") == "EXACT":
+            bm = rag.get("best_match") or {}
             merged["ingredients_ko"] = bm.get("ingredients_ko")
             merged["alg_tags"] = bm.get("alg_tags")
         else:
@@ -116,9 +119,7 @@ def run_step_04_rag_match(
         "config": {
             "top_k": int(top_k),
             "save_top_n": int(save_top_n),
-            "embed_confirmed": float(embed_confirmed),
             "embed_ambiguous": float(embed_ambiguous),
-            "jamo_confirmed": float(jamo_confirmed),
             "jamo_threshold": float(jamo_threshold),
             "score_threshold": float(score_threshold),
         },
@@ -141,9 +142,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--save_top_n", type=int, default=2)
 
     p.add_argument("--embed_ambiguous", type=float, default=0.90)
-    p.add_argument("--embed_confirmed", type=float, default=0.95)
     p.add_argument("--jamo_threshold", type=float, default=0.85)
-    p.add_argument("--jamo_confirmed", type=float, default=0.95)
     p.add_argument("--score_threshold", type=float, default=0.55)
 
     # Backward-compatible CLI (orchestrator may still pass these)
@@ -174,9 +173,7 @@ def main() -> None:
         top_k=args.top_k,
         save_top_n=args.save_top_n,
         embed_ambiguous=args.embed_ambiguous,
-        embed_confirmed=args.embed_confirmed,
         jamo_threshold=args.jamo_threshold,
-        jamo_confirmed=args.jamo_confirmed,
         score_threshold=args.score_threshold,
         include_debug=args.include_debug,
     )
