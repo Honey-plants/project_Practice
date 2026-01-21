@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import re
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -10,39 +10,38 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
+"""
+retrieval.py
+
+Design goals (current project policy):
+- RAG focuses on menu-name matching only.
+- CONFIRM (decide canonical menu) ONLY when EXACT match (including variants).
+- Otherwise return raw_menu (if provided) or None, and let downstream LLM handle refinement.
+- Chroma documents remain 'menu' only (A-plan). Variants are used as a lightweight post-filter
+  (max jamo similarity + exact-on-variant).
+"""
+
 # ==============================
-# CONFIG
+# CONFIG / ROUTING
 # ==============================
 COLLECTION_NAME = "menu_index"
 
-BASE_DIR = Path(__file__).resolve().parents[3]  # menu_assistant/
+BASE_DIR = Path(__file__).resolve().parents[3]  # .../menu_assistant/
 DEFAULT_CHROMA_DIR = BASE_DIR / "data" / "chroma"
 DEFAULT_EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
+# Runtime defaults (aligned to orchestrator/step_04 flags)
 DEFAULT_TOP_K = 5
 DEFAULT_SAVE_TOP_N = 2
+DEFAULT_SCORE_THRESHOLD = 0.55
 
-
-# Decision thresholds (menu-only embedding)
-#
-# We keep the existing CLI contract:
-#   - embed_ambiguous: lower bound for EMBED-based decision
-#   - jamo_threshold: lower bound for JAMO-based decision
-# and add confirmed tiers with separate defaults.
-DEFAULT_EMBED_CONFIRMED = 0.95      # >= 0.95 => CONFIRMED_EMBED
-DEFAULT_EMBED_AMBIGUOUS = 0.90      # >= 0.90 => AMBIGUOUS_EMBED
-
-DEFAULT_JAMO_CONFIRMED = 0.95       # >= 0.95 => CONFIRMED_JAMO
-DEFAULT_JAMO_AMBIGUOUS = 0.85       # >= 0.85 => AMBIGUOUS_JAMO
-
-# Backward-compatible alias (older CLI param name)
-DEFAULT_JAMO_THRESHOLD = DEFAULT_JAMO_AMBIGUOUS
-
-DEFAULT_SCORE_THRESHOLD = 0.55      # < threshold => NOT_FOUND_BELOW_THRESHOLD
-# Final score (for CLOSE vs NOT_FOUND)
+# Final score used for CLOSE vs NOT_FOUND gating (NOT for confirmation)
 DEFAULT_FINAL_W_EMBED = 0.65
 DEFAULT_FINAL_W_JAMO = 0.35
 DEFAULT_FINAL_CLOSE_THRESHOLD = 0.80
+
+# Hard cutoff requested previously: if best jamo < 0.5 => NOT_FOUND
+JAMO_HARD_CUTOFF = 0.5
 
 # Env overrides
 ENV_CHROMA_DIR = "MENU_ASSISTANT_CHROMA_DIR"
@@ -68,6 +67,7 @@ def _norm_space(s: str) -> str:
 
 
 def _split_csv(v: Any) -> List[str]:
+    """Best-effort CSV/list to list[str]."""
     if v is None:
         return []
     if isinstance(v, (list, tuple, set)):
@@ -82,6 +82,7 @@ def _split_csv(v: Any) -> List[str]:
 
 
 def _to_similarity(distance: Optional[float]) -> float:
+    """Chroma distance -> similarity in [0,1] for cosine distance (1 - distance)."""
     if distance is None:
         return 0.0
     try:
@@ -92,9 +93,9 @@ def _to_similarity(distance: Optional[float]) -> float:
 
 
 def _parse_metadata(md: Dict[str, Any]) -> Dict[str, Any]:
-    # The build script should store these metadata keys.
     return {
         "menu": _norm_space(str(md.get("menu", ""))),
+        "variants": _split_csv(md.get("variants", "")),
         "ingredients_ko": _split_csv(md.get("ingredients_ko", "")),
         "alg_tags": _split_csv(md.get("alg_tags", "")),
         "source": _norm_space(str(md.get("source", ""))),
@@ -102,7 +103,7 @@ def _parse_metadata(md: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # ==============================
-# JAMO SIMILARITY (typo robust)
+# JAMO SIMILARITY (typo-robust)
 # ==============================
 _SBASE = 0xAC00
 _LBASE = 0x1100
@@ -113,12 +114,10 @@ _VCOUNT = 21
 _TCOUNT = 28
 _NCOUNT = _VCOUNT * _TCOUNT
 _SCOUNT = _LCOUNT * _NCOUNT
-# retrieval.py 상단 (CONFIG 영역 근처)
-JAMO_HARD_CUTOFF = 0.5
 
 
 def _hangul_to_jamo(s: str) -> str:
-    out = []
+    out: List[str] = []
     for ch in s:
         code = ord(ch)
         if _SBASE <= code < (_SBASE + _SCOUNT):
@@ -166,6 +165,9 @@ def jamo_similarity(a: str, b: str) -> float:
     return float(max(0.0, 1.0 - (dist / denom)))
 
 
+# ==============================
+# DATA STRUCTURES
+# ==============================
 @dataclass
 class Candidate:
     id: str
@@ -174,11 +176,17 @@ class Candidate:
     ingredients_ko: List[str]
     alg_tags: List[str]
     source: str = ""
-    jamo_score: float = 0.0
-    final_score: float = 0.0
+    variants: List[str] = field(default_factory=list)
+
+    # Scoring outputs
+    jamo_score: float = 0.0           # max jamo over [menu]+variants
+    best_variant: Optional[str] = None
+    final_score: float = 0.0          # w_embed*embed + w_jamo*jamo
 
 
-
+# ==============================
+# CHROMA RETRIEVER
+# ==============================
 class ChromaMenuRetriever:
     def __init__(
         self,
@@ -189,12 +197,14 @@ class ChromaMenuRetriever:
         self.chroma_dir = _get_env_path(ENV_CHROMA_DIR) or Path(chroma_dir)
         self.collection_name = os.environ.get(ENV_COLLECTION) or collection_name
         self.embed_model = os.environ.get(ENV_EMBED_MODEL) or embed_model
+
         self._collection = None
         self._client = None
 
     def _init(self) -> None:
         if self._collection is not None:
             return
+
         if not self.chroma_dir.exists():
             raise RuntimeError(f"[RAG] chroma_dir does not exist: {self.chroma_dir}")
 
@@ -203,6 +213,7 @@ class ChromaMenuRetriever:
         if hasattr(chromadb, "PersistentClient"):
             self._client = chromadb.PersistentClient(path=str(self.chroma_dir))
         else:
+            # Legacy fallback
             self._client = chromadb.Client(
                 Settings(persist_directory=str(self.chroma_dir), anonymized_telemetry=False)
             )
@@ -212,7 +223,7 @@ class ChromaMenuRetriever:
             embedding_function=emb_fn,
         )
 
-        # Empty collection check
+        # Empty collection check (fail fast)
         try:
             cnt = self._collection.count()
         except Exception:
@@ -253,17 +264,30 @@ class ChromaMenuRetriever:
                 id=str(_id),
                 embed_score=float(_to_similarity(dist)),
                 menu=str(meta.get("menu", "")),
-                ingredients_ko=meta.get("ingredients_ko") or [],
-                alg_tags=meta.get("alg_tags") or [],
+                variants=list(meta.get("variants") or []),
+                ingredients_ko=list(meta.get("ingredients_ko") or []),
+                alg_tags=list(meta.get("alg_tags") or []),
                 source=str(meta.get("source", "")),
             )
-            cand.jamo_score = jamo_similarity(q, cand.menu)
-            # final_score는 match 단계에서 가중치/임계값을 바꿀 수 있으므로 기본 계산은 0으로 두고,
-            # 여기서는 "기본 가중치"로만 채워둔다(디버그/정렬용).
+
+            # Variant-aware jamo (A-plan)
+            variants = [cand.menu] + cand.variants
+            best_jamo = 0.0
+            best_v = cand.menu
+            for v in variants:
+                js = jamo_similarity(q, v)
+                if js > best_jamo:
+                    best_jamo = js
+                    best_v = v
+            cand.jamo_score = best_jamo
+            cand.best_variant = best_v
+
+            # Default final score (caller can recompute with different weights later)
             cand.final_score = (
-                    DEFAULT_FINAL_W_EMBED * float(cand.embed_score)
-                    + DEFAULT_FINAL_W_JAMO * float(cand.jamo_score)
+                DEFAULT_FINAL_W_EMBED * float(cand.embed_score)
+                + DEFAULT_FINAL_W_JAMO * float(cand.jamo_score)
             )
+
             out.append(cand)
 
         out.sort(key=lambda x: x.final_score, reverse=True)
@@ -280,33 +304,24 @@ def get_retriever() -> ChromaMenuRetriever:
     return _DEFAULT_RETRIEVER
 
 
+# ==============================
+# MATCH POLICY
+# ==============================
 def match_menu_norm(
     menu_norm: str,
     *,
-    raw_menu: Optional[str] = None,  # NEW: step_04에서 넘기면 EXACT가 아닐 때 raw 반환 가능
+    raw_menu: Optional[str] = None,
     top_k: int = DEFAULT_TOP_K,
     save_top_n: int = DEFAULT_SAVE_TOP_N,
-    embed_ambiguous: float = DEFAULT_EMBED_AMBIGUOUS,   # 하한(게이팅) 용도로만 사용
-    jamo_threshold: float = DEFAULT_JAMO_THRESHOLD,     # 하한(게이팅) 용도로만 사용
-    score_threshold: float = DEFAULT_SCORE_THRESHOLD,   # embed 최소 하한
-    final_w_embed: float = DEFAULT_FINAL_W_EMBED,       # NEW
-    final_w_jamo: float = DEFAULT_FINAL_W_JAMO,         # NEW
-    final_close_threshold: float = DEFAULT_FINAL_CLOSE_THRESHOLD,  # NEW
+    embed_ambiguous: float = 0.90,  # NOTE: kept for CLI compatibility (currently unused by policy)
+    jamo_threshold: float = 0.55,
+    score_threshold: float = DEFAULT_SCORE_THRESHOLD,
+    final_w_embed: float = DEFAULT_FINAL_W_EMBED,
+    final_w_jamo: float = DEFAULT_FINAL_W_JAMO,
+    final_close_threshold: float = DEFAULT_FINAL_CLOSE_THRESHOLD,
     include_debug: bool = False,
 ) -> Dict[str, Any]:
-    """Menu-name-only matching.
-
-    Policy:
-      - EXACT: only when normalized query == normalized canonical menu name
-      - CLOSE: candidates exist and pass gating + final_score >= close threshold
-      - NOT_FOUND: otherwise
-
-    Return:
-      - decided_menu:
-          * EXACT: canonical menu
-          * else: raw_menu (if provided), otherwise None  (backward compatible)
-    """
-
+    """Menu-name-only matching."""
     retriever = get_retriever()
     used_query, cands, dbg = retriever.query(menu_norm=menu_norm, top_k=int(top_k))
 
@@ -334,19 +349,16 @@ def match_menu_norm(
             "debug": dbg if include_debug else None,
         }
 
-    # Recompute final_score with passed weights (caller can tune without rebuilding)
+    # Recompute final_score with passed weights
     for c in cands:
         c.final_score = float(final_w_embed) * float(c.embed_score) + float(final_w_jamo) * float(c.jamo_score)
-
-    # sort by final_score desc (robust "close" scoring)
     cands.sort(key=lambda x: x.final_score, reverse=True)
 
-    # Best by embed (top1) and best by jamo (for hard cutoff and signals)
+    top1 = cands[0]                       # best final score
     top1_embed = max(cands, key=lambda x: x.embed_score)
     best_jamo = max(cands, key=lambda x: x.jamo_score)
-    top1 = cands[0]  # best final_score
 
-    # >>> HARD CUTOFF: jamo < 0.5 => NOT_FOUND (사용자 요구) <<<
+    # Hard cutoff: if even best jamo is too low, treat as NOT_FOUND
     if float(best_jamo.jamo_score) < JAMO_HARD_CUTOFF:
         return {
             "status": "NOT_FOUND_BELOW_THRESHOLD",
@@ -367,33 +379,32 @@ def match_menu_norm(
             "signals": {
                 "best_jamo_menu": best_jamo.menu,
                 "best_jamo_score": float(best_jamo.jamo_score),
-                "thresholds": {
-                    "jamo_hard_cutoff": float(JAMO_HARD_CUTOFF),
-                },
+                "thresholds": {"jamo_hard_cutoff": float(JAMO_HARD_CUTOFF)},
             },
             "debug": dbg if include_debug else None,
         }
 
-    # EXACT 판단: 정규화된 used_query == 정규화된 canonical menu
     qn = _norm_space(used_query)
-    tn = _norm_space(top1.menu)
+    top1_menu_norm = _norm_space(top1.menu)
+    variant_norms = {_norm_space(v) for v in ([top1.menu] + (top1.variants or []))}
 
-    if qn and tn and qn == tn:
+    # Initialize gating booleans so debug is always safe
+    embed_ok = True
+    jamo_ok = True
+    close_ok = True
+
+    if qn and qn in variant_norms:
         status = "EXACT"
         decided_menu = top1.menu
-        decision_method = "EXACT"
+        decision_method = "EXACT_VARIANT_MATCH" if qn != top1_menu_norm else "EXACT"
     else:
-        # Gating: embed/jamo 하한 + final close threshold
-        # - embed 하한은 top1_embed 기준으로 체크 (임베딩 품질 하한)
-        # - jamo_threshold는 best_jamo 기준으로 체크 (문자/오타 견고성 하한)
-        # - close는 top1(final) 기준으로 체크
         embed_ok = float(top1_embed.embed_score) >= float(score_threshold)
         jamo_ok = float(best_jamo.jamo_score) >= float(jamo_threshold)
         close_ok = float(top1.final_score) >= float(final_close_threshold)
 
         if embed_ok and jamo_ok and close_ok:
             status = "CLOSE"
-            decided_menu = raw_menu if raw_menu else None  # 확정 금지, raw 반환(옵션)
+            decided_menu = raw_menu if raw_menu else None
             decision_method = "CLOSE_BY_FINAL_SCORE"
         else:
             status = "NOT_FOUND_BELOW_THRESHOLD"
@@ -408,9 +419,8 @@ def match_menu_norm(
             "embed_score": float(c.embed_score),
             "jamo_score": float(c.jamo_score),
             "final_score": float(c.final_score),
-            "ingredients_ko": c.ingredients_ko,
-            "alg_tags": c.alg_tags,
             "source": c.source,
+            "best_variant": c.best_variant,
         }
         for c in cands[:save_n]
     ]
@@ -424,6 +434,7 @@ def match_menu_norm(
         "ingredients_ko": top1.ingredients_ko,
         "alg_tags": top1.alg_tags,
         "source": top1.source,
+        "best_variant": top1.best_variant,
     }
 
     signals = {
@@ -433,6 +444,8 @@ def match_menu_norm(
         "top1_embed": float(top1_embed.embed_score),
         "best_jamo_menu": best_jamo.menu,
         "best_jamo": float(best_jamo.jamo_score),
+        "best_variant": top1.best_variant,
+        "best_variant_jamo": float(top1.jamo_score),
         "thresholds": {
             "embed_min": float(score_threshold),
             "jamo_min": float(jamo_threshold),
@@ -440,6 +453,9 @@ def match_menu_norm(
             "final_w_embed": float(final_w_embed),
             "final_w_jamo": float(final_w_jamo),
             "jamo_hard_cutoff": float(JAMO_HARD_CUTOFF),
+        },
+        "compat": {
+            "embed_ambiguous": float(embed_ambiguous),  # accepted but not used
         },
     }
 
@@ -449,11 +465,11 @@ def match_menu_norm(
         debug_out.update(
             {
                 "policy": "EXACT_ONLY_CONFIRM",
-                "embed_ok": embed_ok if qn != tn else True,
-                "jamo_ok": jamo_ok if qn != tn else True,
-                "close_ok": close_ok if qn != tn else True,
                 "query_norm": qn,
-                "top1_norm": tn,
+                "top1_menu_norm": top1_menu_norm,
+                "embed_ok": bool(embed_ok),
+                "jamo_ok": bool(jamo_ok),
+                "close_ok": bool(close_ok),
             }
         )
 
