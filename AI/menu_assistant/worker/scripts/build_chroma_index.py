@@ -51,7 +51,7 @@ DEFAULT_DATASET_PATH = (
     / "data"
     / "datasets"
     / "raw"
-    / "menu_final_with_allergen_plus_770.json"
+    / "menu_seed_with_alg_tags_variants_v2.json"
 )
 DEFAULT_CHROMA_DIR = BASE_DIR / "data" / "chroma"
 
