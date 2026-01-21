@@ -189,7 +189,7 @@ class Step4Options:
     # RAG match options (match step_04_rag_match.py)
     top_k: int = 20
     embed_ambiguous: float = 0.90
-    jamo_threshold: float = 0.85
+    jamo_threshold: float = 0.55
     score_threshold: float = 0.55
     save_top_n: int = 2
 

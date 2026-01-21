@@ -77,31 +77,66 @@ def run_step_04_rag_match(
             continue
 
         menu_norm = str(it.get("menu_norm") or "").strip()
+        raw_menu = str(
+            it.get("raw_menu")
+            or it.get("menu_raw")
+            or it.get("text")
+            or it.get("menu")
+            or it.get("query")
+            or ""
+        ).strip()
 
         rag = match_menu_norm(
             menu_norm=menu_norm,
+            raw_menu=raw_menu,
             top_k=int(top_k),
             save_top_n=int(save_top_n),
-            embed_ambiguous=float(embed_ambiguous),
-            embed_confirmed=float(embed_confirmed),
+            embed_ambiguous=float(embed_ambiguous),  # reserved / compat
             jamo_threshold=float(jamo_threshold),
-            jamo_confirmed=float(jamo_confirmed),
             score_threshold=float(score_threshold),
             include_debug=include_debug,
         )
 
         merged = dict(it)
-        merged["rag_match"] = rag
 
-        # Convenience outputs for downstream
+        # Top-level convenience fields (stable contract for downstream LLM/service)
+        merged["raw_menu"] = raw_menu or merged.get("raw_menu")
+        merged["menu_norm"] = menu_norm or merged.get("menu_norm")
         merged["menu_final"] = rag.get("decided_menu")
+        merged["match_status"] = rag.get("status")
+        merged["match_decision_method"] = rag.get("decision_method")
+
+        # Match evidence (keep candidates/thresholds for LLM reasoning)
         bm = rag.get("best_match") or {}
-        if isinstance(bm, dict):
-            merged["ingredients_ko"] = bm.get("ingredients_ko")
-            merged["alg_tags"] = bm.get("alg_tags")
+        signals = rag.get("signals") or {}
+        merged["match"] = {
+            "used_query": rag.get("used_query"),
+            "best": {
+                "id": bm.get("id") if isinstance(bm, dict) else None,
+                "menu": bm.get("menu") if isinstance(bm, dict) else None,
+                "best_variant": bm.get("best_variant") if isinstance(bm, dict) else None,
+                "embed_score": bm.get("embed_score") if isinstance(bm, dict) else None,
+                "jamo_score": bm.get("jamo_score") if isinstance(bm, dict) else None,
+                "final_score": bm.get("final_score") if isinstance(bm, dict) else None,
+            },
+            "candidates": rag.get("candidates") or [],
+            "thresholds": (signals.get("thresholds") or {}) if isinstance(signals, dict) else {},
+            "debug": rag.get("debug") if include_debug else None,
+        }
+
+        # Confirmed payload: ONLY when EXACT
+        if rag.get("status") == "EXACT" and isinstance(bm, dict):
+            merged["confirmed"] = {
+                "menu_id": bm.get("id"),
+                "menu": bm.get("menu"),
+                "ingredients_ko": bm.get("ingredients_ko"),
+                "alg_tags": bm.get("alg_tags"),
+            }
         else:
-            merged["ingredients_ko"] = None
-            merged["alg_tags"] = None
+            merged["confirmed"] = None
+
+        # Backward-compat: keep raw rag output under rag_match if you still need it
+        merged["rag_match"] = rag
 
         out_items.append(merged)
 
@@ -116,10 +151,12 @@ def run_step_04_rag_match(
         "config": {
             "top_k": int(top_k),
             "save_top_n": int(save_top_n),
-            "embed_confirmed": float(embed_confirmed),
             "embed_ambiguous": float(embed_ambiguous),
-            "jamo_confirmed": float(jamo_confirmed),
             "jamo_threshold": float(jamo_threshold),
+            "reserved": {
+                "embed_confirmed": float(embed_confirmed),
+                "jamo_confirmed": float(jamo_confirmed),
+            },
             "score_threshold": float(score_threshold),
         },
         "stats": stats,

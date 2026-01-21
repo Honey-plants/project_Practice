@@ -1,5 +1,5 @@
 # 0) 통합 실행코드
-python menu_assistant/worker/worker_app/pipeline/orchestrator.py --image Upload_Images/image13.jpg
+python menu_assistant/worker/worker_app/pipeline/orchestrator.py --image Upload_Images/image10.jpg
 
 
 # 1) 보정만 수행 (photometric-only)
