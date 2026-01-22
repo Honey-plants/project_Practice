@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, Cookie, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
@@ -19,11 +19,15 @@ def login(response: Response, form: OAuth2PasswordRequestForm = Depends(), db: S
     print("login form :: ", form)
     access, refresh = service.login_issue_tokens(db, email=form.username, password=form.password)
 
+    print("acc :: ", access)
+
     print("refresh token : ", refresh)
 
     # refresh 생성 시 exp 구하기
     decode_refresh = jwt.decode_token(refresh)
     ttl = jwt.exp_seconds_left(decode_refresh)
+
+    print("cookie name :: ", COOKIE_NAME)
 
     # refresh는 HttpOnly 쿠키로 저장
     response.set_cookie(
@@ -32,30 +36,49 @@ def login(response: Response, form: OAuth2PasswordRequestForm = Depends(), db: S
         httponly=True,
         secure=False,      # 로컬 http면 False, 배포(https)면 True
         samesite="lax",    # 프론트/백 완전 다른 도메인이면 none+secure 필요
-        path="/auth",
+        # path="/auth",    # /auth 에서 전체 관리 위해서 / 변경
+        path="/",
         max_age=ttl,
     )
+
+    print("refresh set cookie :: ", response)
 
     return {"access_token": access, "token_type": "bearer"}
 
 # REFRESH TOKEN 재발급
 @router.post("/refresh", response_model=schemas.AccessTokenResponse)
-def refresh(payload: schemas.RefreshRequest, db: Session = Depends(get_db)):
-    # access = service.refresh_access_token(payload.refresh_token)
-    # return schemas.AccessTokenResponse(access_token=access)
+def refresh(response: Response, db: Session = Depends(get_db), refresh_token: str | None = Cookie(default=None, alias=COOKIE_NAME),
+):
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Missing refresh cookie")
 
-    # refresh token db 저장 로직 추가!
-    access, refresh = service.refresh_rotate_tokens(db, payload.refresh_token)
-    print("acc :: ", access, "  refresh :: ", refresh)
-    return schemas.TokenPairResponse(access_token=access, refresh_token=refresh)
+    new_access, new_refresh = service.refresh_rotate_tokens(db, refresh_token)
+
+    new_refresh_payload = jwt.decode_token(new_refresh)
+    ttl = jwt.exp_seconds_left(new_refresh_payload)
+
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=new_refresh,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        # path="/auth",    # /auth 에서 전체 관리 위해서 / 변경
+        path="/",
+        max_age=ttl,
+    )
+    return {"access_token": new_access, "token_type": "bearer"}
 
 # LOGOUT
 @router.post("/logout")
-def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def logout(response: Response, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     # service.logout(token)
 
-    # logout refresh token 삭제 로직 추가!
+    # logout refresh token revoked 로직 추가!
     service.logout(db, token)
+
+    # front cookie refresh token 삭제 처리
+    response.delete_cookie(key=COOKIE_NAME, path="/")
     return {"ok": True}
 
 # 현재 USER 정보

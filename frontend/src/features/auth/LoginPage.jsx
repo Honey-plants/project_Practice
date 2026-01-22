@@ -39,11 +39,15 @@ export default function LoginPage() {
       body.set("username", form.email);
       body.set("password", form.password);
 
+      console.log("body :: ", body)
+
       const res = await fetch(LOGIN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body,
       });
+
+      console.log("res :: ", res)
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -53,6 +57,8 @@ export default function LoginPage() {
       const tokenData = await res.json();
       const accessToken = tokenData?.access_token;
       if (!accessToken) throw new Error("No access token in login response.");
+
+      console.log("tokenData  :: ", tokenData)
 
       // 서버 연결: /auth/me 호출
       const meRes = await fetch(ME_URL, {
@@ -75,7 +81,8 @@ export default function LoginPage() {
         member_id: memberId,
         nickname: me?.nickname ?? "",
       };
-      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionObj));
+      //localStorage.setItem(SESSION_KEY, JSON.stringify(sessionObj));
+      sessionStorage.setItem("accessToken", accessToken);
       window.dispatchEvent(new Event("session-changed"));
 
       navigate("/");

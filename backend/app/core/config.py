@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+# 실제 프로젝트 위치 :: backend 하위에 위치 upload 폴더 생성
 ENV_PATH = Path(__file__).resolve().parents[3] / ".env"  # backend/.env
 load_dotenv(ENV_PATH)
 
@@ -31,3 +32,21 @@ REDIS_DB = int(os.getenv("REDIS_DB", "0"))
 
 print("ENV_PATH =", ENV_PATH)
 print("ENV exists =", ENV_PATH.exists())
+
+
+# -- FILE UPLOAD --
+# 현재 LOCAL 개발 사용
+# S3: STORAGE_DRIVER=s3 + 버킷/리전/프리픽스 세팅
+STORAGE_DRIVER = os.getenv("STORAGE_DRIVER", "local")  # local | s3
+
+# 프로젝트 root 설정 :: 추후 S3 변경시 변동 적음
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+# 실제 저장 위치
+LOCAL_UPLOAD_DIR = os.getenv("LOCAL_UPLOAD_DIR", str(PROJECT_ROOT / "upload"))
+
+# 추후 E2C S3 사용 예정
+S3_BUCKET = os.getenv("S3_BUCKET", "")
+S3_REGION = os.getenv("S3_REGION", "")
+S3_PREFIX = os.getenv("S3_PREFIX", "uploads")
+# upload :: upload/menu 폴더명 구조 잡기 좋음
