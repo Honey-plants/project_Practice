@@ -1,0 +1,12 @@
+# .dockerignore (repo root)
+.git
+**/.git
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/dist
+**/build
+k8s
+secrets

@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: project-app
+  namespace: argocd
+spec:
+  description: "api/frontend GitOps project"
+  sourceRepos:
+    - "*"   # 필요 시 특정 repo로 제한 권장
+  destinations:
+    - namespace: app-dev
+      server: https://kubernetes.default.svc
+    - namespace: app-prod
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

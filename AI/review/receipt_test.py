@@ -8,16 +8,26 @@ from paddleocr import PaddleOCR
 import json
 import numpy as np
 import cv2
+from google import genai
+from google.genai import types
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.getenv("GOOGLE_API")
 
 BASE_DIR = Path(__file__).resolve().parent              # model_testing
 UPLOAD_DIR = BASE_DIR / "tmp_receipt"
 OUTPUT_DIR = BASE_DIR / "tmp_output"
 
+client = genai.Client(api_key=API_KEY)
+
 ocr_model = PaddleOCR(
     lang="korean",
     use_textline_orientation=True,
     use_doc_unwarping=False,
-    text_det_limit_side_len=1280,
+    text_det_limit_side_len=1024,
     text_det_thresh=0.3,
     text_det_box_thresh=0.2,
     text_det_unclip_ratio=1.5,
@@ -25,6 +35,41 @@ ocr_model = PaddleOCR(
 
 )
 
+def translate_menu_ko_to_en(menu_ko: list[str]) -> list[str]:
+    """
+    Translate Korean menu names → English using Gemini 1.5 Flash (cheapest).
+    """
+    if not menu_ko:
+        return []
+
+    prompt = (
+        "Translate the following Korean menu items into natural English food names.\n"
+        "- Do NOT use romanization.\n"
+        "- If the dish is uniquely Korean, add a short explanation in parentheses.\n"
+        "- Keep the same order.\n"
+        "- Output one item per line.\n\n"
+        "Menu items:\n"
+        + "\n".join(f"- {m}" for m in menu_ko)
+    )
+
+    response = client.models.generate_content(
+        model="gemini-2.0-flash-lite",
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.2,
+            max_output_tokens=512,
+        ),
+    )
+
+    text = response.text.strip()
+
+    translations = [
+        line.strip("- ").strip()
+        for line in text.split("\n")
+        if line.strip()
+    ]
+
+    return translations
 
 def normalize_ocr_lines(result_item):
     """
@@ -76,7 +121,8 @@ def join_split_tokens(tokens, y_threshold=15):
     current_line.sort(key=lambda x: x['x_min'])
     lines.append(" ".join([t['text'] for t in current_line]))
 
-    print("lines", lines)
+    with open("lines_joined_10.json", "w", encoding="utf-8") as f:
+        json.dump(lines, f, ensure_ascii=False, indent=2)
     return lines
 
 
@@ -122,8 +168,8 @@ def extract_phone(lines):
 
 #전화번호로 사업자 정보 검색(가게명, 주소, 번호, 위치)
 def find_location(query):
-    client_id = ""
-    client_secret = ""
+    client_id = "45476rdzYavZqCFMWGI5"
+    client_secret = "PDPZB2w7RS"
     # 지역 검색 API 엔드포인트
     url = "https://openapi.naver.com/v1/search/local.json"
     params = {
@@ -155,6 +201,10 @@ def find_location(query):
 # 메뉴명 추출
 # ==============================================
 
+import re
+
+PRICE_RE = re.compile(r"\d{1,3}(,\d{3})+")
+
 def extract_menu_items(lines):
     menu_items = []
 
@@ -163,24 +213,59 @@ def extract_menu_items(lines):
 
     in_menu_section = False
 
-    for line in lines:
-        # 1. Start condition (단가/수량 등 찾기)
+    for i, line in enumerate(lines):
+        line = line.strip()
+
+        # 1️⃣ Start condition
         if not in_menu_section and any(k in line for k in START_KEYWORDS):
             in_menu_section = True
             continue
 
-        # 2. Stop condition
-        if in_menu_section and any(k in line for k in STOP_KEYWORDS):
-            break
-
         if not in_menu_section:
             continue
 
-        name_tokens = line.split(" ")[0]
+        # 2️⃣ Stop condition
+        if any(k in line for k in STOP_KEYWORDS):
+            break
 
-        menu_items.append(name_tokens)
-    print("menu", menu_items)
-    return menu_items
+        # ❌ 메타 제거
+        if line.startswith("[") and "]" in line:
+            continue
+
+        # 🚫 START 키워드 줄 제거 (← 핵심 추가)
+        if any(k in line for k in START_KEYWORDS):
+            continue
+
+        # 🔑 가격 줄
+        if PRICE_RE.search(line):
+            name = re.sub(PRICE_RE, "", line)
+            name = re.sub(r"\d+", "", name)
+            name = re.sub(r"[^가-힣 ]", "", name).strip()
+
+            if re.search(r"[가-힣]{2,}", name):
+                menu_items.append(name)
+                continue
+
+            if i > 0:
+                prev = lines[i - 1]
+                prev = re.sub(r"[^가-힣 ]", "", prev).strip()
+                if re.search(r"[가-힣]{2,}", prev):
+                    menu_items.append(prev)
+            continue
+
+        # 🔑 가격 없는 줄 (메뉴 후보)
+        name_tokens = re.sub(r"[^가-힣 ]", "", line).strip()
+        if re.search(r"[가-힣]{2,}", name_tokens):
+            menu_items.append(name_tokens)
+
+    # 중복 제거
+    result = []
+    for m in menu_items:
+        if m not in result:
+            result.append(m)
+
+    return result
+
 
 def is_menu_token(token_text, menu_lines):
     return any(token_text in line for line in menu_lines)
@@ -193,17 +278,20 @@ def build_receipt_json(ocr_lines):
 
     # 1. Normalize OCR tokens
     tokens = normalize_ocr_lines(ocr_lines)
-
+    # print(tokens)
     # 2. Merge tokens into readable lines
     lines = join_split_tokens(tokens)
-
+    print(lines)
     # 3. Extract phone number
     phone = extract_phone(lines)
     print("phone:", phone)
 
     # 4. Extract menu items
     menu_ko = extract_menu_items(lines)
-
+    print("menu", menu_ko)
+    menu_en = translate_menu_ko_to_en(menu_ko)
+    for ko, en in zip(menu_ko, menu_en):
+        print(f"{ko} → {en}")
     # 5. Find store info (optional, via phone)
     store_info = None
     if phone:
@@ -222,7 +310,8 @@ def build_receipt_json(ocr_lines):
                 "x": store_info.get("mapx"),
                 "y": store_info.get("mapy"),
             },
-            "menu_name": menu_ko,
+            "menu_ko": menu_ko,
+            "menu_en": menu_en
         }
     else:
         receipt_json = {
@@ -277,26 +366,26 @@ def draw_ocr_boxes(image: np.ndarray, ocr_result, save_path="ocr_bbox.png"):
 
 def preprocess_image(image_bytes: bytes) -> np.ndarray:
     img_array = np.frombuffer(image_bytes, np.uint8)
-    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+    bgr = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+    bgr = cv2.resize(bgr, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
 
-    img = cv2.resize(img, None, fx=1.5, fy=1.5, interpolation=cv2.INTER_CUBIC)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    cv2.imwrite("gray.png", gray)
-    blur = cv2.GaussianBlur(gray, (5,5), 0)
-    cv2.imwrite("color.png", blur)
+    gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
 
-    thresh = cv2.adaptiveThreshold(
-        blur, 255,
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv2.THRESH_BINARY,
-        31, 5
-    )
-    cv2.imwrite("preprocess_0.png",thresh)
+    # 가벼운 노이즈 제거
+    gray = cv2.fastNlMeansDenoising(gray, None, h=8)
 
-    # Convert back to 3 channels
-    thresh_bgr = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
-    cv2.imwrite("preprocess.png",thresh_bgr)
-    return thresh_bgr
+    # 대비만 살짝
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    gray = clahe.apply(gray)
+
+    # 글자 획만 살짝 강화
+    blur = cv2.GaussianBlur(gray, (0, 0), 1.0)
+    sharp = cv2.addWeighted(gray, 1.5, blur, -0.5, 0)
+
+    # ✅ 이걸 OCR로 보낸다
+    return cv2.cvtColor(sharp, cv2.COLOR_GRAY2BGR)
+
+
 
 def ocr_result_to_json_safe(ocr_item: dict) -> dict:
     tokens = []
@@ -320,25 +409,23 @@ def process_receipt_ocr(image_path: Path) -> dict:
     print("img")
     result = ocr_model.predict(img)
 
-
     if not result or not result[0]:
         return {"error": "No text detected"}
 
-
     ocr_raw = ocr_result_to_json_safe(result[0])
-    with open("ocr_raw.json", "w", encoding="utf-8") as f:
+    with open("ocr_raw_10.json", "w", encoding="utf-8") as f:
         json.dump(ocr_raw, f, ensure_ascii=False, indent=2)
     print("[OK] saved ocr_raw.json")
 
     draw_ocr_boxes(
         image=img,
         ocr_result=result[0],
-        save_path="ocr_bbox.png"
+        save_path="ocr_bbox_10.png"
     )
 
     receipt = build_receipt_json(result[0])
 
-    with open("receipt_result.json", "w", encoding="utf-8") as f:
+    with open("receipt_result_10.json", "w", encoding="utf-8") as f:
 
         json.dump(receipt, f, ensure_ascii=False, indent=2)
         print("receipt_to_store.json saved")
@@ -356,6 +443,8 @@ if __name__ == "__main__":
     # for image_file in image_files:
     #     with open(image_file, "rb") as f:
     #         image_bytes = f.read()
-    image_files = UPLOAD_DIR / "receipt_7.jpg"
+    image_files = UPLOAD_DIR / "receipt_10.jpg"
     process_receipt_ocr(image_files)
+
+    # extract_menu_items("lines_joined_11.json")
 

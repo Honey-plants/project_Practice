@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { mockUser } from "../../assets/mock/mockData";
+import { resizeAndCompressImage } from "../../common/utils/imageProcessor";
 
 export default function ReviewWritePage() {
   const [step, setStep] = useState("upload"); // upload -> confirm -> write -> done
@@ -16,19 +17,34 @@ export default function ReviewWritePage() {
       return;
     }
     setLoading(true);
+
     try {
+      // 이미지 리사이즈
+      const resizedBlob = await resizeAndCompressImage(imageFile, 1024);
+
+      const resizedFile = new File(
+        [resizedBlob],
+        imageFile.name,
+        { type: 'image/jpeg'}
+      );
+      console.log("original:", imageFile.size);
+      console.log("resized:", resizedFile.size);
+
       // 실제 서버 호출 예시
-      // const formData = new FormData();
-      // formData.append("image", imageFile);
-      // const res = await fetch("/upload/receipt", { method: "POST", body: formData });
-      // const data = await res.json();
+      const formData = new FormData();
+      formData.append("image", resizedFile);
+      const res = await fetch("/upload/receipt", { 
+        method: "POST", 
+        body: formData 
+      });
+      const data = await res.json();
 
       // 목업 데이터
-      const data = {
-        store_name: "Ebi Don Store",
-        address: "Seoul, Korea",
-        menu_name: ["Ebi Don", "Tempura"],
-      };
+      // const data = {
+      //   store_name: "Ebi Don Store",
+      //   address: "Seoul, Korea",
+      //   menu_name: ["Ebi Don", "Tempura"],
+      // };
 
       setReceipt(data);
       setStep("confirm");

@@ -8,6 +8,79 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
 
+# ============================================================
+# Path routing (Docker-friendly)
+# ============================================================
+
+def _project_root() -> Path:
+    """
+    Resolve repository/project root robustly.
+    This file is: <root>/AI/menu_assistant/worker/worker_app/pipeline/orchestrator.py
+    So parents[4] => <root>/AI, parents[5] => <root>
+    """
+    here = Path(__file__).resolve()
+    # .../AI/menu_assistant/worker/worker_app/pipeline/orchestrator.py
+    # parents: [pipeline, worker_app, worker, menu_assistant, AI, <root>]
+    return here.parents[5]
+
+
+def _default_image_base() -> Path:
+    """
+    Default image base (no hard-coded Windows paths).
+    Priority:
+      1) ENV: MENU_ASSISTANT_IMAGE_BASE
+      2) <project_root>/AI/Upload_Images
+    """
+    env = os.environ.get("MENU_ASSISTANT_IMAGE_BASE")
+    if env:
+        return Path(env).expanduser().resolve()
+    return (_project_root() / "AI" / "Upload_Images").resolve()
+
+
+def _default_runs_root() -> Path:
+    """
+    Default runs root (no hard-coded Windows paths).
+    Priority:
+      1) ENV: MENU_ASSISTANT_RUNS_ROOT
+      2) <project_root>/AI/menu_assistant/data/runs
+    """
+    env = os.environ.get("MENU_ASSISTANT_RUNS_ROOT")
+    if env:
+        return Path(env).expanduser().resolve()
+    return (_project_root() / "AI" / "menu_assistant" / "data" / "runs").resolve()
+
+
+def _resolve_image_arg(image_arg: str, image_base: Path) -> Path:
+    """
+    Resolve --image argument into an absolute path.
+
+    Supported inputs:
+      - absolute path: returned as-is
+      - "Upload_Images/xxx.jpg": mapped under image_base/xxx.jpg
+      - "xxx.jpg": mapped under image_base/xxx.jpg
+      - other relative paths: resolved against current working directory
+        (but we still try image_base first to keep UX consistent)
+    """
+    p = Path(image_arg)
+
+    # Absolute path
+    if p.is_absolute():
+        return p
+
+    parts = p.parts
+    if parts and parts[0].lower() == "upload_images":
+        # Upload_Images/xxx.jpg -> <image_base>/xxx.jpg
+        tail = Path(*parts[1:]) if len(parts) > 1 else Path()
+        return (image_base / tail).resolve()
+
+    # Try <image_base>/<relative>
+    candidate = (image_base / p).resolve()
+    if candidate.exists():
+        return candidate
+
+    # Fallback: resolve relative to CWD
+    return p.resolve()
+
 
 # ============================================================
 # Utilities
@@ -18,12 +91,13 @@ def make_run_id() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-def run_cmd(cmd: List[str], env: Optional[dict] = None) -> None:
+def run_cmd(cmd: List[str], env: Optional[dict] = None, cwd: Optional[Path] = None) -> None:
     """Run a command and raise on failure."""
     print("\n[RUN]", " ".join(cmd))
-    p = subprocess.run(cmd, shell=False, env=env)
+    p = subprocess.run(cmd, shell=False, env=env, cwd=str(cwd) if cwd else None)
     if p.returncode != 0:
         raise RuntimeError(f"Command failed (exit={p.returncode}): {' '.join(cmd)}")
+
 
 
 def ensure_exists(path: Path, msg: str) -> None:
@@ -50,7 +124,7 @@ def _resolve_chroma_dir(data_dir: Path, chroma_dir_arg: Optional[str]) -> Path:
 
     # Optional Windows fallback for this project layout
     if os.name == "nt":
-        win_fallback = Path(r"C:\\Users\\201\\Desktop\\PGHfolder\\Final_project\\AI\\menu_assistant\\data\\chroma")
+        win_fallback = Path(r"C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\data\\chroma")
         if win_fallback.exists():
             return win_fallback
 
@@ -67,9 +141,9 @@ class Step1Options:
     backend: str = "auto"  # {none,doctr,dewarpnet,docunet,auto}
     device: str = "cpu"
     model_dir: Optional[str] = None
-    gamma: float = 1.0
+    gamma: float = 1.15
     clahe_clip: float = 2.0
-    shadow_strength: float = 0.0
+    shadow_strength: float = 0.85
 
 
 @dataclass
@@ -83,6 +157,9 @@ class Step2Options:
     det_model_dir: Optional[str] = None
     rec_model_dir: Optional[str] = None
     cls_model_dir: Optional[str] = None
+    det_box_thresh: Optional[float] = None
+    det_thresh: Optional[float] = None
+    det_unclip_ratio: Optional[float] = None
 
     use_preprocess: bool = False
     preprocess_mode: Optional[str] = None
@@ -99,15 +176,27 @@ class Step3Options:
     merge_gap_px: int = 25
     min_score: float = 0.0
 
+    # NEW: stabilized merge controls (pass2 is OFF by default)
+    aggressive_merge: bool = False
+    merge_gap_ratio: float = 0.75
+    pass2_gap_px: int = 14
+    pass2_gap_ratio: float = 0.45
+
+
 
 @dataclass
 class Step4Options:
-    # RAG match options
+    # RAG match options (match step_04_rag_match.py)
     top_k: int = 20
-    rerank_top_k: int = 5
+    embed_ambiguous: float = 0.90
+    jamo_threshold: float = 0.55
     score_threshold: float = 0.55
-    ambiguous_gap: float = 0.03
+    save_top_n: int = 2
+
+    # kept for compatibility only (step_04 accepts but does not use)
+    rerank_top_k: int = 5
     use_rerank: bool = True
+
     include_debug: bool = False
 
     # Retrieval routing (stability)
@@ -115,13 +204,13 @@ class Step4Options:
     collection: str = "menu_index"
 
 
-class PipelineOrchestrator:
-    """image -> step_01_rectify -> step_02_ocr -> step_03_normalize -> step_04_rag_match"""
 
+class PipelineOrchestrator:
     def __init__(self, runs_root: Path):
         self.runs_root = runs_root
-        # runs_root = .../data/runs  -> data_dir = .../data
         self.data_dir = runs_root.parent
+        self.ai_root = runs_root.parents[2]  # .../AI
+
 
     def run(
         self,
@@ -180,7 +269,8 @@ class PipelineOrchestrator:
         if step1.model_dir:
             cmd1 += ["--model_dir", step1.model_dir]
 
-        run_cmd(cmd1)
+        run_cmd(cmd1, cwd=self.ai_root)
+
         ensure_exists(rectify_img, "Step01 expected output missing (rectified image)")
 
         # ----------------------------------------------------
@@ -225,8 +315,21 @@ class PipelineOrchestrator:
             cmd2 += ["--out", step2.out]
         if step2.vis:
             cmd2 += ["--vis", step2.vis]
+        # orchestrator.py (cmd2 구성 부분)
+        if step2.det_box_thresh is not None:
+            cmd2 += ["--det_box_thresh", str(step2.det_box_thresh)]
+        if step2.det_thresh is not None:
+            cmd2 += ["--det_thresh", str(step2.det_thresh)]
+        if step2.det_unclip_ratio is not None:
+            cmd2 += ["--det_unclip_ratio", str(step2.det_unclip_ratio)]
 
-        run_cmd(cmd2)
+        step2_env = os.environ.copy()
+        step2_env["FLAGS_use_mkldnn"] = "0"  # oneDNN(MKLDNN) off
+        step2_env["FLAGS_use_onednn"] = "0"  # 일부 버전에서 사용
+        step2_env["FLAGS_enable_pir_api"] = "0"  # PIR 경로 차단(버전별로 효과)
+        step2_env["FLAGS_enable_pir_in_executor"] = "0"
+
+        run_cmd(cmd2, env=step2_env, cwd=self.ai_root)
 
         ocr_json_check = Path(step2.out) if step2.out else ocr_json
         ensure_exists(ocr_json_check, "Step02 expected output missing (ocr json)")
@@ -250,7 +353,22 @@ class PipelineOrchestrator:
             str(step3.merge_gap_px),
             "--min-score",
             str(step3.min_score),
+
+            # NEW: pass1 stabilization (always on)
+            "--merge-gap-ratio",
+            str(step3.merge_gap_ratio),
         ]
+
+        # NEW: pass2 only when requested
+        if step3.aggressive_merge:
+            cmd3 += [
+                "--enable-merge-pass2",
+                "--pass2-gap-px",
+                str(step3.pass2_gap_px),
+                "--pass2-gap-ratio",
+                str(step3.pass2_gap_ratio),
+            ]
+
         run_cmd(cmd3)
         ensure_exists(normalize_json, "Step03 expected output missing (normalize json)")
 
@@ -292,15 +410,23 @@ class PipelineOrchestrator:
                 run_id,
                 "--data_dir",
                 str(self.data_dir),
+
                 "--top_k",
                 str(step4.top_k),
-                "--rerank_top_k",
-                str(step4.rerank_top_k),
+                "--embed_ambiguous",
+                str(step4.embed_ambiguous),
+                "--jamo_threshold",
+                str(step4.jamo_threshold),
                 "--score_threshold",
                 str(step4.score_threshold),
-                "--ambiguous_gap",
-                str(step4.ambiguous_gap),
+                "--save_top_n",
+                str(step4.save_top_n),
+
+                # (호환용: step_04는 받기만 함)
+                "--rerank_top_k",
+                str(step4.rerank_top_k),
             ]
+
             if step4.use_rerank:
                 cmd4 += ["--use_rerank"]
             else:
@@ -332,7 +458,7 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Pipeline Orchestrator: step_01 -> step_02 -> step_03 -> step_04")
 
     p.add_argument("--image", required=True, help="Input image path")
-    p.add_argument("--runs-root", default="menu_assistant/data/runs", help="Runs root directory")
+    p.add_argument("--runs-root", default=str(_default_runs_root()), help="Runs root directory")
     p.add_argument("--run-id", default=None, help="Optional run id. If omitted, auto-generated.")
 
     # ---------------- Step1 passthrough ----------------
@@ -353,6 +479,10 @@ if __name__ == "__main__":
     p.add_argument("--rec-model-dir", default=None)
     p.add_argument("--cls-model-dir", default=None)
 
+    p.add_argument("--det-box-thresh", type=float, default=0.35)
+    p.add_argument("--det-thresh", type=float, default=0.30)
+    p.add_argument("--det-unclip-ratio", type=float, default=2.0)
+
     p.add_argument("--use-preprocess", action="store_true")
     p.add_argument("--preprocess-mode", default=None)
 
@@ -365,14 +495,20 @@ if __name__ == "__main__":
     p.add_argument("--line-y-tol", type=int, default=20)
     p.add_argument("--merge-gap-px", type=int, default=25)
     p.add_argument("--min-score", type=float, default=0.0)
+    p.add_argument("--aggressive-merge", action="store_true", help="Enable Step3 merge pass2 (more aggressive).")
 
     # ---------------- Step4 passthrough ----------------
     p.add_argument("--run-step4", action="store_true", help="Run step4 (default: on)")
     p.add_argument("--no-step4", action="store_true", help="Skip step4")
-    p.add_argument("--top-k", type=int, default=20)
-    p.add_argument("--rerank-top-k", type=int, default=5)
+
+    p.add_argument("--top-k", type=int, default=5)
+    p.add_argument("--embed-ambiguous", type=float, default=0.90)
+    p.add_argument("--jamo-threshold", type=float, default=0.55)
     p.add_argument("--score-threshold", type=float, default=0.55)
-    p.add_argument("--ambiguous-gap", type=float, default=0.03)
+    p.add_argument("--save-top-n", type=int, default=2)
+
+    # (호환용) Step4는 받기만 함
+    p.add_argument("--rerank-top-k", type=int, default=5)
     p.add_argument("--use-rerank", action="store_true")
     p.add_argument("--no-rerank", action="store_true")
     p.add_argument("--rag-debug", action="store_true")
@@ -391,6 +527,15 @@ if __name__ == "__main__":
     p.add_argument("--no-structured", action="store_true", help="Do not print structured fields in checker")
 
     args = p.parse_args()
+
+    # ------------------------------------------------------------
+    # Resolve image path (Docker-friendly)
+    # ------------------------------------------------------------
+    image_base = _default_image_base()
+    resolved_image = _resolve_image_arg(args.image, image_base)
+    args.image = str(resolved_image)
+
+    args.runs_root = str(Path(args.runs_root).expanduser().resolve())
 
     orch = PipelineOrchestrator(Path(args.runs_root))
 
@@ -417,6 +562,10 @@ if __name__ == "__main__":
         dump_raw=args.dump_raw,
         out=args.ocr_out,
         vis=args.ocr_vis,
+        det_box_thresh=args.det_box_thresh,
+        det_thresh=args.det_thresh,
+        det_unclip_ratio=args.det_unclip_ratio,
+
     )
 
     step3 = Step3Options(
@@ -424,6 +573,12 @@ if __name__ == "__main__":
         line_y_tol=args.line_y_tol,
         merge_gap_px=args.merge_gap_px,
         min_score=args.min_score,
+
+        # NEW
+        aggressive_merge=args.aggressive_merge,
+        merge_gap_ratio=0.75,
+        pass2_gap_px=14,
+        pass2_gap_ratio=0.45,
     )
 
     use_rerank = True
@@ -434,10 +589,14 @@ if __name__ == "__main__":
 
     step4 = Step4Options(
         top_k=args.top_k,
-        rerank_top_k=args.rerank_top_k,
+        embed_ambiguous=args.embed_ambiguous,
+        jamo_threshold=args.jamo_threshold,
         score_threshold=args.score_threshold,
-        ambiguous_gap=args.ambiguous_gap,
+        save_top_n=args.save_top_n,
+
+        rerank_top_k=args.rerank_top_k,
         use_rerank=use_rerank,
+
         include_debug=args.rag_debug,
         chroma_dir=args.chroma_dir,
         collection=args.collection,

@@ -21,7 +21,8 @@ def build_prompt(user_profile, reviews):
     reviews_str = json.dumps(reviews, ensure_ascii=False, indent=2)
 
     # 3. Construct the Final Prompt
-    full_prompt = f"""You are a professional travel food journal writer creating a visual food diary page
+    full_prompt = f"""
+You are a professional travel food journal writer creating a visual food diary page
 for foreign visitors traveling in South Korea.
 
 TARGET USER:

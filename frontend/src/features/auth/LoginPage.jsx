@@ -2,17 +2,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../../common/components/ui/Header.jsx";
-import './LoginPage.css';
+import "./LoginPage.css";
 
-// 테스트/통합 기준 세션 키
-const SESSION_KEY = "final_project_session";
-
-// 실제 서버 호출 URL
-const LOGIN_URL = "/auth/login";
-const ME_URL = "/auth/me";
-
-// 목업 데이터 예시 (서버 연결 전 테스트용)
-// const mockUser = { access_token: "mock_access", member_id: "user_001", nickname: "TestUser" };
+import { login as loginApi } from "../../common/utils/authApi";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -28,7 +20,6 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
       if (!form.email || !form.password) {
         throw new Error("Please enter email and password.");
@@ -85,6 +76,8 @@ export default function LoginPage() {
       sessionStorage.setItem("accessToken", accessToken);
       window.dispatchEvent(new Event("session-changed"));
 
+      if (!form.email || !form.password) throw new Error("Please enter email and password.");
+      await loginApi({ email: form.email, password: form.password });
       navigate("/");
 
     } catch (err) {

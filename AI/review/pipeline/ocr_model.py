@@ -4,13 +4,13 @@ print("🔥 Loading OCR model once...")
 
 ocr_model = PaddleOCR(
     lang="korean",
-    use_angle_cls=True,
-    use_doc_unwarping=True,
-    det_limit_side_len=1280,
-    det_db_thresh=0.1,
-    det_db_box_thresh=0.2,
-    det_db_unclip_ratio=2.0
+    use_textline_orientation=True,
+    use_doc_unwarping=False,
+    text_det_limit_side_len=1280,
+    text_det_thresh=0.3,
+    text_det_box_thresh=0.2,
+    text_det_unclip_ratio=1.5,
+    enable_mkldnn=False,  # 핵심
 )
 
-print("ocr model")
 

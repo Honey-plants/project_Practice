@@ -1,258 +1,232 @@
-// src/features/profile/ProfilePage.jsx
-import { useEffect, useState } from "react";
+import Modal from "../../common/components/ui/Modal";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../common/components/ui/Header";
-import { mockUser } from "../../assets/mock/mockData";
+import "./ProfilePage.css"
 
-const SESSION_KEY = "final_project_session";
-
-// 세션 읽기 + 동기화용 유틸
-function getSession() {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
+import { getSession, setSession as persistSession, subscribeSession } from "../../common/utils/session";
+import { getMember, updateMember } from "../../common/utils/memberApi";
 
 export default function ProfilePage() {
   const { memberId } = useParams();
   const navigate = useNavigate();
 
-  const [session, setSession] = useState(() => getSession());
+  const [session, setSessionState] = useState(() => getSession());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 프로필 데이터
   const [profile, setProfile] = useState(null);
   const [nickname, setNickname] = useState("");
-  const [gender, setGender] = useState("");
-  const [country, setCountry] = useState("");
 
-  // 세션 변경 감지: 다른 탭(storage) + 같은 탭(session-changed)
+  useEffect(() => subscribeSession(setSessionState), []);
+
+  const myId = session?.member_id;
+  const token = session?.access_token;
+
   useEffect(() => {
-    const sync = () => setSession(getSession());
-    window.addEventListener("storage", sync);
-    window.addEventListener("session-changed", sync);
-
-    return () => {
-      window.removeEventListener("storage", sync);
-      window.removeEventListener("session-changed", sync);
-    };
-  }, []);
-
-  // 프로필 조회
-  useEffect(() => {
-    const token = session?.access_token;
-    const myId = session?.member_id;
-
     if (!token || !myId) {
-      navigate("/login");
+      navigate("/login", { replace: true });
       return;
     }
+    if (!memberId) navigate(`/profile/${myId}`, { replace: true });
+  }, [memberId, myId, token, navigate]);
 
-    // 내 것만 보게 강제
+  useEffect(() => {
+    if (!token || !myId || !memberId) return;
     if (String(myId) !== String(memberId)) {
-      navigate(`/profile/${myId}`);
-      return;
+      navigate(`/profile/${myId}`, { replace: true });
     }
+  }, [memberId, myId, token, navigate]);
 
+  const effectiveId = useMemo(() => memberId || myId, [memberId, myId]);
+
+  useEffect(() => {
     let ignore = false;
-
-    (async () => {
+    const run = async () => {
+      if (!token || !effectiveId) return;
       setLoading(true);
       setError("");
-
       try {
-        // ===============================
-        // 서버 연결용 (실제 환경)
-        // const res = await fetch(`/members/${memberId}`, {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
-        // if (!res.ok) throw new Error(`프로필 조회 실패 (${res.status})`);
-        // const data = await res.json();
-
-        // ===============================
-        // 목업 테스트용
-        const data = mockUser;
-
-        if (!ignore) {
-          setProfile(data);
-          setNickname(data?.nickname ?? "");
-          setGender(data?.gender ?? "");
-          setCountry(data?.country ?? "");
-        }
+        const data = await getMember(effectiveId);
+        if (ignore) return;
+        setProfile(data);
+        setNickname(data?.nickname ?? "");
       } catch (e) {
-        if (!ignore) setError(e?.message || "프로필 조회 실패");
+        if (ignore) return;
+        setError(e?.message || "프로필 조회 실패");
+        if (e?.status === 401) navigate("/login", { replace: true });
       } finally {
         if (!ignore) setLoading(false);
       }
-    })();
-
-    return () => {
-      ignore = true;
     };
-  }, [memberId, navigate, session?.access_token, session?.member_id]);
+    run();
+    return () => { ignore = true; };
+  }, [effectiveId, token, navigate]);
 
-  // 저장(PATCH)
-  const onSave = async () => {
-    setError("");
+const [editOpen, setEditOpen] = useState(false);
+const [editNick, setEditNick] = useState("");
+const [editItemIds, setEditItemIds] = useState([]);
+const [editDislikeTags, setEditDislikeTags] = useState([]);
 
-    try {
-      const token = session?.access_token;
-      if (!token) {
-        navigate("/login");
-        return;
-      }
+const openEdit = () => {
+  // profile 로딩 후 값으로 프리필
+  setEditNick(profile?.nickname ?? "");
+  setEditItemIds(profile?.item_ids ?? []);
+  setEditDislikeTags(profile?.dislike_tags ?? []);
+  setEditOpen(true);
+};
 
-      const payload = {
-        nickname,
-        gender,
-        country,
-        // item_ids / dislike_tags 필요 시 여기에 추가
-        // item_ids: [],
-        // dislike_tags: [],
-      };
+const closeEdit = () => setEditOpen(false);
 
-      // ===============================
-      // 서버 연결용
-      // const res = await fetch(`/members/${memberId}`, {
-      //   method: "PATCH",
-      //   headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      //   body: JSON.stringify(payload),
-      // });
-      // if (!res.ok) throw new Error(`프로필 수정 실패 (${res.status})`);
-      // const updated = await res.json();
+const toggleItem = (id) => {
+  setEditItemIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+};
 
-      // ===============================
-      // 목업용
-      const updated = { ...profile, ...payload };
 
-      setProfile(updated);
-      alert("저장 완료");
-    } catch (e) {
-      setError(e?.message || "저장 실패");
-    }
-  };
+const onSaveEdit = async () => {
+  setError("");
+  try {
+    if (!token || !effectiveId) return navigate("/login");
+
+    const updated = await updateMember(effectiveId, {
+      nickname: editNick,
+      item_ids: editItemIds,
+      dislike_tags: editDislikeTags,
+    });
+
+    setProfile(updated);
+    setNickname(updated?.nickname ?? editNick);
+
+    // Header 즉시 반영
+    const current = getSession(); // ✅ localStorage에 있는 진짜 세션을 다시 읽음
+      persistSession({
+        ...current, // ✅ access_token, member_id 보존
+        nickname: updated?.nickname ?? editNick,
+    });
+
+    setEditOpen(false);
+    alert("저장 완료");
+  } catch (e) {
+    setError(e?.message || "저장 실패");
+    if (e?.status === 401) navigate("/login");
+  }
+};
 
   // 좌측 메뉴 이동
   const goReviewList = () => navigate("/review");
   const goCommunity = () => navigate("/community");
-  const goEdit = () => navigate(`/profile/${memberId}/edit`);
+  const goEdit = () => openEdit();
 
-  return (
-    <div>
-      <Header showNav={true} showAuthArea={true} />
+  
 
-      <div className="profileWrap">
-        <div className="profileLayout">
-          {/* LEFT SIDEBAR */}
-          <aside className="profileSidebar">
-            <div className="sideTop">
-              <div className="bannerBox">배너</div>
-              <div className="profileTitle">Profile</div>
-            </div>
+return (
+  <div className="pfp-root">
+    <Header showNav={true} showAuthArea={true} />
 
-            <div className="sideCard infoCard">
-              {loading ? (
-                <div className="muted">불러오는 중...</div>
-              ) : (
-                <>
-                  <div className="infoText">{profile?.nickname ?? "-"}</div>
-                  <div className="infoText">{profile?.email ?? "-"}</div>
-                </>
-              )}
-            </div>
+    <div className="pfp-shell">
+      <div className="pfp-grid">
+        {/* LEFT SIDEBAR */}
+        <aside className="pfp-aside">
+          <div className="pfp-asideTop">
+            <div className="pfp-title">Profile</div>
+          </div>
 
-            <div className="sideCard menuCard">
-              <button className="menuBtn" type="button" onClick={goReviewList}>
-                리뷰 리스트
+          <div className="pfp-card">
+            {loading ? (
+              <div className="pfp-muted">불러오는 중...</div>
+            ) : (
+              <>
+                <div className="pfp-infoRow">{profile?.nickname ?? "-"}</div>
+                <div className="pfp-infoRow">{profile?.email ?? "-"}</div>
+              </>
+            )}
+          </div>
+
+          <div className="pfp-card pfp-menu">
+            <button className="pfp-menuBtn" type="button" onClick={goReviewList}>
+              리뷰 리스트
+            </button>
+            <button className="pfp-menuBtn" type="button" onClick={goCommunity}>
+              커뮤니티
+            </button>
+            <button className="pfp-menuBtn" type="button" onClick={goEdit}>
+              회원정보 수정
+            </button>
+          </div>
+        </aside>
+
+        {/* RIGHT MAIN */}
+        <section className="pfp-main">
+          {error && <div className="pfp-error">{error}</div>}
+
+          <div className="pfp-map">
+            내가 다닌 장소를 표시하는 지도
+            <br />
+            보이는 위치
+          </div>
+
+          <div className="pfp-row">
+            <div className="pfp-panel">
+              <button className="pfp-more" type="button" onClick={goReviewList}>
+                더보기
               </button>
-              <button className="menuBtn" type="button" onClick={goCommunity}>
-                커뮤니티
-              </button>
-              <button className="menuBtn" type="button" onClick={goEdit}>
-                회원정보 수정
-              </button>
-            </div>
-          </aside>
-
-          {/* RIGHT MAIN */}
-          <section className="profileMain">
-            {error && <div className="errorBox">{error}</div>}
-
-            {/* MAP AREA */}
-            <div className="mapBox">
-              <div className="mapText">
-                내가 다닌 장소를 표시하는 지도
+              <div className="pfp-panelText">
+                내가 작성한
                 <br />
-                보이는 위치
+                리뷰 리스트
               </div>
             </div>
 
-            {/* CARDS */}
-            <div className="cardRow">
-              <div className="mainCard">
-                <button className="moreBtn" type="button" onClick={goReviewList}>
-                  더보기
-                </button>
-                <div className="cardBodyText">
-                  내가 작성한
-                  <br />
-                  리뷰 리스트
-                </div>
-              </div>
-
-              <div className="mainCard">
-                <button className="moreBtn" type="button" onClick={goCommunity}>
-                  더보기
-                </button>
-                <div className="cardBodyText">
-                  나의 리뷰
-                  <br />
-                  기반으로 만든
-                  <br />
-                  커뮤니티 글
-                </div>
+            <div className="pfp-panel">
+              <button className="pfp-more" type="button" onClick={goCommunity}>
+                더보기
+              </button>
+              <div className="pfp-panelText">
+                나의 리뷰
+                <br />
+                기반으로 만든
+                <br />
+                커뮤니티 글
               </div>
             </div>
-
-            {/* 회원정보 수정 폼 */}
-            <details className="editDetails">
-              <summary className="editSummary">회원정보 수정 열기</summary>
-
-              <div className="editPanel">
-                <div className="editGrid">
-                  <label className="field">
-                    <div className="label">Email (readonly)</div>
-                    <input value={profile?.email || ""} readOnly />
-                  </label>
-
-                  <label className="field">
-                    <div className="label">Nickname</div>
-                    <input value={nickname} onChange={(e) => setNickname(e.target.value)} />
-                  </label>
-
-                  <label className="field">
-                    <div className="label">Gender</div>
-                    <input value={gender} onChange={(e) => setGender(e.target.value)} />
-                  </label>
-
-                  <label className="field">
-                    <div className="label">Country</div>
-                    <input value={country} onChange={(e) => setCountry(e.target.value)} />
-                  </label>
-
-                  <button className="saveBtn" type="button" onClick={onSave}>
-                    저장
-                  </button>
-                </div>
-              </div>
-            </details>
-          </section>
-        </div>
+          </div>
+        </section>
       </div>
     </div>
-  );
+    {editOpen && (
+      <Modal title="회원정보 수정" onClose={closeEdit}>
+        <div className="pfp-edit">
+          <div className="pfp-formRow">
+            <label>닉네임</label>
+            <input value={editNick} onChange={(e) => setEditNick(e.target.value)} />
+          </div>
+
+          {/* {RESTRICTION_CATEGORIES?.map((cat) => (
+            <div key={cat.id} className="pfp-formBlock">
+              <div className="pfp-formTitle">{cat.label}</div>
+              <div className="pfp-chipGrid">
+                {cat.options.map((opt) => (
+                  <button
+                    key={opt.itemId}
+                    type="button"
+                    className={`pfp-chip ${editItemIds.includes(opt.itemId) ? "on" : ""}`}
+                    onClick={() => toggleItem(opt.itemId)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))} */}
+
+          <div className="pfp-actions">
+            <button type="button" onClick={onSaveEdit}>저장</button>
+            <button type="button" onClick={closeEdit}>취소</button>
+          </div>
+        </div>
+      </Modal>
+    )}
+  </div>
+);
+
 }
