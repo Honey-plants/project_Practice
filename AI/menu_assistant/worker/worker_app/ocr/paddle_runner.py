@@ -154,17 +154,17 @@ def run_paddleocr(
     PaddleOCR = import_paddleocr()
     ocr = build_paddleocr(
         PaddleOCR,
-        lang=lang,
-        det_limit_side_len=det_limit_side_len,
-        det_limit_type=det_limit_type,
-        use_doc_unwarping=use_doc_unwarping,
-        use_textline_orientation=use_textline_orientation,
-        det_model_dir=det_model_dir,
-        rec_model_dir=rec_model_dir,
-        cls_model_dir=cls_model_dir,
-        det_box_thresh=det_box_thresh,
-        det_thresh=det_thresh,
-        det_unclip_ratio=det_unclip_ratio,
+        lang=lang, #언어(korean)
+        det_limit_side_len=det_limit_side_len,#DET 전에 이미지의 긴변을 이 값으로 리사이즈
+        det_limit_type=det_limit_type,#det_limit_side_len을 어떤 기준으로 적용할지 결정
+        use_doc_unwarping=use_doc_unwarping,#PaddleOCR 내부의 문서 펼침(unwarping) 기능 사용 여부
+        use_textline_orientation=use_textline_orientation,#텍스트 라인이 뒤집혀 있는지 판단할지 여부
+        det_model_dir=det_model_dir,#텍스트 검출(DET) 모델 디렉터리
+        rec_model_dir=rec_model_dir,#실제 문자열 인식 모델 경로
+        cls_model_dir=cls_model_dir,#텍스트 방향(0° / 180°) 분류 모델 경로
+        det_box_thresh=det_box_thresh,#텍스트 박스로 채택할 최소 confidence
+        det_thresh=det_thresh,#픽셀 단위에서 “글자일 가능성” 판정 기준
+        det_unclip_ratio=det_unclip_ratio,#검출된 텍스트 영역을 얼마나 확장(unclip) 할지
     )
     return ocr_predict_or_ocr(ocr, image_path, image_bgr)
 
