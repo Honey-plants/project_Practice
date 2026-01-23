@@ -1,79 +1,104 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, NavLink } from "react-router-dom";
-import "./Header.css";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "providers/AuthProvider";
 
-import { getSession, subscribeSession } from "../../utils/session";
-import { logout as logoutApi } from "../../utils/authApi";
-
-/**
- * Header
- * - 기본: localStorage의 SESSION_KEY를 읽어 로그인 UI 처리 (전 페이지 공통)
- * - 필요하면 session/isLoggedIn/onLogout를 props로 넘겨 오버라이드 가능
- */
-export default function Header({
-  showNav = true,
-  showAuthArea = true,
-  session: sessionProp,
-  isLoggedIn: isLoggedInProp,
-  showLogin = true,
-  showSignup = true,
-  onLogout,
-}) {
+export default function Header() {
   const navigate = useNavigate();
-  const [sessionState, setSessionState] = useState(() => getSession());
+  const { logout } = useAuth();
 
-  useEffect(() => {
-    if (sessionProp !== undefined) return;
-    return subscribeSession(setSessionState);
-  }, [sessionProp]);
-
-  const session = sessionProp !== undefined ? sessionProp : sessionState;
-
-  const isLoggedIn = useMemo(() => {
-    if (typeof isLoggedInProp === "boolean") return isLoggedInProp;
-    return !!session?.access_token && !!session?.member_id;
-  }, [isLoggedInProp, session]);
-
-  const handleLogout = async () => {
+  const onLogout = async () => {
     try {
-      if (onLogout) await onLogout();
-      else await logoutApi();
-    } finally {
+      await logout();
       navigate("/login");
+    } catch (e) {
+      alert(e?.message || "로그아웃 실패");
     }
   };
 
-  console.log("Header sessionProp:", sessionProp);
-  console.log("Header session(final):", session);
-
   return (
-    <header>
-      <button onClick={() => navigate("/")}>FOOD RAY</button>
+    <header style={{ display: "flex", gap: 8, alignItems: "center", padding: 12, borderBottom: "1px solid #eee" }}>
+      <strong style={{ marginRight: 12 }}>HEANET</strong>
 
-      {showNav && (
-        <nav>
-          <NavLink to="/review">Review</NavLink>
-          <NavLink to="/community">Community</NavLink>
-        </nav>
-      )}
+      <button onClick={() => navigate("/")}>Main</button>
+      <button onClick={() => navigate("/login")}>Login</button>
 
-      {showAuthArea && (
-        <div>
-          {isLoggedIn ? (
-            <>
-              <button onClick={() => navigate(`/profile/${session?.member_id}`)}>
-                {session?.nickname || "Profile"}
-              </button>
-              <button onClick={handleLogout}>로그아웃</button>
-            </>
-          ) : (
-            <>
-              {showLogin && <button onClick={() => navigate("/login")}>로그인</button>}
-              {showSignup && <button onClick={() => navigate("/signup")}>회원가입</button>}
-            </>
-          )}
-        </div>
-      )}
+      <div style={{ flex: 1 }} />
+
+      <button onClick={onLogout}>Logout</button>
     </header>
   );
 }
+
+
+
+// import React from "react";
+// import { NavLink, useNavigate } from "react-router-dom";
+// import "./Header.css";
+// import { useAuth } from "providers/AuthProvider";
+//
+// export default function Header({
+//   showNav = true,
+//   showAuthArea = true,
+//   showLogin = true,
+//   showSignup = true,
+// }) {
+//   const navigate = useNavigate();
+//   const { isLoggedIn, me, logout } = useAuth();
+//
+//   return (
+//     <header className="appHeader">
+//       <div className="headerInner">
+//         <button type="button" className="brand" onClick={() => navigate("/")}>
+//           FOOD RAY
+//         </button>
+//
+//         {showNav && (
+//           <nav className="nav">
+//             <NavLink className="navItem" to="/review">Review</NavLink>
+//             <NavLink className="navItem" to="/community">Community</NavLink>
+//           </nav>
+//         )}
+//
+//         {showAuthArea && (
+//           <div className="authArea">
+//             {isLoggedIn ? (
+//               <>
+//                 <button
+//                   type="button"
+//                   className="ghostBtn"
+//                   onClick={() => navigate("/profile")}
+//                 >
+//                   {me?.nickname || "Profile"}
+//                 </button>
+//                 <button type="button" className="solidBtn" onClick={logout}>
+//                   로그아웃
+//                 </button>
+//               </>
+//             ) : (
+//               <>
+//                 {showLogin && (
+//                   <button
+//                     type="button"
+//                     className="ghostBtn"
+//                     onClick={() => navigate("/login")}
+//                   >
+//                     로그인
+//                   </button>
+//                 )}
+//                 {showSignup && (
+//                   <button
+//                     type="button"
+//                     className="solidBtn"
+//                     onClick={() => navigate("/signup")}
+//                   >
+//                     회원가입
+//                   </button>
+//                 )}
+//               </>
+//             )}
+//           </div>
+//         )}
+//       </div>
+//     </header>
+//   );
+// }

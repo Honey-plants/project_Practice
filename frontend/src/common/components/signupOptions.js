@@ -1,4 +1,4 @@
-export const GENDER_OPTIONS = ["Male", "Female", "Other", "Prefer not to say"];
+export const GENDER_OPTIONS = ["M", "F", "Other", "Prefer not to say"];
 
 export const COUNTRY_OPTIONS = [
   "Korea",

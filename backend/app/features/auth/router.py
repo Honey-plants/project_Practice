@@ -36,7 +36,6 @@ def login(response: Response, form: OAuth2PasswordRequestForm = Depends(), db: S
         httponly=True,
         secure=False,      # 로컬 http면 False, 배포(https)면 True
         samesite="lax",    # 프론트/백 완전 다른 도메인이면 none+secure 필요
-        # path="/auth",    # /auth 에서 전체 관리 위해서 / 변경
         path="/",
         max_age=ttl,
     )
@@ -79,6 +78,8 @@ def logout(response: Response, token: str = Depends(oauth2_scheme), db: Session 
 
     # front cookie refresh token 삭제 처리
     response.delete_cookie(key=COOKIE_NAME, path="/")
+    # 둘 다 삭제 (과거 path=/auth 잔재 제거)
+    response.delete_cookie(key=COOKIE_NAME, path="/auth")
     return {"ok": True}
 
 # 현재 USER 정보

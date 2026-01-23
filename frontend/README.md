@@ -68,3 +68,34 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
+### 로그인 관리 및 정리
+- AccessToken은 프론트에서 sessionStorage 보관
+- API 호출은 무조건 apiFetch()만 사용
+1. Authorization 자동 첨부
+2. 401이면 /auth/refresh로 재발급 시도 후 1회 재시도
+- 서버에서는 member_id를 프론트에서 받지 않음
+1. 항상 current_me(= /auth/me, /members/me)로 확인
+
+
+### 폴더 구조 및 설명
+# src/app/providers/AuthProvider.jsx
+- login/logout/me 로딩을 한 곳에서 통합 관리
+- Header는 여기 state를 그대로 사용
+
+# src/app/layouts/*
+- Header를 페이지마다 import 하지 않음
+- RootLayout(일반) / AuthLayout(로그인/가입) 분리
+
+# src/app/router/AppRouter.jsx
+- layout 라우팅 + 보호 라우팅 적용
+- /profile, /review/new는 ProtectedRoute
+
+# src/features/profile/ProfilePage.jsx
+- 이제 memberId params
+- /members/me로 조회/수정
+
+# src/features/review/ReviewWritePage.jsx
+- payload에서 member_id 제거
+- (서버가 current_me로 처리)
