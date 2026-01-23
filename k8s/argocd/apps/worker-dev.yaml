@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: api-dev
+  name: worker-dev
   namespace: argocd
 spec:
   project: app-platform
@@ -9,10 +9,10 @@ spec:
   source:
     repoURL: https://github.com/mingoo684/cicdex2.git
     targetRevision: main
-    path: k8s/charts/api
+    path: k8s/charts/worker
     helm:
       valueFiles:
-        - ../../env/dev/api-values.yaml
+        - ../../env/dev/worker-values.yaml
 
   destination:
     server: https://kubernetes.default.svc

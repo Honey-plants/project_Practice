@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redis-prod
+  namespace: argocd
+spec:
+  project: app-platform
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-prod
+
+  sources:
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: redis
+      targetRevision: 24.1.0
+      helm:
+        releaseName: redis
+        valueFiles:
+          - $values/k8s/env/prod/redis-values.yaml
+
+    - repoURL: https://github.com/mingoo684/cicdex2.git
+      targetRevision: main
+      ref: values
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

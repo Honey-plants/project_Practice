@@ -19,16 +19,19 @@ COPY frontend/ ./
 RUN npm run build
 
 # 빌드 결과를 /out 으로 통일 (dist 또는 build 자동 대응)
+# NOTE: 폴더 자체가 아니라 "내용"을 /out에 복사해야 index.html이 루트에 위치합니다.
 RUN set -eux; \
+    mkdir -p /out; \
     if [ -d "dist" ]; then \
-      cp -r dist /out; \
+      cp -r dist/. /out/; \
     elif [ -d "build" ]; then \
-      cp -r build /out; \
+      cp -r build/. /out/; \
     else \
       echo "ERROR: build output folder not found (expected dist/ or build/)"; \
       ls -la; \
       exit 1; \
-    fi
+    fi; \
+    test -f /out/index.html
 
 
 ########################
@@ -67,10 +70,6 @@ EOF
 COPY --from=builder /out /usr/share/nginx/html
 
 EXPOSE 8080
-
-# (선택) non-root로 실행하고 싶으면 아래 주석을 해제하세요.
-# nginx:alpine에는 nginx 유저가 기본 존재합니다.
-# USER nginx
 
 CMD ["nginx", "-g", "daemon off;"]
 

@@ -42,7 +42,7 @@ COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir /wheels/* \
  && rm -rf /wheels
 
-# copy full repo
+# copy full repo (API + AI/worker 포함)
 COPY . /app
 
 # ------------------------------------------------------------
@@ -82,27 +82,37 @@ RUN set -eu; \
 
 
 ########################
-# verify stage (smoke tests)
-# - CI에서 이 stage를 빌드하면, libGL/cv2 문제를 "빌드 단계"에서 즉시 차단
+# api-verify stage (smoke tests)
 ########################
-FROM runtime AS verify
+FROM runtime AS api-verify
 
 # 1) OS 패키지 설치 확인 (재발 시 원인 파악이 빠름)
 RUN set -eux; \
     dpkg -l | grep -E 'libgl1|libglib2.0-0|libxrender1|libxext6|libsm6'
 
-# 2) 실제 동작 확인: 동적 링크가 해결되어야 import가 성공함
+# 2) 의존성 동작 확인
 RUN set -eux; \
     python -c "import cv2; print('cv2 OK', cv2.__version__)"
 
-# (선택) OCR까지 강하게 보려면 아래처럼 추가 가능하나, 모델/런타임 비용이 커질 수 있어 기본은 비추천
-# RUN set -eux; python -c "from paddleocr import PaddleOCR; print('paddleocr OK')"
+# 3) uvicorn import 확인(런타임 최소 보장)
+RUN set -eux; \
+    python -c "import uvicorn; print('uvicorn OK')"
 
 
 ########################
-# final image (deployable)
+# worker-verify stage (smoke tests)
 ########################
-FROM runtime AS final
+FROM runtime AS worker-verify
+
+# AI/ai 패키지 경로가 정상인지 최소 확인 (특정 모듈 경로 강제는 여기서 하지 않음)
+RUN set -eux; \
+    python -c "import ai; print('ai OK')"
+
+
+########################
+# api-final image (deployable)
+########################
+FROM runtime AS api-final
 
 # non-root
 RUN useradd -m -u 10001 appuser
@@ -111,5 +121,22 @@ USER 10001:10001
 EXPOSE 8000
 
 # Keep chart unchanged: uvicorn app.main:app
-CMD ["python", "-m", "uvicorn", "backend.app.main:app", "--host=0.0.0.0", "--port=8000"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host=0.0.0.0", "--port=8000"]
 
+
+########################
+# worker-final image (deployable)
+########################
+FROM runtime AS worker-final
+
+# non-root
+RUN useradd -m -u 10001 appuser
+USER 10001:10001
+
+# Worker는 보통 외부 포트를 열지 않으므로 EXPOSE 생략 가능
+# EXPOSE 8000
+
+# IMPORTANT:
+# 아래 모듈 경로는 "당신 프로젝트의 실제 worker 엔트리포인트"로 바꿔야 합니다.
+# 예: ["python","-m","AI.menu_assistant.worker.worker_app.main"]
+CMD ["python", "-m", "AI.menu_assistant.worker.worker_app.main"]

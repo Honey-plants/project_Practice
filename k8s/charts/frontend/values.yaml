@@ -13,8 +13,8 @@ autoscaling:
 
 
 image:
-  repository: ghcr.io/mingoo684/cicdex1-frontend
-  tag: $TAG
+  repository: ghcr.io/mingoo684/cicdex2-frontend
+  tag: dev-001
   pullPolicy: IfNotPresent
 
 service:
