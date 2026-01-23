@@ -5,10 +5,10 @@ from backend.app.common.service.file_upload_service import (
 )
 from backend.app.common.schemas.file_upload_schema import UploadInputResponse
 
-router = APIRouter(prefix="/menu", tags=["menu"])
+router = APIRouter(prefix="/recipe", tags=["recipe"])
 
 @router.post("/upload", response_model=UploadInputResponse)
-async def menu_upload(type: str = Form("menu"), image: UploadFile = File(...), current=Depends(get_current_member),):
+async def recipe_upload(type: str = Form("recipe"), image: UploadFile = File(...), current=Depends(get_current_member),):
 
     obj = await upload_input_file(upload_type=type, member_id=current.member_id, upload=image)
 
@@ -20,8 +20,8 @@ async def menu_upload(type: str = Form("menu"), image: UploadFile = File(...), c
         # local/s3 상관없이 로직이 쓸 '파일 경로' 확보
         local_path, cleanup_download = ensure_local_path(obj)
 
-        # 여기서 menu 로직 실행 (local_path로 처리)
-        # result = menu_service.analyze(local_path)
+        # 여기서 recipe 로직 실행 (local_path로 처리)
+        # result = recipe_service.analyze(local_path)
 
         return UploadInputResponse(
             upload_type=obj.upload_type,

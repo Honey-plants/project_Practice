@@ -59,6 +59,8 @@ def login_issue_tokens(db: Session, email: str, password: str) -> tuple[str, str
     refresh_payload = decode_token(refresh)
 
     # Redis 저장 (refresh:{member_id} = refresh_jti)
+
+
     token_store.save_refresh_jti(
         member.member_id,
         refresh_payload["jti"],
@@ -86,6 +88,8 @@ def refresh_rotate_tokens(db: Session, refresh_token: str) -> tuple[str, str]:
     except Exception as e:
         print("[REFRESH] decode/type error:", repr(e))
         raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    print("token_store :: ", token_store)
 
     # 2단계 : redis에 저장된 refresh_jti와 비교
     saved_jti = token_store.get_refresh_jti(member_id)

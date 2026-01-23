@@ -47,47 +47,46 @@ export function AuthProvider({ children }) {
     return () => { ignore = true; };
   }, [accessToken]);
 
-  const login = async (email, password) => {
-    const body = new URLSearchParams();
-    body.set("username", email);
-    body.set("password", password);
+const login = async (email, password) => {
+  const body = new URLSearchParams();
+  body.set("username", email);
+  body.set("password", password);
 
-    const base = process.env.REACT_APP_API_BASE_URL || "";
-    const res = await fetch(base + "/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body,
-      credentials: "include", // refresh 쿠키 저장
-    });
+  const base = process.env.REACT_APP_API_BASE_URL || "";
+  const res = await fetch(base + "/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+    credentials: "include",
+  });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.detail || `Login failed (${res.status})`);
-    }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.detail || `Login failed (${res.status})`);
+  }
 
-    const tokenData = await res.json();
-    if (!tokenData?.access_token) throw new Error("No access token.");
+  const tokenData = await res.json();
+  if (!tokenData?.access_token) throw new Error("No access token.");
 
-    setAccessToken(tokenData.access_token);
-    setToken(tokenData.access_token);
+  // ✅ 이것만 하면 됨
+  setAccessToken(tokenData.access_token);   // 내부에서 auth-changed까지 쏨
+//   setToken(tokenData.access_token);
 
-    // optional immediate me fetch
-    const meRes = await apiFetch("/auth/me");
-    if (!meRes.ok) throw new Error("Failed to fetch me");
-    const meData = await meRes.json();
-    setMe(meData);
-
-    return meData;
-  };
+  // ✅ me 호출 삭제 (useEffect가 처리)
+  return true;
+};
 
   const logout = async () => {
     try {
       await apiFetch("/auth/logout", { method: "POST" }).catch(() => {});
     } finally {
-      // 현재 혼재되어 있을 수 있으니 둘 다 제거 (정리)
-      sessionStorage.removeItem("access_token");
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token"); // 원래 HttpOnly면 없어야 정상
+
+
+        // test 완료
+//       // 현재 혼재되어 있을 수 있으니 둘 다 제거 (정리)
+//       sessionStorage.removeItem("access_token");
+//       localStorage.removeItem("access_token");
+//       localStorage.removeItem("refresh_token"); // 원래 HttpOnly면 없어야 정상
 
       setAccessToken(null);
       setToken(null);

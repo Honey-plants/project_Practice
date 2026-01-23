@@ -7,6 +7,7 @@ from backend.app.common.schemas.file_upload_schema import UploadInputResponse
 
 router = APIRouter(prefix="/review", tags=["review"])
 
+# 영수증 검증 및 리뷰 생성
 @router.post("/upload", response_model=UploadInputResponse)
 async def review_upload(type: str = Form("review"), image: UploadFile = File(...), current=Depends(get_current_member), ):
     obj = await upload_input_file(upload_type=type, member_id=current.member_id, upload=image)
@@ -16,7 +17,7 @@ async def review_upload(type: str = Form("review"), image: UploadFile = File(...
     try:
         local_path, cleanup_download = ensure_local_path(obj)
 
-        # review 로직 실행
+        # review AI 로직 실행
         # result = review_service.process(local_path)
 
         return UploadInputResponse(

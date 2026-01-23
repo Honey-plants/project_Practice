@@ -18,7 +18,8 @@ export async function apiFetch(url, options = {}, retry = true) {
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   const res = await fetch(BASE + url, { ...options, headers, credentials: "include" });
-
+  console.log("res 1 :: ", res)
+  console.log("res 2 :: ", res.data)
   if (!skipRefresh && res.status === 401 && retry) {
     const refreshed = await fetch(BASE + "/auth/refresh", { method: "POST", credentials: "include" });
     if (!refreshed.ok) {

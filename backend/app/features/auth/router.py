@@ -46,12 +46,17 @@ def login(response: Response, form: OAuth2PasswordRequestForm = Depends(), db: S
 
 # REFRESH TOKEN 재발급
 @router.post("/refresh", response_model=schemas.AccessTokenResponse)
-def refresh(response: Response, db: Session = Depends(get_db), refresh_token: str | None = Cookie(default=None, alias=COOKIE_NAME),
-):
+def refresh(response: Response, db: Session = Depends(get_db), refresh_token: str | None = Cookie(default=None, alias=COOKIE_NAME),):
+
     if not refresh_token:
         raise HTTPException(status_code=401, detail="Missing refresh cookie")
 
+    print("refresh token :: ", refresh_token)
+
     new_access, new_refresh = service.refresh_rotate_tokens(db, refresh_token)
+
+    print("new_acc :: ", new_access)
+    print("new_ref :: ", new_refresh)
 
     new_refresh_payload = jwt.decode_token(new_refresh)
     ttl = jwt.exp_seconds_left(new_refresh_payload)
@@ -62,7 +67,6 @@ def refresh(response: Response, db: Session = Depends(get_db), refresh_token: st
         httponly=True,
         secure=False,
         samesite="lax",
-        # path="/auth",    # /auth 에서 전체 관리 위해서 / 변경
         path="/",
         max_age=ttl,
     )
