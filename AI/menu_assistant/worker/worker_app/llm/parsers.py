@@ -5,7 +5,7 @@ import json
 import re
 from typing import Any, Dict, Tuple, Optional
 
-from menu_assistant.worker.worker_app.services.schema import validate_llm_output_v1
+from menu_assistant.worker.worker_app.llm.services.schema import validate_llm_output_v1
 
 
 _JSON_BLOCK_RE = re.compile(r"\{.*\}", re.DOTALL)
