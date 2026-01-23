@@ -1,0 +1,223 @@
+{
+  "run_id": "20260126_172230",
+  "input_image": "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\Upload_Images\\image8.jpg",
+  "rectified_image": "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\data\\runs\\20260126_172230\\rectify\\rectified.jpg",
+  "backend": "auto",
+  "device": "cpu",
+  "model_dir": "menu_assistant/worker/worker_app/vision/metrics/DewarpNet_master",
+  "input_shape": [
+    960,
+    1280
+  ],
+  "ops": [
+    {
+      "illumination": [
+        {
+          "op": "shadow_correction",
+          "blur_ksize": 51,
+          "strength": 0.0
+        }
+      ]
+    },
+    {
+      "denoise": [
+        {
+          "op": "fastNlMeansDenoisingColored",
+          "h": 8,
+          "hColor": 8,
+          "templateWindowSize": 7,
+          "searchWindowSize": 21
+        }
+      ]
+    },
+    {
+      "photometric": [
+        {
+          "op": "clahe",
+          "clip_limit": 2.0,
+          "tile": 8
+        },
+        {
+          "op": "gamma",
+          "gamma": 1.0
+        },
+        {
+          "op": "unsharp",
+          "amount": 1.2,
+          "sigma": 1.0
+        }
+      ]
+    },
+    {
+      "backend_meta": {
+        "backend": "auto",
+        "device": "cpu",
+        "model_dir": "menu_assistant/worker/worker_app/vision/metrics/DewarpNet_master",
+        "auto": {
+          "policy": {
+            "trigger_threshold": 0.65,
+            "min_score_gain": 0.1,
+            "allow_dewarp_when_docunet_failed": true
+          },
+          "trigger": {
+            "score": 0.8289857916160726,
+            "features": {
+              "mix": 0.9633578909029208,
+              "dispersion": 0.6864312308175223,
+              "texty": 0.5888802083333333,
+              "edge_density": 0.04711041666666667,
+              "num_lines": 112
+            },
+            "note": "Higher score => more likely needs non-linear dewarp."
+          },
+          "selected": "dewarpnet",
+          "decision": {
+            "docunet_quad_found": false,
+            "dewarp_ready": true,
+            "should_try_dewarpnet": true,
+            "score_gain": 0.0,
+            "accept_dewarpnet": true
+          },
+          "trigger_dewarpnet": {
+            "score": 0.8289857916160726,
+            "features": {
+              "mix": 0.9633578909029208,
+              "dispersion": 0.6864312308175223,
+              "texty": 0.5888802083333333,
+              "edge_density": 0.04711041666666667,
+              "num_lines": 112
+            },
+            "note": "Higher score => more likely needs non-linear dewarp."
+          }
+        },
+        "docunet_meta": {
+          "backend": "docunet",
+          "device": "cpu",
+          "model_dir": "menu_assistant/worker/worker_app/vision/metrics/DewarpNet_master",
+          "input_shape": [
+            960,
+            1280
+          ],
+          "init": {
+            "init": "opencv_perspective_ready",
+            "weights_path": null,
+            "torch_available": true,
+            "torch_import_error": null,
+            "doctr_available": false,
+            "doctr_import_error": "ModuleNotFoundError(\"No module named 'doctr'\")",
+            "orientation_predictor_available": false
+          },
+          "applied": false,
+          "method": "orientation_then_opencv_perspective",
+          "orientation": {
+            "enabled": true,
+            "applied": false,
+            "predictor_available": false,
+            "reason": "orientation predictor unavailable"
+          },
+          "opencv": {
+            "params": {
+              "canny1": 50,
+              "canny2": 150,
+              "dilate_iter": 2,
+              "approx_eps_ratio": 0.02,
+              "min_area_ratio": 0.08,
+              "border": 10
+            },
+            "find": {
+              "found": false,
+              "image_shape": [
+                960,
+                1280
+              ],
+              "num_contours": 155,
+              "best_area": 0.0,
+              "min_area_ratio": 0.08
+            }
+          },
+          "warning": "No document-like quadrilateral found; returning oriented image.",
+          "output_shape": [
+            960,
+            1280
+          ]
+        },
+        "dewarpnet_meta": {
+          "backend": "dewarpnet",
+          "device": "cpu",
+          "model_dir": "menu_assistant/worker/worker_app/vision/metrics/DewarpNet_master",
+          "init": {
+            "backend": "dewarpnet",
+            "device": "cpu",
+            "model_dir": "menu_assistant/worker/worker_app/vision/metrics/DewarpNet_master",
+            "cfg": {
+              "infer_py": null,
+              "wc_model_path": null,
+              "bm_model_path": null,
+              "python_executable": "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\.venv\\Scripts\\python.exe",
+              "timeout_sec": 240,
+              "strict": false,
+              "temp_root": null,
+              "keep_debug_files": false,
+              "show": false,
+              "extra_args": [],
+              "cmd_template": [
+                "{py}",
+                "{infer_py}",
+                "--wc_model_path",
+                "{wc}",
+                "--bm_model_path",
+                "{bm}",
+                "--img_path",
+                "{inp_dir}",
+                "--out_path",
+                "{out_dir}",
+                "{show_flag}"
+              ]
+            },
+            "resolved": {
+              "infer_py": "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\worker\\worker_app\\vision\\metrics\\DewarpNet_master\\infer.py",
+              "wc": "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\worker\\worker_app\\vision\\metrics\\DewarpNet_master\\unetnc_doc3d_final.pkl",
+              "bm": "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\worker\\worker_app\\vision\\metrics\\DewarpNet_master\\dnetccnl_doc3d_final.pkl"
+            },
+            "ready": true,
+            "errors": {},
+            "model_dir_abs": "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\worker\\worker_app\\vision\\metrics\\DewarpNet_master"
+          },
+          "ready": true,
+          "applied": false,
+          "method": "infer_py_dir_io",
+          "input_shape": [
+            960,
+            1280
+          ],
+          "cmd": [
+            "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\.venv\\Scripts\\python.exe",
+            "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\worker\\worker_app\\vision\\metrics\\DewarpNet_master\\infer.py",
+            "--wc_model_path",
+            "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\worker\\worker_app\\vision\\metrics\\DewarpNet_master\\unetnc_doc3d_final.pkl",
+            "--bm_model_path",
+            "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\worker\\worker_app\\vision\\metrics\\DewarpNet_master\\dnetccnl_doc3d_final.pkl",
+            "--img_path",
+            "C:\\Users\\201\\AppData\\Local\\Temp\\dewarpnet_i1lxwxx7\\inp",
+            "--out_path",
+            "C:\\Users\\201\\AppData\\Local\\Temp\\dewarpnet_i1lxwxx7\\out"
+          ],
+          "subprocess": {
+            "returncode": 1,
+            "elapsed_ms": 2111,
+            "stdout_tail": "",
+            "stderr_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\worker\\worker_app\\vision\\metrics\\DewarpNet_master\\infer.py\", line 8, in <module>\n    import torchvision.models as models\nModuleNotFoundError: No module named 'torchvision'\n"
+          },
+          "error": "RuntimeError: infer.py failed (returncode=1)",
+          "warning": "DewarpNet failed; passthrough."
+        }
+      }
+    }
+  ],
+  "output_shape": [
+    960,
+    1280
+  ],
+  "elapsed_ms": 5180,
+  "notes": "Overlay and OCR are performed in rectified image coordinate system."
+}

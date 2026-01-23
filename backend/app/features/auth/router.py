@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response ,Cookie,HTTPException
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
@@ -40,14 +40,33 @@ def login(response: Response, form: OAuth2PasswordRequestForm = Depends(), db: S
 
 # REFRESH TOKEN 재발급
 @router.post("/refresh", response_model=schemas.AccessTokenResponse)
-def refresh(payload: schemas.RefreshRequest, db: Session = Depends(get_db)):
-    # access = service.refresh_access_token(payload.refresh_token)
-    # return schemas.AccessTokenResponse(access_token=access)
 
-    # refresh token db 저장 로직 추가!
-    access, refresh = service.refresh_rotate_tokens(db, payload.refresh_token)
-    print("acc :: ", access, "  refresh :: ", refresh)
-    return schemas.TokenPairResponse(access_token=access, refresh_token=refresh)
+def refresh(response: Response, db: Session = Depends(get_db), refresh_token: str | None = Cookie(default=None, alias=COOKIE_NAME),):
+
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Missing refresh cookie")
+
+    print("refresh token :: ", refresh_token)
+
+    new_access, new_refresh = service.refresh_rotate_tokens(db, refresh_token)
+
+    print("new_acc :: ", new_access)
+    print("new_ref :: ", new_refresh)
+
+    new_refresh_payload = jwt.decode_token(new_refresh)
+    ttl = jwt.exp_seconds_left(new_refresh_payload)
+
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=new_refresh,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        path="/",
+        max_age=ttl,
+    )
+    return {"access_token": new_access, "token_type": "bearer"}
+
 
 # LOGOUT
 @router.post("/logout")

@@ -1,0 +1,140 @@
+{
+  "schema_version": "v1",
+  "run_id": "20260126_170639",
+  "items": [
+    {
+      "item_id": "itm_0001",
+      "menu_name": "물막국수",
+      "poly": [
+        [
+          1439.0,
+          1383.0
+        ],
+        [
+          1679.0,
+          1429.0
+        ],
+        [
+          1665.0,
+          1504.0
+        ],
+        [
+          1424.0,
+          1458.0
+        ]
+      ],
+      "menu_description_ko": "시원한 육수에 메밀면을 말아 먹는 전통적인 막국수입니다.",
+      "risk_description_ko": "위험: OK — 사용자에게 특별한 위험 요소가 발견되지 않았습니다.\n근거: 제공된 알러지 태그 및 재료 정보와 사용자 프로필을 비교한 결과, 충돌하는 부분이 없습니다.\n권고: 안심하고 섭취하셔도 좋습니다.",
+      "risk_level": "OK",
+      "reason_bullets": [],
+      "confidence": 1.0,
+      "matched_constraints": {
+        "allergy_tags": null,
+        "religion": null,
+        "avoid_foods": null
+      }
+    },
+    {
+      "item_id": "itm_0002",
+      "menu_name": "물비빔막국수",
+      "poly": [
+        [
+          262.0,
+          2026.0
+        ],
+        [
+          619.0,
+          2086.0
+        ],
+        [
+          608.0,
+          2152.0
+        ],
+        [
+          251.0,
+          2092.0
+        ]
+      ],
+      "menu_description_ko": "시원한 육수와 매콤한 양념이 어우러진 막국수입니다.",
+      "risk_description_ko": "위험: CAUTION — 메뉴 재료 정보가 부족하여 알러지 및 비선호 식품 포함 여부를 확인할 수 없습니다.\n근거: 제공된 메뉴에 대한 재료 및 알러지 태그 정보가 없어 사용자 프로필과의 충돌 가능성을 판단하기 어렵습니다.\n권고: 주문 전 매장에 정확한 재료 및 소스 구성을 문의하여 확인하는 것이 좋습니다.",
+      "risk_level": "CAUTION",
+      "reason_bullets": [
+        "메뉴 재료 정보 부족으로 알러지 및 비선호 식품 포함 여부 확인 불가"
+      ],
+      "confidence": 0.5,
+      "matched_constraints": {
+        "allergy_tags": null,
+        "religion": null,
+        "avoid_foods": null
+      }
+    },
+    {
+      "item_id": "itm_0003",
+      "menu_name": "물쫄면",
+      "poly": [
+        [
+          1018.0,
+          3247.0
+        ],
+        [
+          1398.0,
+          3295.0
+        ],
+        [
+          1390.0,
+          3353.0
+        ],
+        [
+          1011.0,
+          3305.0
+        ]
+      ],
+      "menu_description_ko": "쫄깃한 면발에 시원한 육수를 부어 먹는 쫄면입니다.",
+      "risk_description_ko": "위험: CAUTION — 메뉴 재료 정보가 부족하여 알러지 및 비선호 식품 포함 여부를 확인할 수 없습니다.\n근거: 제공된 메뉴에 대한 재료 및 알러지 태그 정보가 없어 사용자 프로필과의 충돌 가능성을 판단하기 어렵습니다.\n권고: 주문 전 매장에 정확한 재료 및 소스 구성을 문의하여 확인하는 것이 좋습니다.",
+      "risk_level": "CAUTION",
+      "reason_bullets": [
+        "메뉴 재료 정보 부족으로 알러지 및 비선호 식품 포함 여부 확인 불가"
+      ],
+      "confidence": 0.5,
+      "matched_constraints": {
+        "allergy_tags": null,
+        "religion": null,
+        "avoid_foods": null
+      }
+    },
+    {
+      "item_id": "itm_0004",
+      "menu_name": "비빔쫄면",
+      "poly": [
+        [
+          1018.0,
+          3247.0
+        ],
+        [
+          1398.0,
+          3295.0
+        ],
+        [
+          1390.0,
+          3353.0
+        ],
+        [
+          1011.0,
+          3305.0
+        ]
+      ],
+      "menu_description_ko": "매콤달콤한 양념에 비벼 먹는 쫄깃한 쫄면입니다.",
+      "risk_description_ko": "위험: CAUTION — 메뉴 재료 정보가 부족하여 알러지 및 비선호 식품 포함 여부를 확인할 수 없습니다.\n근거: 제공된 메뉴에 대한 재료 및 알러지 태그 정보가 없어 사용자 프로필과의 충돌 가능성을 판단하기 어렵습니다.\n권고: 주문 전 매장에 정확한 재료 및 소스 구성을 문의하여 확인하는 것이 좋습니다.",
+      "risk_level": "CAUTION",
+      "reason_bullets": [
+        "메뉴 재료 정보 부족으로 알러지 및 비선호 식품 포함 여부 확인 불가"
+      ],
+      "confidence": 0.5,
+      "matched_constraints": {
+        "allergy_tags": null,
+        "religion": null,
+        "avoid_foods": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "user_id": 1,
+  "categories": [
+    {
+      "category_id": 1,
+      "category_label_ko": "알러지",
+      "category_label_en": "allergy",
+      "items": [
+        {
+          "item_id": 101,
+          "item_label_ko": "땅콩 알러지",
+          "item_label_en": "ALG_PEANUT",
+          "category_id": 1,
+          "alg_tags": ["ALG_PEANUT"],
+          "blocked_ingredients_ko": ["땅콩", "피넛"]
+        },
+        {
+          "item_id": 102,
+          "item_label_ko": "갑각류 알러지",
+          "item_label_en": "ALG_CRUSTACEANS",
+          "category_id": 1,
+          "alg_tags": ["ALG_CRUSTACEANS"],
+          "blocked_ingredients_ko": ["새우", "게", "랍스터", "크랩"]
+        },
+        {
+          "item_id": 103,
+          "item_label_ko": "우유 알러지",
+          "item_label_en": "ALG_MILK",
+          "category_id": 1,
+          "alg_tags": ["ALG_MILK"],
+          "blocked_ingredients_ko": ["우유", "치즈", "버터", "크림"]
+        }
+      ]
+    },
+
+    {
+      "category_id": 3,
+      "category_label_ko": "싫어하는 음식",
+      "category_label_en": "dislike",
+      "items": [
+        {
+          "item_id": 301,
+          "item_label_ko": "고수",
+          "item_label_en": "cilantro",
+          "category_id": 3,
+          "blocked_ingredients_ko": ["고수", "코리앤더"]
+        },
+        {
+          "item_id": 302,
+          "item_label_ko": "간 요리",
+          "item_label_en": "liver",
+          "category_id": 3,
+          "blocked_ingredients_ko": ["간"]
+        }
+      ]
+    }
+
+  ],
+  "meta": {
+    "version": "1.1",
+    "schema": "user_profile_mock.json compatible",
+    "used_in": "step_05_risk_score / llm",
+    "note": "allergy items use ALG_* directly in item_label_en"
+  }
+}

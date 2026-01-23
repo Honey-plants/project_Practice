@@ -1,0 +1,2050 @@
+{
+  "run_dir": "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\data\\runs\\20260126_170639",
+  "input_normalize": "C:\\Users\\201\\Desktop\\PGHfolder\\haenet\\AI\\menu_assistant\\data\\runs\\20260126_170639\\normalize\\normalize.json",
+  "config": {
+    "top_k": 5,
+    "save_top_n": 2,
+    "embed_ambiguous": 0.9,
+    "jamo_threshold": 0.55,
+    "reserved": {
+      "embed_confirmed": 0.95,
+      "jamo_confirmed": 0.95
+    },
+    "score_threshold": 0.55
+  },
+  "stats": {
+    "EXACT": 1,
+    "CONFIRMED_EMBED": 0,
+    "AMBIGUOUS_EMBED": 0,
+    "CONFIRMED_JAMO": 0,
+    "AMBIGUOUS_JAMO": 0,
+    "NOT_FOUND_EMPTY_QUERY": 0,
+    "NOT_FOUND_NO_CANDIDATES": 0,
+    "NOT_FOUND_BELOW_THRESHOLD": 17,
+    "TOTAL": 21,
+    "CLOSE": 3
+  },
+  "items": [
+    {
+      "raw_menu": "함께하",
+      "poly": [
+        [
+          571.0,
+          551.0
+        ],
+        [
+          1055.0,
+          660.0
+        ],
+        [
+          1033.0,
+          758.0
+        ],
+        [
+          549.0,
+          648.0
+        ]
+      ],
+      "menu_norm": "함께하",
+      "menu_final": "함께하",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "함께하",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_0052",
+            "menu": "갈비만두",
+            "embed_score": 0.9610652923583984,
+            "jamo_score": 0.19999999999999996,
+            "final_score": 0.6946924400329589
+          },
+          {
+            "id": "rep_0211",
+            "menu": "나쵸",
+            "embed_score": 0.9624224901199341,
+            "jamo_score": 0.1428571428571429,
+            "final_score": 0.6755746185779572
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "함께하",
+        "decided_menu": "함께하",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_0052",
+            "menu": "갈비만두",
+            "embed_score": 0.9610652923583984,
+            "jamo_score": 0.19999999999999996,
+            "final_score": 0.6946924400329589
+          },
+          {
+            "id": "rep_0211",
+            "menu": "나쵸",
+            "embed_score": 0.9624224901199341,
+            "jamo_score": 0.1428571428571429,
+            "final_score": 0.6755746185779572
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "갈비만두",
+          "best_jamo_score": 0.19999999999999996,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "취향",
+      "poly": [
+        [
+          361.0,
+          723.0
+        ],
+        [
+          629.0,
+          777.0
+        ],
+        [
+          603.0,
+          905.0
+        ],
+        [
+          335.0,
+          851.0
+        ]
+      ],
+      "menu_norm": "취향",
+      "menu_final": "취향",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "취향",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_1212",
+            "menu": "우동",
+            "embed_score": 0.9015623331069946,
+            "jamo_score": 0.19999999999999996,
+            "final_score": 0.6560155165195465
+          },
+          {
+            "id": "rep_0568",
+            "menu": "매운탕",
+            "embed_score": 0.9001556634902954,
+            "jamo_score": 0.125,
+            "final_score": 0.628851181268692
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "취향",
+        "decided_menu": "취향",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_1212",
+            "menu": "우동",
+            "embed_score": 0.9015623331069946,
+            "jamo_score": 0.19999999999999996,
+            "final_score": 0.6560155165195465
+          },
+          {
+            "id": "rep_0568",
+            "menu": "매운탕",
+            "embed_score": 0.9001556634902954,
+            "jamo_score": 0.125,
+            "final_score": 0.628851181268692
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "우동",
+          "best_jamo_score": 0.19999999999999996,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "있는",
+      "poly": [
+        [
+          1539.0,
+          765.0
+        ],
+        [
+          1771.0,
+          826.0
+        ],
+        [
+          1749.0,
+          910.0
+        ],
+        [
+          1517.0,
+          849.0
+        ]
+      ],
+      "menu_norm": "있는",
+      "menu_final": "있는",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "있는",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_0849",
+            "menu": "빙수",
+            "embed_score": 0.9520100951194763,
+            "jamo_score": 0.16666666666666663,
+            "final_score": 0.6771398951609929
+          },
+          {
+            "id": "rep_1212",
+            "menu": "우동",
+            "embed_score": 0.9494304060935974,
+            "jamo_score": 0.16666666666666663,
+            "final_score": 0.6754630972941716
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "있는",
+        "decided_menu": "있는",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_0849",
+            "menu": "빙수",
+            "embed_score": 0.9520100951194763,
+            "jamo_score": 0.16666666666666663,
+            "final_score": 0.6771398951609929
+          },
+          {
+            "id": "rep_1212",
+            "menu": "우동",
+            "embed_score": 0.9494304060935974,
+            "jamo_score": 0.16666666666666663,
+            "final_score": 0.6754630972941716
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "빙수",
+          "best_jamo_score": 0.16666666666666663,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "저격",
+      "poly": [
+        [
+          352.0,
+          842.0
+        ],
+        [
+          623.0,
+          896.0
+        ],
+        [
+          597.0,
+          1027.0
+        ],
+        [
+          326.0,
+          973.0
+        ]
+      ],
+      "menu_norm": "저격",
+      "menu_final": "저격",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "저격",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_1212",
+            "menu": "우동",
+            "embed_score": 0.9431890845298767,
+            "jamo_score": 0.0,
+            "final_score": 0.6130729049444199
+          },
+          {
+            "id": "rep_0957",
+            "menu": "소무침",
+            "embed_score": 0.9429095983505249,
+            "jamo_score": 0.0,
+            "final_score": 0.6128912389278413
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "저격",
+        "decided_menu": "저격",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_1212",
+            "menu": "우동",
+            "embed_score": 0.9431890845298767,
+            "jamo_score": 0.0,
+            "final_score": 0.6130729049444199
+          },
+          {
+            "id": "rep_0957",
+            "menu": "소무침",
+            "embed_score": 0.9429095983505249,
+            "jamo_score": 0.0,
+            "final_score": 0.6128912389278413
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "우동",
+          "best_jamo_score": 0.0,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "시원한",
+      "poly": [
+        [
+          1197.0,
+          1302.0
+        ],
+        [
+          1372.0,
+          1336.0
+        ],
+        [
+          1359.0,
+          1402.0
+        ],
+        [
+          1184.0,
+          1368.0
+        ]
+      ],
+      "menu_norm": "시원한",
+      "menu_final": "시원한",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "시원한",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_1727",
+            "menu": "해신탕",
+            "embed_score": 0.9771267175674438,
+            "jamo_score": 0.25,
+            "final_score": 0.7226323664188385
+          },
+          {
+            "id": "rep_0560",
+            "menu": "매운소바",
+            "embed_score": 0.9636946320533752,
+            "jamo_score": 0.25,
+            "final_score": 0.713901510834694
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "시원한",
+        "decided_menu": "시원한",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_1727",
+            "menu": "해신탕",
+            "embed_score": 0.9771267175674438,
+            "jamo_score": 0.25,
+            "final_score": 0.7226323664188385
+          },
+          {
+            "id": "rep_0560",
+            "menu": "매운소바",
+            "embed_score": 0.9636946320533752,
+            "jamo_score": 0.25,
+            "final_score": 0.713901510834694
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "해신탕",
+          "best_jamo_score": 0.25,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "국물파",
+      "poly": [
+        [
+          1189.0,
+          1362.0
+        ],
+        [
+          1365.0,
+          1395.0
+        ],
+        [
+          1353.0,
+          1460.0
+        ],
+        [
+          1177.0,
+          1427.0
+        ]
+      ],
+      "menu_norm": "국물파",
+      "menu_final": "국물파",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "국물파",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_1270",
+            "menu": "자몽차",
+            "embed_score": 0.9128561019897461,
+            "jamo_score": 0.25,
+            "final_score": 0.680856466293335
+          },
+          {
+            "id": "rep_0520",
+            "menu": "말차마카롱",
+            "embed_score": 0.9065327644348145,
+            "jamo_score": 0.08333333333333337,
+            "final_score": 0.6184129635492961
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "국물파",
+        "decided_menu": "국물파",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_1270",
+            "menu": "자몽차",
+            "embed_score": 0.9128561019897461,
+            "jamo_score": 0.25,
+            "final_score": 0.680856466293335
+          },
+          {
+            "id": "rep_0520",
+            "menu": "말차마카롱",
+            "embed_score": 0.9065327644348145,
+            "jamo_score": 0.08333333333333337,
+            "final_score": 0.6184129635492961
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "자몽차",
+          "best_jamo_score": 0.25,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "물막국수",
+      "poly": [
+        [
+          1439.0,
+          1383.0
+        ],
+        [
+          1679.0,
+          1429.0
+        ],
+        [
+          1665.0,
+          1504.0
+        ],
+        [
+          1424.0,
+          1458.0
+        ]
+      ],
+      "menu_norm": "물막국수",
+      "menu_final": "물막국수",
+      "match_status": "EXACT",
+      "match_decision_method": "EXACT",
+      "match": {
+        "used_query": "물막국수",
+        "best": {
+          "id": "rep_0633",
+          "menu": "물막국수",
+          "best_variant": "물막국수",
+          "embed_score": 1.0,
+          "jamo_score": 1.0,
+          "final_score": 1.0
+        },
+        "candidates": [
+          {
+            "id": "rep_0633",
+            "menu": "물막국수",
+            "embed_score": 1.0,
+            "jamo_score": 1.0,
+            "final_score": 1.0,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "물막국수"
+          },
+          {
+            "id": "rep_0635",
+            "menu": "물칼국수",
+            "embed_score": 0.8281127214431763,
+            "jamo_score": 0.8181818181818181,
+            "final_score": 0.8246369053017009,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "물칼국수"
+          }
+        ],
+        "thresholds": {
+          "embed_min": 0.55,
+          "jamo_min": 0.55,
+          "final_close": 0.8,
+          "final_w_embed": 0.65,
+          "final_w_jamo": 0.35,
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": {
+        "menu_id": "rep_0633",
+        "menu": "물막국수",
+        "ingredients_ko": [
+          "Wheat"
+        ],
+        "alg_tags": [
+          "ALG_CEREALS_GLUTEN"
+        ]
+      },
+      "rag_match": {
+        "status": "EXACT",
+        "used_query": "물막국수",
+        "decided_menu": "물막국수",
+        "decision_method": "EXACT",
+        "best_match": {
+          "id": "rep_0633",
+          "menu": "물막국수",
+          "embed_score": 1.0,
+          "jamo_score": 1.0,
+          "final_score": 1.0,
+          "ingredients_ko": [
+            "Wheat"
+          ],
+          "alg_tags": [
+            "ALG_CEREALS_GLUTEN"
+          ],
+          "source": "menu_representative_korean_dedup_plus_cuisines",
+          "best_variant": "물막국수"
+        },
+        "candidates": [
+          {
+            "id": "rep_0633",
+            "menu": "물막국수",
+            "embed_score": 1.0,
+            "jamo_score": 1.0,
+            "final_score": 1.0,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "물막국수"
+          },
+          {
+            "id": "rep_0635",
+            "menu": "물칼국수",
+            "embed_score": 0.8281127214431763,
+            "jamo_score": 0.8181818181818181,
+            "final_score": 0.8246369053017009,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "물칼국수"
+          }
+        ],
+        "signals": {
+          "top1_final_menu": "물막국수",
+          "top1_final": 1.0,
+          "top1_embed_menu": "물막국수",
+          "top1_embed": 1.0,
+          "best_jamo_menu": "물막국수",
+          "best_jamo": 1.0,
+          "best_variant": "물막국수",
+          "best_variant_jamo": 1.0,
+          "thresholds": {
+            "embed_min": 0.55,
+            "jamo_min": 0.55,
+            "final_close": 0.8,
+            "final_w_embed": 0.65,
+            "final_w_jamo": 0.35,
+            "jamo_hard_cutoff": 0.5
+          },
+          "compat": {
+            "embed_ambiguous": 0.9
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "시원한 육수에 살얼음이 동동~",
+      "poly": [
+        [
+          1421.0,
+          1550.0
+        ],
+        [
+          1873.0,
+          1637.0
+        ],
+        [
+          1865.0,
+          1679.0
+        ],
+        [
+          1413.0,
+          1592.0
+        ]
+      ],
+      "menu_norm": "시원한육수에살얼음이동동",
+      "menu_final": "시원한 육수에 살얼음이 동동~",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "시원한육수에살얼음이동동",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_1049",
+            "menu": "아이스크림크로플",
+            "embed_score": 0.6270186901092529,
+            "jamo_score": 0.1875,
+            "final_score": 0.4731871485710144
+          },
+          {
+            "id": "rep_0229",
+            "menu": "냉우동",
+            "embed_score": 0.6199304461479187,
+            "jamo_score": 0.15625,
+            "final_score": 0.45764228999614714
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "시원한육수에살얼음이동동",
+        "decided_menu": "시원한 육수에 살얼음이 동동~",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_1049",
+            "menu": "아이스크림크로플",
+            "embed_score": 0.6270186901092529,
+            "jamo_score": 0.1875,
+            "final_score": 0.4731871485710144
+          },
+          {
+            "id": "rep_0229",
+            "menu": "냉우동",
+            "embed_score": 0.6199304461479187,
+            "jamo_score": 0.15625,
+            "final_score": 0.45764228999614714
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "아이스크림크로플",
+          "best_jamo_score": 0.1875,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "새콤한 물막국수",
+      "poly": [
+        [
+          1413.0,
+          1595.0
+        ],
+        [
+          1663.0,
+          1644.0
+        ],
+        [
+          1655.0,
+          1686.0
+        ],
+        [
+          1405.0,
+          1637.0
+        ]
+      ],
+      "menu_norm": "새콤한물막국수",
+      "menu_final": "새콤한 물막국수",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "새콤한물막국수",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_0921",
+            "menu": "새콤해물",
+            "embed_score": 0.8630144000053406,
+            "jamo_score": 0.4736842105263158,
+            "final_score": 0.7267488336876818
+          },
+          {
+            "id": "rep_0635",
+            "menu": "물칼국수",
+            "embed_score": 0.8210803866386414,
+            "jamo_score": 0.4736842105263158,
+            "final_score": 0.6994917249993274
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "새콤한물막국수",
+        "decided_menu": "새콤한 물막국수",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_0921",
+            "menu": "새콤해물",
+            "embed_score": 0.8630144000053406,
+            "jamo_score": 0.4736842105263158,
+            "final_score": 0.7267488336876818
+          },
+          {
+            "id": "rep_0635",
+            "menu": "물칼국수",
+            "embed_score": 0.8210803866386414,
+            "jamo_score": 0.4736842105263158,
+            "final_score": 0.6994917249993274
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "새콤해물",
+          "best_jamo_score": 0.4736842105263158,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "물비빔막국수",
+      "poly": [
+        [
+          262.0,
+          2026.0
+        ],
+        [
+          619.0,
+          2086.0
+        ],
+        [
+          608.0,
+          2152.0
+        ],
+        [
+          251.0,
+          2092.0
+        ]
+      ],
+      "menu_norm": "물비빔막국수",
+      "menu_final": "물비빔막국수",
+      "match_status": "CLOSE",
+      "match_decision_method": "CLOSE_BY_FINAL_SCORE",
+      "match": {
+        "used_query": "물비빔막국수",
+        "best": {
+          "id": "rep_1148",
+          "menu": "열비빔국수",
+          "best_variant": "열비빔국수",
+          "embed_score": 0.9577243328094482,
+          "jamo_score": 0.6875,
+          "final_score": 0.8631458163261414
+        },
+        "candidates": [
+          {
+            "id": "rep_1148",
+            "menu": "열비빔국수",
+            "embed_score": 0.9577243328094482,
+            "jamo_score": 0.6875,
+            "final_score": 0.8631458163261414,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "열비빔국수"
+          },
+          {
+            "id": "rep_1099",
+            "menu": "어탕국수",
+            "embed_score": 0.9457483887672424,
+            "jamo_score": 0.375,
+            "final_score": 0.7459864526987076,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "어탕국수"
+          }
+        ],
+        "thresholds": {
+          "embed_min": 0.55,
+          "jamo_min": 0.55,
+          "final_close": 0.8,
+          "final_w_embed": 0.65,
+          "final_w_jamo": 0.35,
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "CLOSE",
+        "used_query": "물비빔막국수",
+        "decided_menu": "물비빔막국수",
+        "decision_method": "CLOSE_BY_FINAL_SCORE",
+        "best_match": {
+          "id": "rep_1148",
+          "menu": "열비빔국수",
+          "embed_score": 0.9577243328094482,
+          "jamo_score": 0.6875,
+          "final_score": 0.8631458163261414,
+          "ingredients_ko": [
+            "Wheat"
+          ],
+          "alg_tags": [
+            "ALG_CEREALS_GLUTEN"
+          ],
+          "source": "menu_representative_korean_dedup_plus_cuisines",
+          "best_variant": "열비빔국수"
+        },
+        "candidates": [
+          {
+            "id": "rep_1148",
+            "menu": "열비빔국수",
+            "embed_score": 0.9577243328094482,
+            "jamo_score": 0.6875,
+            "final_score": 0.8631458163261414,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "열비빔국수"
+          },
+          {
+            "id": "rep_1099",
+            "menu": "어탕국수",
+            "embed_score": 0.9457483887672424,
+            "jamo_score": 0.375,
+            "final_score": 0.7459864526987076,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "어탕국수"
+          }
+        ],
+        "signals": {
+          "top1_final_menu": "열비빔국수",
+          "top1_final": 0.8631458163261414,
+          "top1_embed_menu": "열비빔국수",
+          "top1_embed": 0.9577243328094482,
+          "best_jamo_menu": "열비빔국수",
+          "best_jamo": 0.6875,
+          "best_variant": "열비빔국수",
+          "best_variant_jamo": 0.6875,
+          "thresholds": {
+            "embed_min": 0.55,
+            "jamo_min": 0.55,
+            "final_close": 0.8,
+            "final_w_embed": 0.65,
+            "final_w_jamo": 0.35,
+            "jamo_hard_cutoff": 0.5
+          },
+          "compat": {
+            "embed_ambiguous": 0.9
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "진한 양념과 시원한 육수의 만남!",
+      "poly": [
+        [
+          254.0,
+          2178.0
+        ],
+        [
+          752.0,
+          2260.0
+        ],
+        [
+          745.0,
+          2301.0
+        ],
+        [
+          247.0,
+          2219.0
+        ]
+      ],
+      "menu_norm": "진한양념과시원한육수의만남",
+      "menu_final": "진한 양념과 시원한 육수의 만남!",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "진한양념과시원한육수의만남",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_0586",
+            "menu": "명란가라아게",
+            "embed_score": 0.9620286226272583,
+            "jamo_score": 0.17142857142857137,
+            "final_score": 0.6853186047077179
+          },
+          {
+            "id": "rep_1196",
+            "menu": "와사비가라아게",
+            "embed_score": 0.9598857164382935,
+            "jamo_score": 0.17142857142857137,
+            "final_score": 0.6839257156848907
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "진한양념과시원한육수의만남",
+        "decided_menu": "진한 양념과 시원한 육수의 만남!",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_0586",
+            "menu": "명란가라아게",
+            "embed_score": 0.9620286226272583,
+            "jamo_score": 0.17142857142857137,
+            "final_score": 0.6853186047077179
+          },
+          {
+            "id": "rep_1196",
+            "menu": "와사비가라아게",
+            "embed_score": 0.9598857164382935,
+            "jamo_score": 0.17142857142857137,
+            "final_score": 0.6839257156848907
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "명란가라아게",
+          "best_jamo_score": 0.17142857142857137,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "매콤한 물비빙막국수",
+      "poly": [
+        [
+          253.0,
+          2224.0
+        ],
+        [
+          576.0,
+          2275.0
+        ],
+        [
+          570.0,
+          2313.0
+        ],
+        [
+          247.0,
+          2262.0
+        ]
+      ],
+      "menu_norm": "매콤한물비빙막국수",
+      "menu_final": "매콤한 물비빙막국수",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "매콤한물비빙막국수",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_0921",
+            "menu": "새콤해물",
+            "embed_score": 0.8142053484916687,
+            "jamo_score": 0.33333333333333337,
+            "final_score": 0.6459001431862513
+          },
+          {
+            "id": "rep_0635",
+            "menu": "물칼국수",
+            "embed_score": 0.7795069813728333,
+            "jamo_score": 0.375,
+            "final_score": 0.6379295378923416
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "매콤한물비빙막국수",
+        "decided_menu": "매콤한 물비빙막국수",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_0921",
+            "menu": "새콤해물",
+            "embed_score": 0.8142053484916687,
+            "jamo_score": 0.33333333333333337,
+            "final_score": 0.6459001431862513
+          },
+          {
+            "id": "rep_0635",
+            "menu": "물칼국수",
+            "embed_score": 0.7795069813728333,
+            "jamo_score": 0.375,
+            "final_score": 0.6379295378923416
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "물칼국수",
+          "best_jamo_score": 0.375,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "진한",
+      "poly": [
+        [
+          904.0,
+          2305.0
+        ],
+        [
+          1016.0,
+          2322.0
+        ],
+        [
+          1007.0,
+          2379.0
+        ],
+        [
+          895.0,
+          2362.0
+        ]
+      ],
+      "menu_norm": "진한",
+      "menu_final": "진한",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "진한",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_1347",
+            "menu": "찜팔보채",
+            "embed_score": 0.9640880227088928,
+            "jamo_score": 0.19999999999999996,
+            "final_score": 0.6966572147607804
+          },
+          {
+            "id": "rep_0554",
+            "menu": "매운버거",
+            "embed_score": 0.9633798599243164,
+            "jamo_score": 0.16666666666666663,
+            "final_score": 0.6845302422841391
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "진한",
+        "decided_menu": "진한",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_1347",
+            "menu": "찜팔보채",
+            "embed_score": 0.9640880227088928,
+            "jamo_score": 0.19999999999999996,
+            "final_score": 0.6966572147607804
+          },
+          {
+            "id": "rep_0554",
+            "menu": "매운버거",
+            "embed_score": 0.9633798599243164,
+            "jamo_score": 0.16666666666666663,
+            "final_score": 0.6845302422841391
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "찜팔보채",
+          "best_jamo_score": 0.19999999999999996,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "양념파",
+      "poly": [
+        [
+          873.0,
+          2352.0
+        ],
+        [
+          1036.0,
+          2376.0
+        ],
+        [
+          1028.0,
+          2434.0
+        ],
+        [
+          864.0,
+          2410.0
+        ]
+      ],
+      "menu_norm": "양념파",
+      "menu_final": "양념파",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "양념파",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_0897",
+            "menu": "새우와인파스타",
+            "embed_score": 0.9730023741722107,
+            "jamo_score": 0.19999999999999996,
+            "final_score": 0.7024515432119369
+          },
+          {
+            "id": "rep_0039",
+            "menu": "간장텐동",
+            "embed_score": 0.9695969820022583,
+            "jamo_score": 0.17647058823529416,
+            "final_score": 0.6920027441838209
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "양념파",
+        "decided_menu": "양념파",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_0897",
+            "menu": "새우와인파스타",
+            "embed_score": 0.9730023741722107,
+            "jamo_score": 0.19999999999999996,
+            "final_score": 0.7024515432119369
+          },
+          {
+            "id": "rep_0039",
+            "menu": "간장텐동",
+            "embed_score": 0.9695969820022583,
+            "jamo_score": 0.17647058823529416,
+            "final_score": 0.6920027441838209
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "새우와인파스타",
+          "best_jamo_score": 0.19999999999999996,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "어묵탕",
+      "poly": [
+        [
+          1271.0,
+          2724.0
+        ],
+        [
+          1441.0,
+          2748.0
+        ],
+        [
+          1432.0,
+          2813.0
+        ],
+        [
+          1262.0,
+          2789.0
+        ]
+      ],
+      "menu_norm": "어묵탕",
+      "menu_final": "어묵탕",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "어묵탕",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_0690",
+            "menu": "반계탕",
+            "embed_score": 0.9426494836807251,
+            "jamo_score": 0.375,
+            "final_score": 0.7439721643924713
+          },
+          {
+            "id": "rep_1357",
+            "menu": "차돌탕",
+            "embed_score": 0.9369454383850098,
+            "jamo_score": 0.375,
+            "final_score": 0.7402645349502563
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "어묵탕",
+        "decided_menu": "어묵탕",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_0690",
+            "menu": "반계탕",
+            "embed_score": 0.9426494836807251,
+            "jamo_score": 0.375,
+            "final_score": 0.7439721643924713
+          },
+          {
+            "id": "rep_1357",
+            "menu": "차돌탕",
+            "embed_score": 0.9369454383850098,
+            "jamo_score": 0.375,
+            "final_score": 0.7402645349502563
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "반계탕",
+          "best_jamo_score": 0.375,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "진하고 깊은 어묵 국물,",
+      "poly": [
+        [
+          1258.0,
+          2860.0
+        ],
+        [
+          1573.0,
+          2908.0
+        ],
+        [
+          1567.0,
+          2946.0
+        ],
+        [
+          1252.0,
+          2899.0
+        ]
+      ],
+      "menu_norm": "진하고깊은어묵국물",
+      "menu_final": "진하고 깊은 어묵 국물,",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "진하고깊은어묵국물",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_0635",
+            "menu": "물칼국수",
+            "embed_score": 0.8583548069000244,
+            "jamo_score": 0.20833333333333337,
+            "final_score": 0.6308472911516825
+          },
+          {
+            "id": "rep_1229",
+            "menu": "유린해물",
+            "embed_score": 0.8295392990112305,
+            "jamo_score": 0.20833333333333337,
+            "final_score": 0.6121172110239664
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "진하고깊은어묵국물",
+        "decided_menu": "진하고 깊은 어묵 국물,",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_0635",
+            "menu": "물칼국수",
+            "embed_score": 0.8583548069000244,
+            "jamo_score": 0.20833333333333337,
+            "final_score": 0.6308472911516825
+          },
+          {
+            "id": "rep_1229",
+            "menu": "유린해물",
+            "embed_score": 0.8295392990112305,
+            "jamo_score": 0.20833333333333337,
+            "final_score": 0.6121172110239664
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "조림해물",
+          "best_jamo_score": 0.25,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "쫄깃한 어묵과 떡이 가득",
+      "poly": [
+        [
+          1253.0,
+          2900.0
+        ],
+        [
+          1588.0,
+          2949.0
+        ],
+        [
+          1583.0,
+          2986.0
+        ],
+        [
+          1247.0,
+          2937.0
+        ]
+      ],
+      "menu_norm": "쫄깃한어묵과떡이가득",
+      "menu_final": "쫄깃한 어묵과 떡이 가득",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "쫄깃한어묵과떡이가득",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_0621",
+            "menu": "묵은지갈비찜",
+            "embed_score": 0.981325626373291,
+            "jamo_score": 0.11538461538461542,
+            "final_score": 0.6782462725272546
+          },
+          {
+            "id": "rep_1347",
+            "menu": "찜팔보채",
+            "embed_score": 0.9693348407745361,
+            "jamo_score": 0.11538461538461542,
+            "final_score": 0.6704522618880638
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "쫄깃한어묵과떡이가득",
+        "decided_menu": "쫄깃한 어묵과 떡이 가득",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_0621",
+            "menu": "묵은지갈비찜",
+            "embed_score": 0.981325626373291,
+            "jamo_score": 0.11538461538461542,
+            "final_score": 0.6782462725272546
+          },
+          {
+            "id": "rep_1347",
+            "menu": "찜팔보채",
+            "embed_score": 0.9693348407745361,
+            "jamo_score": 0.11538461538461542,
+            "final_score": 0.6704522618880638
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "묵은지갈비찜",
+          "best_jamo_score": 0.11538461538461542,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "물쫄면",
+      "poly": [
+        [
+          1018.0,
+          3247.0
+        ],
+        [
+          1398.0,
+          3295.0
+        ],
+        [
+          1390.0,
+          3353.0
+        ],
+        [
+          1011.0,
+          3305.0
+        ]
+      ],
+      "menu_norm": "물쫄면",
+      "menu_final": "물쫄면",
+      "match_status": "CLOSE",
+      "match_decision_method": "CLOSE_BY_FINAL_SCORE",
+      "match": {
+        "used_query": "물쫄면",
+        "best": {
+          "id": "rep_0634",
+          "menu": "물밀면",
+          "best_variant": "물밀면",
+          "embed_score": 0.9370822906494141,
+          "jamo_score": 0.7777777777777778,
+          "final_score": 0.8813257111443413
+        },
+        "candidates": [
+          {
+            "id": "rep_0634",
+            "menu": "물밀면",
+            "embed_score": 0.9370822906494141,
+            "jamo_score": 0.7777777777777778,
+            "final_score": 0.8813257111443413,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "물밀면"
+          },
+          {
+            "id": "rep_1348",
+            "menu": "찜해물",
+            "embed_score": 0.967926025390625,
+            "jamo_score": 0.11111111111111116,
+            "final_score": 0.6680408053927951,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "찜해물"
+          }
+        ],
+        "thresholds": {
+          "embed_min": 0.55,
+          "jamo_min": 0.55,
+          "final_close": 0.8,
+          "final_w_embed": 0.65,
+          "final_w_jamo": 0.35,
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "CLOSE",
+        "used_query": "물쫄면",
+        "decided_menu": "물쫄면",
+        "decision_method": "CLOSE_BY_FINAL_SCORE",
+        "best_match": {
+          "id": "rep_0634",
+          "menu": "물밀면",
+          "embed_score": 0.9370822906494141,
+          "jamo_score": 0.7777777777777778,
+          "final_score": 0.8813257111443413,
+          "ingredients_ko": [
+            "Wheat"
+          ],
+          "alg_tags": [
+            "ALG_CEREALS_GLUTEN"
+          ],
+          "source": "menu_representative_korean_dedup_plus_cuisines",
+          "best_variant": "물밀면"
+        },
+        "candidates": [
+          {
+            "id": "rep_0634",
+            "menu": "물밀면",
+            "embed_score": 0.9370822906494141,
+            "jamo_score": 0.7777777777777778,
+            "final_score": 0.8813257111443413,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "물밀면"
+          },
+          {
+            "id": "rep_1348",
+            "menu": "찜해물",
+            "embed_score": 0.967926025390625,
+            "jamo_score": 0.11111111111111116,
+            "final_score": 0.6680408053927951,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "찜해물"
+          }
+        ],
+        "signals": {
+          "top1_final_menu": "물밀면",
+          "top1_final": 0.8813257111443413,
+          "top1_embed_menu": "찜해물",
+          "top1_embed": 0.967926025390625,
+          "best_jamo_menu": "물밀면",
+          "best_jamo": 0.7777777777777778,
+          "best_variant": "물밀면",
+          "best_variant_jamo": 0.7777777777777778,
+          "thresholds": {
+            "embed_min": 0.55,
+            "jamo_min": 0.55,
+            "final_close": 0.8,
+            "final_w_embed": 0.65,
+            "final_w_jamo": 0.35,
+            "jamo_hard_cutoff": 0.5
+          },
+          "compat": {
+            "embed_ambiguous": 0.9
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "비빔쫄면",
+      "poly": [
+        [
+          1018.0,
+          3247.0
+        ],
+        [
+          1398.0,
+          3295.0
+        ],
+        [
+          1390.0,
+          3353.0
+        ],
+        [
+          1011.0,
+          3305.0
+        ]
+      ],
+      "menu_norm": "비빔쫄면",
+      "menu_final": "비빔쫄면",
+      "match_status": "CLOSE",
+      "match_decision_method": "CLOSE_BY_FINAL_SCORE",
+      "match": {
+        "used_query": "비빔쫄면",
+        "best": {
+          "id": "rep_0835",
+          "menu": "비빔밀면",
+          "best_variant": "비빔밀면",
+          "embed_score": 0.9687853455543518,
+          "jamo_score": 0.8181818181818181,
+          "final_score": 0.916074110973965
+        },
+        "candidates": [
+          {
+            "id": "rep_0835",
+            "menu": "비빔밀면",
+            "embed_score": 0.9687853455543518,
+            "jamo_score": 0.8181818181818181,
+            "final_score": 0.916074110973965,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "비빔밀면"
+          },
+          {
+            "id": "rep_1347",
+            "menu": "찜팔보채",
+            "embed_score": 0.9653242230415344,
+            "jamo_score": 0.18181818181818177,
+            "final_score": 0.691097108613361,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "찜팔보채"
+          }
+        ],
+        "thresholds": {
+          "embed_min": 0.55,
+          "jamo_min": 0.55,
+          "final_close": 0.8,
+          "final_w_embed": 0.65,
+          "final_w_jamo": 0.35,
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "CLOSE",
+        "used_query": "비빔쫄면",
+        "decided_menu": "비빔쫄면",
+        "decision_method": "CLOSE_BY_FINAL_SCORE",
+        "best_match": {
+          "id": "rep_0835",
+          "menu": "비빔밀면",
+          "embed_score": 0.9687853455543518,
+          "jamo_score": 0.8181818181818181,
+          "final_score": 0.916074110973965,
+          "ingredients_ko": [
+            "Wheat"
+          ],
+          "alg_tags": [
+            "ALG_CEREALS_GLUTEN"
+          ],
+          "source": "menu_representative_korean_dedup_plus_cuisines",
+          "best_variant": "비빔밀면"
+        },
+        "candidates": [
+          {
+            "id": "rep_0835",
+            "menu": "비빔밀면",
+            "embed_score": 0.9687853455543518,
+            "jamo_score": 0.8181818181818181,
+            "final_score": 0.916074110973965,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "비빔밀면"
+          },
+          {
+            "id": "rep_1347",
+            "menu": "찜팔보채",
+            "embed_score": 0.9653242230415344,
+            "jamo_score": 0.18181818181818177,
+            "final_score": 0.691097108613361,
+            "source": "menu_representative_korean_dedup_plus_cuisines",
+            "best_variant": "찜팔보채"
+          }
+        ],
+        "signals": {
+          "top1_final_menu": "비빔밀면",
+          "top1_final": 0.916074110973965,
+          "top1_embed_menu": "비빔밀면",
+          "top1_embed": 0.9687853455543518,
+          "best_jamo_menu": "비빔밀면",
+          "best_jamo": 0.8181818181818181,
+          "best_variant": "비빔밀면",
+          "best_variant_jamo": 0.8181818181818181,
+          "thresholds": {
+            "embed_min": 0.55,
+            "jamo_min": 0.55,
+            "final_close": 0.8,
+            "final_w_embed": 0.65,
+            "final_w_jamo": 0.35,
+            "jamo_hard_cutoff": 0.5
+          },
+          "compat": {
+            "embed_ambiguous": 0.9
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "쫄~깃한 쫄면과 새콤달콤",
+      "poly": [
+        [
+          1006.0,
+          3368.0
+        ],
+        [
+          1337.0,
+          3409.0
+        ],
+        [
+          1333.0,
+          3443.0
+        ],
+        [
+          1002.0,
+          3402.0
+        ]
+      ],
+      "menu_norm": "쫄깃한쫄면과새콤달콤",
+      "menu_final": "쫄~깃한 쫄면과 새콤달콤",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "쫄깃한쫄면과새콤달콤",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_0623",
+            "menu": "묵은지김치찜",
+            "embed_score": 0.9372739195823669,
+            "jamo_score": 0.1428571428571429,
+            "final_score": 0.6592280477285386
+          },
+          {
+            "id": "rep_0920",
+            "menu": "새콤오징어",
+            "embed_score": 0.9296005964279175,
+            "jamo_score": 0.1428571428571429,
+            "final_score": 0.6542403876781464
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "쫄깃한쫄면과새콤달콤",
+        "decided_menu": "쫄~깃한 쫄면과 새콤달콤",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_0623",
+            "menu": "묵은지김치찜",
+            "embed_score": 0.9372739195823669,
+            "jamo_score": 0.1428571428571429,
+            "final_score": 0.6592280477285386
+          },
+          {
+            "id": "rep_0920",
+            "menu": "새콤오징어",
+            "embed_score": 0.9296005964279175,
+            "jamo_score": 0.1428571428571429,
+            "final_score": 0.6542403876781464
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "묵은지김치찜",
+          "best_jamo_score": 0.1428571428571429,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    },
+    {
+      "raw_menu": "비법소스로 맛있게 매콤한맛",
+      "poly": [
+        [
+          1002.0,
+          3402.0
+        ],
+        [
+          1380.0,
+          3449.0
+        ],
+        [
+          1375.0,
+          3484.0
+        ],
+        [
+          997.0,
+          3437.0
+        ]
+      ],
+      "menu_norm": "비법소스로맛있게매콤한맛",
+      "menu_final": "비법소스로 맛있게 매콤한맛",
+      "match_status": "NOT_FOUND_BELOW_THRESHOLD",
+      "match_decision_method": "JAMO_HARD_CUTOFF",
+      "match": {
+        "used_query": "비법소스로맛있게매콤한맛",
+        "best": {
+          "id": null,
+          "menu": null,
+          "best_variant": null,
+          "embed_score": null,
+          "jamo_score": null,
+          "final_score": null
+        },
+        "candidates": [
+          {
+            "id": "rep_0623",
+            "menu": "묵은지김치찜",
+            "embed_score": 0.925458550453186,
+            "jamo_score": 0.1333333333333333,
+            "final_score": 0.6482147244612376
+          },
+          {
+            "id": "rep_0621",
+            "menu": "묵은지갈비찜",
+            "embed_score": 0.9142885208129883,
+            "jamo_score": 0.09999999999999998,
+            "final_score": 0.6292875385284424
+          }
+        ],
+        "thresholds": {
+          "jamo_hard_cutoff": 0.5
+        },
+        "debug": null
+      },
+      "confirmed": null,
+      "rag_match": {
+        "status": "NOT_FOUND_BELOW_THRESHOLD",
+        "used_query": "비법소스로맛있게매콤한맛",
+        "decided_menu": "비법소스로 맛있게 매콤한맛",
+        "decision_method": "JAMO_HARD_CUTOFF",
+        "best_match": null,
+        "candidates": [
+          {
+            "id": "rep_0623",
+            "menu": "묵은지김치찜",
+            "embed_score": 0.925458550453186,
+            "jamo_score": 0.1333333333333333,
+            "final_score": 0.6482147244612376
+          },
+          {
+            "id": "rep_0621",
+            "menu": "묵은지갈비찜",
+            "embed_score": 0.9142885208129883,
+            "jamo_score": 0.09999999999999998,
+            "final_score": 0.6292875385284424
+          }
+        ],
+        "signals": {
+          "best_jamo_menu": "묵은지김치찜",
+          "best_jamo_score": 0.1333333333333333,
+          "thresholds": {
+            "jamo_hard_cutoff": 0.5
+          }
+        },
+        "debug": null
+      }
+    }
+  ]
+}
