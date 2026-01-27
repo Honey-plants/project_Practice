@@ -13,6 +13,22 @@ from typing import Any, Dict, List, Literal, Optional, Tuple
 SchemaVersion = Literal["v1"]
 RiskLevel = Literal["OK", "CAUTION", "NO"]
 
+# ============================================================
+# Allowed ALG tags (UI/정렬 기준 고정)
+# ============================================================
+ALLOWED_ALG_TAGS = {
+    "ALG_CELERY",
+    "ALG_CEREALS_GLUTEN",
+    "ALG_CRUSTACEANS",
+    "ALG_EGGS",
+    "ALG_FISH",
+    "ALG_MILK",
+    "ALG_MOLLUSCS",
+    "ALG_MUSTARD",
+    "ALG_SESAME",
+    "ALG_SOY",
+    "ALG_TREE_NUTS",
+}
 
 # ============================================================
 # Low-level validators
@@ -114,6 +130,14 @@ class LLMItemOutputV1:
       - risk_level     : OK / CAUTION / NO (기본 CAUTION)
       - reason_bullets : 근거를 bullet로 분리(프론트 UI에 그대로 활용 가능)
       - confidence     : 0~1 범위의 신뢰도(모델 응답 품질/추정치 표기)
+
+    EXTENDED OPTIONAL (프롬프트 확장용):
+      - matched_constraints : 사용자 조건과 충돌한다고 판단된 항목 요약
+          {
+            "allergy_tags": ["ALG_MILK"] or null,
+            "religion": "..." or null,
+            "avoid_foods": ["고수"] or null
+          }
     """
     # REQUIRED (must always exist)
     item_id: str
@@ -126,6 +150,8 @@ class LLMItemOutputV1:
     risk_level: RiskLevel = "CAUTION"
     reason_bullets: List[str] = field(default_factory=list)
     confidence: float = 0.0
+    # NOTE: dataclass level typing is optional; validator handles runtime checks
+    matched_constraints: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -224,6 +250,46 @@ def validate_llm_output_v1(obj: Dict[str, Any]) -> Tuple[bool, str]:
                 return False, f"items[{i}].confidence must be numeric"
             if c < 0.0 or c > 1.0:
                 return False, f"items[{i}].confidence must be 0.0~1.0"
+
+        # OPTIONAL: matched_constraints
+        # - if present, must be object or null
+        # - fields inside must be:
+        #   allergy_tags: list[str] subset of ALLOWED_ALG_TAGS OR null
+        #   religion: str OR null
+        #   avoid_foods: list[str] OR null
+        if "matched_constraints" in it:
+            mc = it.get("matched_constraints")
+            if mc is not None:
+                if not isinstance(mc, dict):
+                    return False, f"items[{i}].matched_constraints must be object or null"
+
+                # allergy_tags
+                if "allergy_tags" in mc:
+                    v = mc.get("allergy_tags")
+                    if v is not None:
+                        if not isinstance(v, list):
+                            return False, f"items[{i}].matched_constraints.allergy_tags must be list or null"
+                        for t in v:
+                            if not isinstance(t, str) or not t.startswith("ALG_"):
+                                return False, f"items[{i}].matched_constraints.allergy_tags invalid value: {t}"
+                            if t not in ALLOWED_ALG_TAGS:
+                                return False, f"items[{i}].matched_constraints.allergy_tags not allowed: {t}"
+
+                # religion
+                if "religion" in mc:
+                    v = mc.get("religion")
+                    if v is not None and not isinstance(v, str):
+                        return False, f"items[{i}].matched_constraints.religion must be string or null"
+
+                # avoid_foods
+                if "avoid_foods" in mc:
+                    v = mc.get("avoid_foods")
+                    if v is not None:
+                        if not isinstance(v, list):
+                            return False, f"items[{i}].matched_constraints.avoid_foods must be list or null"
+                        for x in v:
+                            if not isinstance(x, str):
+                                return False, f"items[{i}].matched_constraints.avoid_foods must be list[str]"
 
     return True, ""
 

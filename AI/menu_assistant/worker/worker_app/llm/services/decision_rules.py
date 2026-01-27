@@ -237,7 +237,7 @@ class DecisionRules:
         rag = rec.get("rag_match") or {}
 
         # decided_menu는 rag_match 우선, 없으면 record 자체에서 탐색
-        decided = _safe_str(rag.get("decided_menu")) or _safe_str(rec.get("decided_menu"))
+        decided = _safe_str(rag.get("used_query")) or _safe_str(rec.get("used_query"))
         if not decided:
             return None
 

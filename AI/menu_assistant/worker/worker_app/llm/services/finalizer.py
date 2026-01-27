@@ -47,6 +47,7 @@ def merge_llm_output_to_final(
                     "risk_description_ko": llm.get("risk_description_ko", ""),
                     "reason_bullets": llm.get("reason_bullets", []),
                     "confidence": llm.get("confidence", 0.0),
+                    "matched_constraints": llm.get("matched_constraints"),
                 },
             }
         )
