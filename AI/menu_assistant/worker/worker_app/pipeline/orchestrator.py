@@ -257,10 +257,6 @@ class Step3Options:
     pass2_gap_px: int = 14
     pass2_gap_ratio: float = 0.45
 
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/development
 
 @dataclass
 class Step4Options:
@@ -282,9 +278,7 @@ class Step4Options:
     collection: str = "menu_index"
 
 
-<<<<<<< HEAD
 
-=======
 @dataclass
 class Step5Options:
     # Step05 (LLM) options
@@ -294,16 +288,13 @@ class Step5Options:
     require_poly: bool = True
 
 
->>>>>>> origin/development
+
 class PipelineOrchestrator:
     def __init__(self, runs_root: Path):
         self.runs_root = runs_root
         self.data_dir = runs_root.parent
         self.ai_root = runs_root.parents[2]  # .../AI
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/development
 
     def run(
             self,

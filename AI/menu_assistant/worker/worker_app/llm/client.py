@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 from __future__ import annotations
 
 import os
@@ -103,4 +101,4 @@ class Gemini25FlashClient:
             config=cfg,
         )
         return (resp.text or "").strip()
->>>>>>> origin/development
+
