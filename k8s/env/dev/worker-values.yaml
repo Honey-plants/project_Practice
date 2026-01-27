@@ -1,0 +1,32 @@
+image:
+    repository: ghcr.io/mingoo684/cicdex2-worker
+    tag: dev-007
+    pullPolicy: IfNotPresent
+
+imagePullSecrets:
+    - name: ghcr-pull2
+
+env:
+    APP_ENV: dev
+
+queue:
+    type: redis
+    redisUrl: redis://redis:6379/0
+
+config:
+    LOG_LEVEL: INFO
+    S3_BUCKET: dev-bucket-name
+    S3_PREFIX: uploads/
+
+secrets:
+    enabled: true
+    OPENAI_API_KEY: REPLACE_IN_DEV_ONLY
+    DB_PASSWORD: REPLACE_IN_DEV_ONLY
+    JWT_SECRET_KEY: REPLACE_IN_DEV_ONLY
+
+secretMount:
+    enabled: true
+    mountPath: /run/app-secrets
+
+autoscaling:
+    enabled: false
