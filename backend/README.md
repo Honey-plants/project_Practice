@@ -79,3 +79,6 @@ key 확인 : docker exec -it app_redis redis-cli keys "*"
 - PATCH /members/me
 - DELETE /members/me
 - (관리자용이 필요하면) GET /members/{member_id} 는 admin만 허용
+
+# docker refresh 확인
+- SCAN 0 MATCH bl:* COUNT 100

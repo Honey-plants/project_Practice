@@ -1,0 +1,106 @@
+import axios from "axios";
+
+const BASE_URL = "";
+
+const api = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+});
+
+const raw = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+});
+
+// sessionStorage
+const SS_KEY = "access_token";
+export const getAccessToken = () => sessionStorage.getItem(SS_KEY);
+
+let accessToken = getAccessToken();
+export const setAccessToken = (token) => {
+  accessToken = token || null;
+  if (token) sessionStorage.setItem(SS_KEY, token);
+  else sessionStorage.removeItem(SS_KEY);
+};
+
+// refresh 싱글플라이트
+let refreshPromise = null;
+async function refreshAccessTokenOnce() {
+  if (!refreshPromise) {
+    refreshPromise = raw
+      .post("/auth/refresh")
+      .then((r) => {
+        const newAccess = r.data?.access_token || null;
+        setAccessToken(newAccess);
+        return newAccess;
+      })
+      .catch((e) => {
+        // refresh 401이면 그냥 null
+        if (e?.response?.status === 401) return null;
+        throw e;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
+// request :: accToken을 여기서 담아주는 곳
+api.interceptors.request.use((config) => {
+  if (accessToken) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    const original = error.config;
+    const status = error.response?.status;
+    const url = original?.url || "";
+
+    const isRefresh = url.includes("/auth/refresh");
+    const isLogin = url.includes("/auth/login");
+    const isLogout = url.includes("/auth/logout");
+
+    // 핵심 변경:
+    // refresh/login에서 401이 나도 sessionStorage 토큰을 지우지 않는다.
+    // (logout만 토큰 정리)
+    if (isRefresh || isLogin) {
+      return Promise.reject(error);
+    }
+    if (isLogout) {
+      setAccessToken(null);
+      window.dispatchEvent(new Event("auth-changed"));
+      return Promise.reject(error);
+    }
+
+    // 일반 API가 401일 때만 refresh 시도
+    if (status === 401 && original && !original._retry) {
+      original._retry = true;
+      try {
+        const newAccess = await refreshAccessTokenOnce();
+        if (!newAccess) throw new Error("No access token after refresh");
+
+        original.headers = original.headers || {};
+        original.headers.Authorization = `Bearer ${newAccess}`;
+
+        window.dispatchEvent(new Event("auth-changed"));
+        return api(original);
+      } catch (e) {
+        // 여기서만 accessToken 제거 (진짜 인증 깨짐)
+        setAccessToken(null);
+        window.dispatchEvent(new Event("auth-changed"));
+        return Promise.reject(e);
+      }
+    }
+
+    const msg = error.response?.data?.detail || error.message || "Request failed";
+    return Promise.reject(new Error(msg));
+  }
+);
+
+export default api;

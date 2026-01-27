@@ -8,7 +8,7 @@ from backend.app.common.schemas import responses
 from backend.app.models.member import Member
 from backend.app.core.security.deps import get_current_member
 
-router = APIRouter(prefix="/members", tags=["member"])
+router = APIRouter(prefix="/member", tags=["member"])
 
 # 회원가입
 @router.post("", status_code=201)
