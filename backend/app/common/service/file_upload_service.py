@@ -15,7 +15,7 @@ async def upload_input_file(*, upload_type: str, member_id: int, upload: UploadF
     업로드 저장: local/s3 동일
     반환 UploadObject.file_key로 이후 처리/삭제 통일
     """
-    # recipe / review
+    # menu / review
     t = normalize_upload_type(upload_type)
     storage = get_storage()
     return await storage.save_input(upload_type=t, member_id=member_id, upload=upload)
