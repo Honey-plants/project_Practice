@@ -7,6 +7,15 @@ __pycache__/
 venv/
 env/
 
+
+# allow GitOps values
+!k8s/env/**
+
+# (선택) 로컬에서만 쓰는 민감 파일은 따로 무시
+k8s/env/**/secrets*.yaml
+k8s/env/**/.env
+
+
 # env files
 .env
 
