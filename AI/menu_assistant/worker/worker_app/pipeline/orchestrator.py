@@ -650,8 +650,9 @@ if __name__ == "__main__":
     p.add_argument("--no-step5", action="store_true", help="Skip step5")
     p.add_argument(
         "--user-profile-json",
-        default=str((_default_image_base() / "user_profile_mock.json").resolve()),
-        help="Path to user profile JSON for step5 (default: Upload_Images/user_profile_mock.json)",
+        default=str((_project_root() / "upload" / "user_profile_mock.json").resolve()),
+        help="Path to user profile JSON for step5 (default: <project_root>/upload/user_profile_mock.json)",
+
     )
     p.add_argument("--step5-debug", action="store_true", help="Enable step5 debug outputs")
     p.add_argument("--step5-max-retries", type=int, default=2)

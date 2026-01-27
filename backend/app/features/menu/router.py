@@ -8,7 +8,7 @@ from backend.app.common.service.file_upload_service import (
 from backend.app.common.schemas.file_upload_schema import UploadInputResponse
 
 # orchestrator import (subprocess X, Python import 실행)
-from menu_assistant.worker.worker_app.pipeline.orchestrator import (
+from AI.menu_assistant.worker.worker_app.pipeline.orchestrator import (
     PipelineOrchestrator,
     _default_runs_root,
 )
