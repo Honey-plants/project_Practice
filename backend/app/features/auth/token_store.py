@@ -8,7 +8,12 @@ def blacklist_key(jti: str) -> str:
 
 def save_refresh_jti(member_id: int, refresh_jti: str, ttl_seconds: int) -> None:
     key = f"refresh:{member_id}"
-    print("[REDIS] SET", key, refresh_jti, ttl_seconds)  # ✅ 임시
+
+    print("[REFRESH] redis key:", key, "exists:", redis_client.exists(key))
+    print("[REFRESH] ttl:", redis_client.ttl(key), "value:", redis_client.get(key))
+
+    # refresh token redis 생성 체크 부분
+    print("[REDIS] SET", key, refresh_jti, ttl_seconds)
     redis_client.set(refresh_key(member_id), refresh_jti, ex=ttl_seconds)
 
 def get_refresh_jti(member_id: int) -> str | None:

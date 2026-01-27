@@ -517,6 +517,69 @@ class PipelineOrchestrator:
 
         return run_dir
 
+# ============================================================
+# Backend helper (ADD ONLY)
+# ============================================================
+
+def get_run_outputs(run_dir: Path) -> dict:
+    """
+    Given a run_dir (e.g. <runs_root>/<run_id>), return important output paths.
+    This is a pure helper for backend response construction.
+    """
+    return {
+        "run_dir": str(run_dir),
+        "rectified_path": str(run_dir / "rectify" / "rectified.jpg"),
+        "final_json_path": str(run_dir / "final" / "final.json"),
+        "ocr_json_path": str(run_dir / "ocr" / "ocr.json"),
+        "normalize_json_path": str(run_dir / "normalize" / "normalize.json"),
+        "rag_match_json_path": str(run_dir / "rag_match" / "rag_match.json"),
+    }
+
+
+def run_pipeline(
+    *,
+    image_path: Path,
+    run_id: Optional[str] = None,
+    runs_root: Optional[Path] = None,
+    run_step4: bool = True,
+    run_step5: bool = True,
+    # optional: pass through options if you need later
+    step1: Optional["Step1Options"] = None,
+    step2: Optional["Step2Options"] = None,
+    step3: Optional["Step3Options"] = None,
+    step4: Optional["Step4Options"] = None,
+    step5: Optional["Step5Options"] = None,
+    do_check: bool = True,
+    check_keywords: Optional[List[str]] = None,
+    show_structured: bool = True,
+) -> dict:
+    """
+    Minimal backend-friendly entrypoint.
+    - Keeps existing PipelineOrchestrator logic unchanged
+    - Returns run_dir + key output paths
+    """
+    rr = runs_root or _default_runs_root()
+    orch = PipelineOrchestrator(Path(rr))
+
+    run_dir = orch.run(
+        image_path=image_path,
+        run_id=run_id,
+        step1=step1,
+        step2=step2,
+        step3=step3,
+        step4=step4,
+        step5=step5,
+        do_check=do_check,
+        check_keywords=check_keywords,
+        show_structured=show_structured,
+        run_step4=run_step4,
+        run_step5=run_step5,
+    )
+
+    outputs = get_run_outputs(run_dir)
+    outputs["run_id"] = run_dir.name  # same as run_id used
+    return outputs
+
 
 # ============================================================
 # CLI
@@ -587,8 +650,9 @@ if __name__ == "__main__":
     p.add_argument("--no-step5", action="store_true", help="Skip step5")
     p.add_argument(
         "--user-profile-json",
-        default=str((_default_image_base() / "user_profile_mock.json").resolve()),
-        help="Path to user profile JSON for step5 (default: Upload_Images/user_profile_mock.json)",
+        default=str((_project_root() / "upload" / "user_profile_mock.json").resolve()),
+        help="Path to user profile JSON for step5 (default: <project_root>/upload/user_profile_mock.json)",
+
     )
     p.add_argument("--step5-debug", action="store_true", help="Enable step5 debug outputs")
     p.add_argument("--step5-max-retries", type=int, default=2)

@@ -1,3 +1,46 @@
+<<<<<<< HEAD
+=======
+from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException
+from backend.app.core.security.deps import get_current_member
+from backend.app.common.service.file_upload_service import (
+    upload_input_file, ensure_local_path, delete_input_file
+)
+from backend.app.common.schemas.file_upload_schema import UploadInputResponse
+
+router = APIRouter(prefix="/review", tags=["review"])
+
+# 영수증 검증 및 리뷰 생성
+@router.post("/upload", response_model=UploadInputResponse)
+async def review_upload(type: str = Form("review"), image: UploadFile = File(...), current=Depends(get_current_member), ):
+    obj = await upload_input_file(upload_type=type, member_id=current.member_id, upload=image)
+
+    cleanup_download = lambda: None
+
+    try:
+        local_path, cleanup_download = ensure_local_path(obj)
+
+        # review AI 로직 실행
+        # result = review_service.process(local_path)
+
+        return UploadInputResponse(
+            upload_type=obj.upload_type,
+            member_id=obj.member_id,
+            file_key=obj.file_key,
+            stored_file_name=obj.stored_file_name,
+            org_file_name=obj.org_file_name,
+            mime_type=obj.mime_type,
+            size_bytes=obj.size_bytes,
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    finally:
+        cleanup_download()
+        delete_input_file(file_key=obj.file_key)
+
+
+>>>>>>> 2f58d98 (backend update and front update)
 # from fastapi import APIRouter, Depends, HTTPException
 # from sqlalchemy.orm import Session
 #

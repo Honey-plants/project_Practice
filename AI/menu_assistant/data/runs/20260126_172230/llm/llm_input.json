@@ -1,0 +1,85 @@
+{
+  "schema_version": "v1",
+  "run_id": "20260126_172230",
+  "user_profile": {
+    "allergy_tags": [
+      "ALG_PEANUT",
+      "ALG_CRUSTACEANS",
+      "ALG_MILK"
+    ],
+    "avoid_foods": [
+      "땅콩",
+      "피넛",
+      "새우",
+      "게",
+      "랍스터",
+      "크랩",
+      "우유",
+      "치즈",
+      "버터",
+      "크림",
+      "고수",
+      "코리앤더",
+      "간"
+    ],
+    "religion": null
+  },
+  "items": [
+    {
+      "item_id": "itm_0001",
+      "status": "close",
+      "menu_name": "삼겹살",
+      "poly": [
+        [
+          834.0,
+          515.0
+        ],
+        [
+          1117.0,
+          523.0
+        ],
+        [
+          1116.0,
+          564.0
+        ],
+        [
+          833.0,
+          556.0
+        ]
+      ],
+      "evidence": {
+        "menu_id": null,
+        "ingredients_ko": [],
+        "alg_tags": []
+      }
+    },
+    {
+      "item_id": "itm_0002",
+      "status": "exact",
+      "menu_name": "먹태",
+      "poly": [
+        [
+          857.0,
+          694.0
+        ],
+        [
+          1170.0,
+          694.0
+        ],
+        [
+          1170.0,
+          745.0
+        ],
+        [
+          857.0,
+          745.0
+        ]
+      ],
+      "evidence": {
+        "menu_id": "rep_0576",
+        "ingredients_ko": [],
+        "alg_tags": []
+      }
+    }
+  ]
+}
