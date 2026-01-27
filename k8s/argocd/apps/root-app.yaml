@@ -8,7 +8,7 @@ spec:
 
     source:
         repoURL: https://github.com/mingoo684/cicdex2.git
-        targetRevision: test1
+        targetRevision: HEAD
         path: k8s/argocd/apps
         directory:
             recurse: true
