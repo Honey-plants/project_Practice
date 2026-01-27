@@ -7,6 +7,81 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
+import json
+
+
+# ============================================================
+# Path routing (Docker-friendly)
+# ============================================================
+
+def _project_root() -> Path:
+    """
+    Resolve repository/project root robustly.
+    This file is: <root>/AI/menu_assistant/worker/worker_app/pipeline/orchestrator.py
+    So parents[4] => <root>/AI, parents[5] => <root>
+    """
+    here = Path(__file__).resolve()
+    # .../AI/menu_assistant/worker/worker_app/pipeline/orchestrator.py
+    # parents: [pipeline, worker_app, worker, menu_assistant, AI, <root>]
+    return here.parents[5]
+
+
+def _default_image_base() -> Path:
+    """
+    Default image base (no hard-coded Windows paths).
+    Priority:
+      1) ENV: MENU_ASSISTANT_IMAGE_BASE
+      2) <project_root>/AI/Upload_Images
+    """
+    env = os.environ.get("MENU_ASSISTANT_IMAGE_BASE")
+    if env:
+        return Path(env).expanduser().resolve()
+    return (_project_root() / "AI" / "Upload_Images").resolve()
+
+
+def _default_runs_root() -> Path:
+    """
+    Default runs root (no hard-coded Windows paths).
+    Priority:
+      1) ENV: MENU_ASSISTANT_RUNS_ROOT
+      2) <project_root>/AI/menu_assistant/data/runs
+    """
+    env = os.environ.get("MENU_ASSISTANT_RUNS_ROOT")
+    if env:
+        return Path(env).expanduser().resolve()
+    return (_project_root() / "AI" / "menu_assistant" / "data" / "runs").resolve()
+
+
+def _resolve_image_arg(image_arg: str, image_base: Path) -> Path:
+    """
+    Resolve --image argument into an absolute path.
+
+    Supported inputs:
+      - absolute path: returned as-is
+      - "Upload_Images/xxx.jpg": mapped under image_base/xxx.jpg
+      - "xxx.jpg": mapped under image_base/xxx.jpg
+      - other relative paths: resolved against current working directory
+        (but we still try image_base first to keep UX consistent)
+    """
+    p = Path(image_arg)
+
+    # Absolute path
+    if p.is_absolute():
+        return p
+
+    parts = p.parts
+    if parts and parts[0].lower() == "upload_images":
+        # Upload_Images/xxx.jpg -> <image_base>/xxx.jpg
+        tail = Path(*parts[1:]) if len(parts) > 1 else Path()
+        return (image_base / tail).resolve()
+
+    # Try <image_base>/<relative>
+    candidate = (image_base / p).resolve()
+    if candidate.exists():
+        return candidate
+
+    # Fallback: resolve relative to CWD
+    return p.resolve()
 
 # ============================================================
 # Path routing (Docker-friendly)
@@ -183,7 +258,6 @@ class Step3Options:
     pass2_gap_ratio: float = 0.45
 
 
-
 @dataclass
 class Step4Options:
     # RAG match options (match step_04_rag_match.py)
@@ -205,6 +279,16 @@ class Step4Options:
 
 
 
+@dataclass
+class Step5Options:
+    # Step05 (LLM) options
+    user_profile_json: Optional[str] = None
+    include_debug: bool = False
+    max_retries: int = 2
+    require_poly: bool = True
+
+
+
 class PipelineOrchestrator:
     def __init__(self, runs_root: Path):
         self.runs_root = runs_root
@@ -213,18 +297,21 @@ class PipelineOrchestrator:
 
 
     def run(
-        self,
-        image_path: Path,
-        run_id: Optional[str] = None,
-        *,
-        step1: Optional[Step1Options] = None,
-        step2: Optional[Step2Options] = None,
-        step3: Optional[Step3Options] = None,
-        step4: Optional[Step4Options] = None,
-        do_check: bool = True,
-        check_keywords: Optional[List[str]] = None,
-        show_structured: bool = True,
-        run_step4: bool = True,
+            self,
+            image_path: Path,
+            run_id: Optional[str] = None,
+            *,
+            step1: Optional[Step1Options] = None,
+            step2: Optional[Step2Options] = None,
+            step3: Optional[Step3Options] = None,
+            step4: Optional[Step4Options] = None,
+            step5: Optional[Step5Options] = None,
+            run_step5: bool = True,
+
+            do_check: bool = True,
+            check_keywords: Optional[List[str]] = None,
+            show_structured: bool = True,
+            run_step4: bool = True,
     ) -> Path:
         if not image_path.exists():
             raise FileNotFoundError(f"Input image not found: {image_path}")
@@ -233,6 +320,7 @@ class PipelineOrchestrator:
         step2 = step2 or Step2Options()
         step3 = step3 or Step3Options()
         step4 = step4 or Step4Options()
+        step5 = step5 or Step5Options()
 
         run_id = run_id or make_run_id()
         run_dir = self.runs_root / run_id
@@ -438,15 +526,136 @@ class PipelineOrchestrator:
             run_cmd(cmd4, env=step4_env)
             ensure_exists(rag_match_json, "Step04 expected output missing (rag_match json)")
 
-        print("\n=== PIPELINE DONE (01~04) ===")
+        # ----------------------------------------------------
+        # Step 05: LLM Risk Score + Build final.json
+        # ----------------------------------------------------
+        final_json = run_dir / "final" / "final.json"
+
+        if run_step5:
+            cmd5 = [
+                sys.executable,
+                "-m",
+                "menu_assistant.worker.worker_app.pipeline.steps.step_05_risk_score",
+                "--run_id",
+                run_id,
+                "--data_dir",
+                str(self.data_dir),
+                "--max_retries",
+                str(step5.max_retries),
+            ]
+
+            if step5.user_profile_json:
+                cmd5 += ["--user_profile_json", step5.user_profile_json]
+
+            if step5.require_poly:
+                cmd5 += ["--require_poly"]
+            else:
+                cmd5 += ["--no_require_poly"]
+
+            if step5.include_debug:
+                cmd5 += ["--include_debug"]
+
+            run_cmd(cmd5, cwd=self.ai_root)
+            llm_input_path = run_dir / "llm" / "llm_input.json"
+            llm_output_path = run_dir / "llm" / "llm_output.json"
+            ensure_exists(llm_input_path, "Step05 expected output missing (llm_input.json)")
+            ensure_exists(llm_output_path, "Step05 expected output missing (llm_output.json)")
+
+            llm_input_obj = json.loads(llm_input_path.read_text(encoding="utf-8"))
+            llm_output_obj = json.loads(llm_output_path.read_text(encoding="utf-8"))
+
+            user_profile = llm_input_obj.get("user_profile") or {"allergy_tags": [], "avoid_foods": [],
+                                                                 "religion": None}
+            llm_input_items = llm_input_obj.get("items") or []
+            llm_output_items = llm_output_obj.get("items") or []
+
+            from menu_assistant.worker.worker_app.llm.services.finalizer import merge_llm_output_to_final
+
+            final_obj = merge_llm_output_to_final(
+                run_id=run_id,
+                user_profile=user_profile,
+                llm_input_items=llm_input_items,
+                llm_output_items=llm_output_items,
+            )
+
+            final_json.parent.mkdir(parents=True, exist_ok=True)
+            final_json.write_text(json.dumps(final_obj, ensure_ascii=False, indent=2), encoding="utf-8")
+            ensure_exists(final_json, "Step05 final output missing (final.json)")
+
+        print("=== PIPELINE DONE (01~04) ===")
         print(f"run_dir        : {run_dir}")
         print(f"rectified.jpg  : {rectify_img}")
         print(f"ocr.json       : {ocr_json_check}")
         print(f"normalize.json : {normalize_json}")
         if run_step4:
             print(f"rag_match.json : {rag_match_json}")
+        if run_step5:
+            print(f"final.json     : {final_json}")
 
         return run_dir
+
+# ============================================================
+# Backend helper (ADD ONLY)
+# ============================================================
+
+def get_run_outputs(run_dir: Path) -> dict:
+    """
+    Given a run_dir (e.g. <runs_root>/<run_id>), return important output paths.
+    This is a pure helper for backend response construction.
+    """
+    return {
+        "run_dir": str(run_dir),
+        "rectified_path": str(run_dir / "rectify" / "rectified.jpg"),
+        "final_json_path": str(run_dir / "final" / "final.json"),
+        "ocr_json_path": str(run_dir / "ocr" / "ocr.json"),
+        "normalize_json_path": str(run_dir / "normalize" / "normalize.json"),
+        "rag_match_json_path": str(run_dir / "rag_match" / "rag_match.json"),
+    }
+
+
+def run_pipeline(
+    *,
+    image_path: Path,
+    run_id: Optional[str] = None,
+    runs_root: Optional[Path] = None,
+    run_step4: bool = True,
+    run_step5: bool = True,
+    # optional: pass through options if you need later
+    step1: Optional["Step1Options"] = None,
+    step2: Optional["Step2Options"] = None,
+    step3: Optional["Step3Options"] = None,
+    step4: Optional["Step4Options"] = None,
+    step5: Optional["Step5Options"] = None,
+    do_check: bool = True,
+    check_keywords: Optional[List[str]] = None,
+    show_structured: bool = True,
+) -> dict:
+    """
+    Minimal backend-friendly entrypoint.
+    - Keeps existing PipelineOrchestrator logic unchanged
+    - Returns run_dir + key output paths
+    """
+    rr = runs_root or _default_runs_root()
+    orch = PipelineOrchestrator(Path(rr))
+
+    run_dir = orch.run(
+        image_path=image_path,
+        run_id=run_id,
+        step1=step1,
+        step2=step2,
+        step3=step3,
+        step4=step4,
+        step5=step5,
+        do_check=do_check,
+        check_keywords=check_keywords,
+        show_structured=show_structured,
+        run_step4=run_step4,
+        run_step5=run_step5,
+    )
+
+    outputs = get_run_outputs(run_dir)
+    outputs["run_id"] = run_dir.name  # same as run_id used
+    return outputs
 
 
 # ============================================================
@@ -512,6 +721,19 @@ if __name__ == "__main__":
     p.add_argument("--use-rerank", action="store_true")
     p.add_argument("--no-rerank", action="store_true")
     p.add_argument("--rag-debug", action="store_true")
+
+    # ---------------- Step5 passthrough ----------------
+    p.add_argument("--run-step5", action="store_true", help="Run step5 (default: on)")
+    p.add_argument("--no-step5", action="store_true", help="Skip step5")
+    p.add_argument(
+        "--user-profile-json",
+        default=str((_project_root() / "upload" / "user_profile_mock.json").resolve()),
+        help="Path to user profile JSON for step5 (default: <project_root>/upload/user_profile_mock.json)",
+
+    )
+    p.add_argument("--step5-debug", action="store_true", help="Enable step5 debug outputs")
+    p.add_argument("--step5-max-retries", type=int, default=2)
+    p.add_argument("--step5-no-require-poly", action="store_true", help="Do not require poly (debug only)")
 
     # ✅ hard-fix routing (stability)
     p.add_argument(
@@ -608,6 +830,19 @@ if __name__ == "__main__":
     if args.run_step4:
         run_step4 = True
 
+    step5 = Step5Options(
+        user_profile_json=args.user_profile_json,
+        include_debug=args.step5_debug,
+        max_retries=args.step5_max_retries,
+        require_poly=(not args.step5_no_require_poly),
+    )
+
+    run_step5 = True
+    if args.no_step5:
+        run_step5 = False
+    if args.run_step5:
+        run_step5 = True
+
     orch.run(
         image_path=Path(args.image),
         run_id=args.run_id,
@@ -615,8 +850,13 @@ if __name__ == "__main__":
         step2=step2,
         step3=step3,
         step4=step4,
+        step5=step5,
         do_check=(not args.no_check),
         check_keywords=args.check_keywords,
         show_structured=(not args.no_structured),
         run_step4=run_step4,
+        run_step5=run_step5,
     )
+
+
+

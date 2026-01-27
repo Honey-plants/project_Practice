@@ -1,4 +1,8 @@
 import base64
+
+
+from AI.review.pipeline.receipt_service import process_receipt_ocr
+
 import traceback
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from backend.app.core.job_queue import connect_redis, enqueue_task, utc_now_iso

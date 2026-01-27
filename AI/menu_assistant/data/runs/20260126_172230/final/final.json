@@ -1,0 +1,134 @@
+{
+  "schema_version": "v1",
+  "run_id": "20260126_172230",
+  "user_profile": {
+    "allergy_tags": [
+      "ALG_PEANUT",
+      "ALG_CRUSTACEANS",
+      "ALG_MILK"
+    ],
+    "avoid_foods": [
+      "땅콩",
+      "피넛",
+      "새우",
+      "게",
+      "랍스터",
+      "크랩",
+      "우유",
+      "치즈",
+      "버터",
+      "크림",
+      "고수",
+      "코리앤더",
+      "간"
+    ],
+    "religion": null
+  },
+  "items": [
+    {
+      "item_id": "itm_0001",
+      "match": {
+        "status": "close",
+        "poly": [
+          [
+            834.0,
+            515.0
+          ],
+          [
+            1117.0,
+            523.0
+          ],
+          [
+            1116.0,
+            564.0
+          ],
+          [
+            833.0,
+            556.0
+          ]
+        ],
+        "menu_id": null,
+        "ingredients_ko": [],
+        "alg_tags": [],
+        "decided_menu": null
+      },
+      "menu": {
+        "menu_name_ko": "삼겹살",
+        "menu_description_ko": "삼겹살은 돼지의 뱃살 부위를 구워 먹는 한국의 대표적인 요리입니다.",
+        "menu_name_en": "",
+        "menu_description_en": ""
+      },
+      "risk": {
+        "risk_level": "OK",
+        "risk_description_ko": "위험: OK — 사용자 프로필과 충돌하는 내용이 확인되지 않았습니다.\n근거: 제공된 메뉴명과 증거만으로는 사용자 프로필의 알러지나 기피 식품과의 연관성을 찾을 수 없습니다.\n권고: 안심하고 섭취하셔도 좋습니다.",
+        "reason_bullets": [],
+        "confidence": 0.9,
+        "matched_constraints": {
+          "allergy_tags": null,
+          "religion": null,
+          "avoid_foods": null
+        }
+      }
+    },
+    {
+      "item_id": "itm_0002",
+      "match": {
+        "status": "exact",
+        "poly": [
+          [
+            857.0,
+            694.0
+          ],
+          [
+            1170.0,
+            694.0
+          ],
+          [
+            1170.0,
+            745.0
+          ],
+          [
+            857.0,
+            745.0
+          ]
+        ],
+        "menu_id": null,
+        "ingredients_ko": [],
+        "alg_tags": [],
+        "decided_menu": null
+      },
+      "menu": {
+        "menu_name_ko": "먹태",
+        "menu_description_ko": "먹태는 황태를 말린 것으로, 주로 구워서 술안주로 즐겨 먹는 메뉴입니다.",
+        "menu_name_en": "",
+        "menu_description_en": ""
+      },
+      "risk": {
+        "risk_level": "CAUTION",
+        "risk_description_ko": "위험: CAUTION — 해산물 특성 및 소스류에 알러지 유발 물질이 포함될 가능성이 있습니다.\n근거: '먹태'는 해산물이며, 제공된 증거에 재료 정보가 없어 사용자 프로필의 ALG_CRUSTACEANS, ALG_MILK 알러지 및 기피 식품(새우, 게, 우유, 치즈, 버터, 크림)과의 충돌 가능성을 배제할 수 없습니다.\n권고: 주문 전 매장에 정확한 재료 및 소스 구성을 확인하는 것이 좋습니다.",
+        "reason_bullets": [
+          "ALG_CRUSTACEANS 알러지 가능성 (해산물 메뉴 특성상)",
+          "ALG_MILK 알러지 가능성 (소스류 포함 가능성)",
+          "기피 식품 '새우', '게' 포함 가능성",
+          "기피 식품 '우유', '치즈', '버터', '크림' 포함 가능성"
+        ],
+        "confidence": 0.6,
+        "matched_constraints": {
+          "allergy_tags": [
+            "ALG_CRUSTACEANS",
+            "ALG_MILK"
+          ],
+          "religion": null,
+          "avoid_foods": [
+            "새우",
+            "게",
+            "우유",
+            "치즈",
+            "버터",
+            "크림"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+
 # AI/review/pipeline/receipt_service.py
 
 import json
@@ -14,10 +15,12 @@ def process_receipt_ocr(image_bytes: bytes) -> dict:
     ocr = get_ocr_model()
 
     # 3) OCR 수행
+
     result = ocr.predict(img)
 
     if not result or not result[0]:
         return {"error": "No text detected"}
+
 
     # 4) 결과 파싱
     receipt = build_receipt_json(result[0])

@@ -3,6 +3,7 @@
 import os
 from typing import Optional
 
+
 # Lazy singleton
 _ocr_model = None  # type: Optional[object]
 
@@ -12,6 +13,7 @@ def get_ocr_model():
     API 부팅(import) 단계에서 Paddle/PaddleOCR 로딩을 피하기 위한 목적.
     """
     global _ocr_model
+
 
     # 운영에서 OCR을 아예 끄고 싶을 때(예: API/Worker 분리 전)
     if os.getenv("DISABLE_OCR", "false").lower() in ("1", "true", "yes"):
