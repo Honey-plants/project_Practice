@@ -17,7 +17,7 @@ env:
     DB_PORT: "3306"
     DB_NAME: app_db
     DB_USER: app_user
-    REDIS_URL: "redis://redis:6379/0"
+    REDIS_URL: "redis://redis-master.app-prod.svc.cluster.local:6379/0"
 
 # Secret을 "파일 마운트"로 주입하는 구조
 secretsMount:
