@@ -43,6 +43,7 @@ def build_step05_prompt(*, run_id: str, user_profile: Dict[str, Any], items: lis
                     "근거: 제공된 재료 정보 또는 알러지 태그를 기준으로 판단했습니다.\n"
                     "권고: 주문 전 원재료와 소스 구성을 매장에 확인하는 것이 좋습니다."
                 ),
+                "comment": "이 메뉴(김치찌개)에 돼지고기/해산물/우유 등 알러지 유발 재료가 들어가나요?",
                 "risk_level": "CAUTION",
                 "reason_bullets": [
                     "사용자 조건(알러지/종교/비선호)과 메뉴 근거(evidence: alg_tags/ingredients_ko) 간 충돌 가능성"
@@ -119,6 +120,9 @@ def build_step05_prompt(*, run_id: str, user_profile: Dict[str, Any], items: lis
         "- risk_level must be consistent with risk_description_ko and matched_constraints.\n"
         "- reason_bullets must include the specific matched constraint when present (e.g., 'ALG_MILK 가능성', '돼지고기 가능성').\n"
         "- confidence must be between 0.0 and 1.0.\n"
+        "- comment must be a SINGLE Korean question for restaurant staff, ending with '?'.\n"
+        "- comment must be based on (1) match.status (exact/close), (2) reason_bullets, and (3) matched_constraints.\n"
+        "- If match.status is close, you MUST ask to confirm the menu name first, then ask the ingredient/allergen question.\n"
     )
 
     return {"system": system, "user": user}
