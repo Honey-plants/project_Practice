@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
 import json
+import time
 
 
 # ============================================================
@@ -204,6 +205,8 @@ class Step4Options:
     collection: str = "menu_index"
 
 
+# orchestrator.py
+
 @dataclass
 class Step5Options:
     # Step05 (LLM) options
@@ -211,6 +214,10 @@ class Step5Options:
     include_debug: bool = False
     max_retries: int = 2
     require_poly: bool = True
+
+    # ✅ NEW: orchestrator-level retry backoff (seconds)
+    sleep_base: float = 2.0
+
 
 
 # ✅ NEW: Step6 options (Translate)
@@ -478,29 +485,42 @@ class PipelineOrchestrator:
 
         if run_step5:
             cmd5 = [
-                sys.executable,
-                "-m",
+                sys.executable, "-m",
                 "menu_assistant.worker.worker_app.pipeline.steps.step_05_risk_score",
-                "--run_id",
-                run_id,
-                "--data_dir",
-                str(self.data_dir),
-                "--max_retries",
-                str(step5.max_retries),
+                "--run_id", run_id,
+                "--data_dir", str(self.data_dir),
+                "--max_retries", str(step5.max_retries),
             ]
-
             if step5.user_profile_json:
                 cmd5 += ["--user_profile_json", step5.user_profile_json]
-
             if step5.require_poly:
                 cmd5 += ["--require_poly"]
             else:
                 cmd5 += ["--no_require_poly"]
-
             if step5.include_debug:
                 cmd5 += ["--include_debug"]
 
-            run_cmd(cmd5, cwd=self.ai_root)
+            # ✅ NEW: retry wrapper (keeps pipeline alive on transient 503/overload)
+            last_err: Optional[Exception] = None
+            for attempt in range(int(step5.max_retries) + 1):
+                try:
+                    if attempt > 0:
+                        wait = float(step5.sleep_base) * (2 ** (attempt - 1))
+                        print(
+                            f"[STEP05] previous attempt failed. retrying in {wait:.1f}s... (attempt {attempt}/{step5.max_retries})")
+                        time.sleep(wait)
+
+                    run_cmd(cmd5, cwd=self.ai_root)
+                    last_err = None
+                    break
+
+                except Exception as e:
+                    last_err = e
+                    # 다음 루프로 재시도. 마지막이면 raise.
+                    if attempt >= int(step5.max_retries):
+                        raise
+
+            # 이후 llm_input/llm_output 읽는 로직은 그대로
 
             llm_input_path = run_dir / "llm" / "llm_input.json"
             llm_output_path = run_dir / "llm" / "llm_output.json"
@@ -583,7 +603,7 @@ class PipelineOrchestrator:
             ensure_exists(translate_json, "Step06 expected output missing (translate.json)")
             ensure_exists(final_translated_json, "Step06 expected output missing (final_translated.json)")
 
-        print("=== PIPELINE DONE (01~04) ===")
+        print("=== PIPELINE DONE (01~06) ===")
         print(f"run_dir        : {run_dir}")
         print(f"rectified.jpg  : {rectify_img}")
         print(f"ocr.json       : {ocr_json_check}")
