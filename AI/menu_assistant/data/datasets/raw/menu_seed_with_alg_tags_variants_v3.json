@@ -35,7 +35,11 @@
     "id": "rep_0003",
     "menu": "가리비덮밥",
     "variants": [
+<<<<<<< HEAD
       "가리비덮밥"
+=======
+      "가리비덥밥"
+>>>>>>> origin/development
     ],
     "ingredients_ko": [
       "Shellfish"

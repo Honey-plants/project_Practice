@@ -1,7 +1,11 @@
 
 import React, { useState } from "react";
 import { mockUser } from "../../assets/mock/mockData";
+<<<<<<< HEAD
 import { resizeImage } from "../../common/utils/imageProcessor";
+=======
+import { resizeAndCompressImage } from "../../common/utils/imageProcessor";
+>>>>>>> origin/development
 
 export default function ReviewWritePage() {
   const [step, setStep] = useState("upload"); // upload -> confirm -> write -> done
@@ -20,7 +24,11 @@ export default function ReviewWritePage() {
 
     try {
       // 이미지 리사이즈
+<<<<<<< HEAD
       const resizedBlob = await resizeImage(imageFile, 1024);
+=======
+      const resizedBlob = await resizeAndCompressImage(imageFile, 1024);
+>>>>>>> origin/development
 
       const resizedFile = new File(
         [resizedBlob],
