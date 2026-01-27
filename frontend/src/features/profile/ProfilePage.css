@@ -1,199 +1,180 @@
-.profileWrap {
-  padding: 24px 16px;
+/* ProfilePage.scoped.css : "pfp-" prefix 전용 (충돌 방지) */
+
+.pfp-root {
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.profileLayout {
-  max-width: 1100px;
+.pfp-shell {
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.pfp-grid {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 40px;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+  align-items: start;
 }
 
 /* LEFT */
-.profileSidebar {
-  border: 4px solid #111;
-  padding: 14px;
-  display: grid;
+.pfp-aside {
+  display: flex;
+  flex-direction: column;
   gap: 14px;
 }
 
-.sideTop {
-  display: grid;
-  grid-template-columns: 64px 1fr;
-  gap: 10px;
-  align-items: center;
-  border: 3px solid #111;
-  padding: 10px;
-}
-
-.bannerBox {
-  border: 3px solid #111;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-}
-
-.profileTitle {
-  border: 3px solid #111;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-}
-
-.sideCard {
-  border: 3px solid #111;
-  padding: 18px 12px;
-  display: grid;
+.pfp-asideTop {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.infoCard {
-  min-height: 140px;
+.pfp-banner {
+  height: 120px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  display: grid;
   place-items: center;
-  align-content: center;
-}
-
-.infoText {
-  text-align: center;
   font-weight: 800;
 }
 
-.menuCard {
-  min-height: 220px;
-  align-content: center;
+.pfp-title {
+  font-size: 22px;
+  font-weight: 900;
 }
 
-.menuBtn {
-  border: 0;
-  background: transparent;
-  font-weight: 800;
-  text-align: left;
-  padding: 12px 10px;
+.pfp-card {
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  padding: 14px;
+  box-sizing: border-box;
+}
+
+.pfp-infoRow {
+  margin: 6px 0;
+  word-break: break-word;
+}
+
+.pfp-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pfp-menuBtn {
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.7);
   cursor: pointer;
-}
-
-.menuBtn:hover {
-  text-decoration: underline;
 }
 
 /* RIGHT */
-.profileMain {
-  display: grid;
-  gap: 18px;
+.pfp-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 400px;
 }
 
-.mapBox {
-  border: 4px solid #111;
-  height: 220px;
+.pfp-error {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 0, 0, 0.22);
+  background: rgba(255, 0, 0, 0.06);
+}
+
+.pfp-map {
+  height: 260px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
   display: grid;
   place-items: center;
-}
-
-.mapText {
   text-align: center;
-  font-weight: 800;
-  line-height: 1.6;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
-.cardRow {
-  margin-top: 22px;
+.pfp-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 28px;
+  gap: 14px;
 }
 
-.mainCard {
-  border: 4px solid #111;
-  min-height: 260px;
+.pfp-panel {
   position: relative;
-  padding: 18px;
-  display: grid;
-  place-items: center;
+  min-height: 180px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  padding: 14px;
+  box-sizing: border-box;
 }
 
-.moreBtn {
+.pfp-more {
   position: absolute;
-  top: -14px;
-  right: 18px;
-
-  border: 3px solid #111;
-  background: #fff;
-  padding: 6px 10px;
-  font-weight: 800;
+  top: 12px;
+  right: 12px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.8);
   cursor: pointer;
 }
 
-.cardBodyText {
-  text-align: center;
-  font-weight: 800;
-  line-height: 1.7;
+.pfp-panelText {
+  margin-top: 38px;
+  line-height: 1.45;
+  font-weight: 700;
 }
 
-/* error */
-.errorBox {
-  border: 2px solid #b00020;
-  padding: 10px;
-  color: #b00020;
-  background: #fff5f6;
+.pfp-muted {
+  opacity: 0.7;
 }
 
-/* edit panel (기능 유지용) */
-.editDetails {
-  margin-top: 10px;
-  border: 2px dashed #111;
-  padding: 10px;
+/* DEBUG(영역 확인용) : 필요 없으면 아래 블록만 삭제 */
+.pfp-grid,
+.pfp-aside,
+.pfp-main,
+.pfp-card,
+.pfp-map,
+.pfp-panel {
+  outline: 2px dashed rgba(0, 0, 0, 0.25);
 }
 
-.editSummary {
-  cursor: pointer;
-  font-weight: 800;
-}
-
-.editPanel {
-  margin-top: 12px;
-}
-
-.editGrid {
-  display: grid;
-  gap: 12px;
-  max-width: 520px;
-}
-
-.field {
-  display: grid;
-  gap: 6px;
-}
-
-.label {
-  font-weight: 800;
-}
-
-.field input {
-  border: 2px solid #111;
-  padding: 10px;
-  width: 100%;
-}
-
-.saveBtn {
-  border: 3px solid #111;
-  background: #fff;
-  padding: 10px 14px;
-  font-weight: 800;
-  cursor: pointer;
-  width: 160px;
-}
-
-/* responsive */
+/* Responsive */
 @media (max-width: 900px) {
-  .profileLayout {
+  .pfp-grid {
     grid-template-columns: 1fr;
-    gap: 18px;
   }
-
-  .cardRow {
+  .pfp-row {
     grid-template-columns: 1fr;
   }
 }
+
+
+.pfp-edit { display: flex; flex-direction: column; gap: 16px; }
+.pfp-formRow { display: flex; flex-direction: column; gap: 8px; }
+.pfp-formBlock { display: flex; flex-direction: column; gap: 10px; }
+.pfp-formTitle { font-weight: 700; }
+.pfp-chipGrid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.pfp-chip {
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+}
+.pfp-chip.on {
+  border-color: #222;
+  font-weight: 700;
+}
+.pfp-actions { display: flex; justify-content: flex-end; gap: 10px; }

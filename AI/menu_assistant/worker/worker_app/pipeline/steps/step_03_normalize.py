@@ -1,139 +1,444 @@
 from __future__ import annotations
 
+import argparse
 import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple
 
 
 # ============================================================
-# Non-menu filtering (do NOT change any paths; only filtering)
-# ============================================================
-# Goal: normalize.json should contain menu candidates ONLY.
-# We keep existing output schema/paths intact and simply filter records
-# before they are appended to items_normalized / items_merged.
-# ============================================================
-# Jaccard helpers (NEW)
+# Step 03: Normalize menu strings (Korean-only) + keep poly
+#
+# STABILIZED MERGE:
+# - 2-pass merge within each text line (y-cluster)
+#   Pass1: merge ONLY short Hangul fragments (len 1~2)
+#   Pass2: conditional merge for longer fragments, with strict guards
+# - Stop merge when next token looks like PRICE/NUMBER column (digits/"원")
+# - Use both absolute x-gap and relative x-gap (gap / avg_height)
+# - Split by "/" AFTER merge, BEFORE normalize
+#
+# Final output keeps ONLY:
+#   { raw_menu, poly, menu_norm }
 # ============================================================
 
-# 메뉴가 절대 될 수 없는 키워드
+
 _NON_MENU_HARD_KEYWORDS = [
+    # fixed hard blocks (policy / notice)
     "원산지", "국내산", "수입산",
-    "인원", "인분",
-    "포장", "배달",
-    "셀프", "무한",
-    "환불", "결제",
+    "포장", "배달", "환불", "결제",
     "문의", "전화",
-    "대로받습니다",
-    "식자재", "유통",
+    "알레르기", "알러지", "주의",
+
+    # menu-board notices / operational words
+    "공지", "안내", "참고", "유의", "필독",
+    "테이블", "카운터", "셀프", "리필", "무료", "서비스",
+    "주문", "주문서", "계산", "계산대", "결제", "포장가능", "배달가능",
+    "영업", "시간", "휴무", "브레이크", "라스트오더",
+
+    # choice / option phrases (typical set explanation)
+    "선택", "중선택", "메뉴북", "대신", "가능", "변경", "추가요금", "개당",
 ]
-# 2글자지만 실제 메뉴로 자주 등장하는 것들(필요시 추가)
-_SHORT_MENU_ALLOW = {
-    "만두", "냉면", "우동", "라면", "먹태", "전", "국", "탕"
+
+# Titles / section headers (should be removed)
+_NON_MENU_TITLES = {
+    "안주", "사이드", "추가", "추가메뉴", "사리", "음료", "음료수", "주류", "메뉴",
+    "세트", "세트메뉴", "코스", "런치", "디너", "세트구성", "구성",
+    "옵션", "선택", "추천", "베스트",
 }
 
-# 섹션/카테고리성 단어(메뉴 아님)
-_NON_MENU_CATEGORY_WORDS = {
-    "안주", "사이드", "추가", "추가메뉴", "사리", "음료", "음료수", "주류", "메뉴"
+_KEEP_HANGUL_ONLY = re.compile(r"[^가-힣]+", re.UNICODE)
+_WS_RE = re.compile(r"\s+", re.UNICODE)
+_SLASH_SPLIT_RE = re.compile(r"\s*/\s*", re.UNICODE)
+_HAS_DIGIT_RE = re.compile(r"\d", re.UNICODE)
+_HAS_WON_RE = re.compile(r"(원|₩)", re.UNICODE)
+
+# Extra non-menu detection (set/notice/instruction lines)
+# - We keep final output as menu_norm, but we filter early to reduce RAG noise.
+# - This is intentionally conservative: it targets set 구성/선택/안내문구.
+_NON_MENU_PATTERNS = [
+    re.compile(r"\bSET\b", re.IGNORECASE),
+    re.compile(r"\bMENU\b", re.IGNORECASE),
+    re.compile(r"\bfrom\b", re.IGNORECASE),
+    re.compile(r"\bor\b", re.IGNORECASE),
+    re.compile(r"\+\s*\d+\s*(천원|만원|원)", re.UNICODE),
+    re.compile(r"\d+\s*인\s*세트", re.UNICODE),
+    re.compile(r"\b\d+\s*잔\b", re.UNICODE),
+    re.compile(r"(중\s*선택|중선택|메뉴\s*선택|대신|가능|변경|추가요금|개당)", re.UNICODE),
+]
+
+# If a line is mostly a 'selection instruction', treat as non-menu.
+_SELECTION_HINTS = [
+    "선택", "중선택", "대신", "가능", "변경", "메뉴북", "메뉴", "옵션",
+]
+
+# Components often appearing in set descriptions. If the string contains these WITH selection hints,
+# it is very likely not a standalone menu name.
+_SET_COMPONENT_WORDS = {
+    "스프", "후식", "드링크", "와인", "샐러드", "샐러드", "파스타", "리조토", "피자",
 }
 
-def is_strict_menu_candidate(
-    text_norm: str,
-    detail_parts_norm: list[str] | None = None,
+
+def _contains_any(s: str, words) -> bool:
+    for w in words:
+        if w and w in s:
+            return True
+    return False
+
+
+def _looks_like_set_or_notice(raw_text: str, menu_norm: str) -> bool:
+    """Return True if the token likely represents set/notice/instruction rather than a menu item."""
+    t = _norm_space(raw_text)
+    if not t:
+        return True
+
+    # headers already handled by _NON_MENU_TITLES, but catch common English headings
+    for pat in _NON_MENU_PATTERNS:
+        if pat.search(t):
+            # If it contains actual Hangul menu and no selection hints, don't over-filter.
+            # Example: '찹스테이크' should pass, 'SET MENU', 'from 59,500', '파스타/.. 중 선택1' should not.
+            # Here, patterns mostly indicate instruction or set.
+            return True
+
+    # Strong selection / instruction signals
+    if _contains_any(t, _SELECTION_HINTS):
+        return True
+
+    # If raw text includes set component words AND looks like instruction, filter.
+    if _contains_any(menu_norm, _SET_COMPONENT_WORDS) and ("선택" in t or "중" in t or "or" in t.lower()):
+        return True
+
+    # Standalone set word or variants like '세트(2인)'
+    if "세트" in t or "세트" in menu_norm:
+        return True
+
+    return False
+
+
+def _norm_space(s: str) -> str:
+    s = (s or "").strip()
+    return _WS_RE.sub(" ", s)
+
+
+def normalize_menu_korean_only(text: str) -> str:
+    s = (text or "").strip()
+    if not s:
+        return ""
+    s = _KEEP_HANGUL_ONLY.sub("", s)
+    return s.strip()
+
+
+def _safe_poly(poly: Any) -> List[List[float]]:
+    if not isinstance(poly, list) or len(poly) < 4:
+        return []
+    out = []
+    for p in poly:
+        if not isinstance(p, (list, tuple)) or len(p) < 2:
+            return []
+        try:
+            out.append([float(p[0]), float(p[1])])
+        except Exception:
+            return []
+    return out
+
+
+def _poly_bbox(poly: List[List[float]]) -> Tuple[float, float, float, float]:
+    xs = [p[0] for p in poly]
+    ys = [p[1] for p in poly]
+    return min(xs), min(ys), max(xs), max(ys)
+
+def _y_overlap_ratio(a: List[List[float]], b: List[List[float]]) -> float:
+    """Two bboxes' vertical overlap ratio over min height. 0.0 ~ 1.0"""
+    ax1, ay1, ax2, ay2 = _poly_bbox(a)
+    bx1, by1, bx2, by2 = _poly_bbox(b)
+    inter = max(0.0, min(ay2, by2) - max(ay1, by1))
+    ha = max(1.0, ay2 - ay1)
+    hb = max(1.0, by2 - by1)
+    denom = min(ha, hb)
+    return float(inter / denom) if denom > 0 else 0.0
+
+
+def _poly_center(poly: List[List[float]]) -> Tuple[float, float]:
+    x1, y1, x2, y2 = _poly_bbox(poly)
+    return (x1 + x2) / 2.0, (y1 + y2) / 2.0
+
+
+def _poly_height(poly: List[List[float]]) -> float:
+    _, y1, _, y2 = _poly_bbox(poly)
+    return max(1.0, float(y2 - y1))
+
+
+def _union_poly_bbox(poly_a: List[List[float]], poly_b: List[List[float]]) -> List[List[float]]:
+    xs = [p[0] for p in poly_a] + [p[0] for p in poly_b]
+    ys = [p[1] for p in poly_a] + [p[1] for p in poly_b]
+    x1, y1, x2, y2 = min(xs), min(ys), max(xs), max(ys)
+    return [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
+
+
+def _is_price_like(text: str) -> bool:
+    t = _norm_space(text)
+    if not t:
+        return False
+    if _HAS_DIGIT_RE.search(t):
+        return True
+    if _HAS_WON_RE.search(t):
+        return True
+    return False
+
+
+def _is_short_hangul_fragment(text: str) -> bool:
+    """Pass1 대상: 한글만 남겼을 때 길이 1~2"""
+    t = _norm_space(text)
+    if not t:
+        return False
+    if _is_price_like(t):
+        return False
+    hn = normalize_menu_korean_only(t)
+    return 1 <= len(hn) <= 2
+
+
+def _is_mergeable_general(text: str) -> bool:
+    """Pass2 대상: 한글-only 기준으로 최소 1글자 이상(가격류 제외)"""
+    t = _norm_space(text)
+    if not t:
+        return False
+    if _is_price_like(t):
+        return False
+    hn = normalize_menu_korean_only(t)
+    return len(hn) >= 1
+
+
+def _merge_two(a: Dict[str, Any], b: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "text": str(a["text"]) + str(b["text"]),
+        "poly": _union_poly_bbox(a["poly"], b["poly"]),
+        "score": float(min(float(a.get("score", 0.0)), float(b.get("score", 0.0)))),
+    }
+
+
+def _line_cluster(items: List[Dict[str, Any]], line_y_tol: int) -> List[List[Dict[str, Any]]]:
+    """y center 기준으로 라인 클러스터링"""
+    if not items:
+        return []
+    items_sorted = sorted(items, key=lambda d: _poly_center(d["poly"])[1])
+    lines: List[List[Dict[str, Any]]] = []
+    cur: List[Dict[str, Any]] = []
+    cur_y: float = 0.0
+
+    for it in items_sorted:
+        _, cy = _poly_center(it["poly"])
+        if not cur:
+            cur = [it]
+            cur_y = cy
+            continue
+        if abs(cy - cur_y) <= float(line_y_tol):
+            cur.append(it)
+            # running average for stability
+            cur_y = (cur_y * (len(cur) - 1) + cy) / len(cur)
+        else:
+            lines.append(cur)
+            cur = [it]
+            cur_y = cy
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def _should_merge_pair(
+    left: Dict[str, Any],
+    right: Dict[str, Any],
+    gap_px: int,
+    gap_ratio: float,
+    pass_mode: str,
 ) -> bool:
-    """
-    Chroma 쿼리용 '진짜 메뉴' 판별 (보수적이되 과도하게 배제하지 않음)
-    """
-    if not text_norm:
+    """병합 여부 판단: x-gap + price-like 차단 + pass별 텍스트 조건"""
+    l_text = str(left.get("text", ""))
+    r_text = str(right.get("text", ""))
+
+    # 가격/숫자 토큰이 끼면 병합 금지
+    if _is_price_like(l_text) or _is_price_like(r_text):
         return False
 
-    # 1) 너무 짧은 조각 텍스트 차단 (단, 예외 허용)
-    if len(text_norm) < 2:
-        return False
-    if len(text_norm) == 2 and text_norm not in _SHORT_MENU_ALLOW:
-        return False
-
-    # 2) 하드 키워드 차단
-    for kw in _NON_MENU_HARD_KEYWORDS:
-        if kw in text_norm:
+    # pass별 토큰 조건
+    if pass_mode == "pass1":
+        if not (_is_short_hangul_fragment(l_text) and _is_short_hangul_fragment(r_text)):
+            return False
+    else:
+        # pass2: 조금 더 넓게 허용하되, 여전히 한글-only가 있어야 함
+        if not (_is_mergeable_general(l_text) and _is_mergeable_general(r_text)):
             return False
 
-    # 3) 섹션/카테고리 단독 단어 차단
-    if text_norm in _NON_MENU_CATEGORY_WORDS:
+    # x-gap 조건
+    lx1, ly1, lx2, ly2 = _poly_bbox(left["poly"])
+    rx1, ry1, rx2, ry2 = _poly_bbox(right["poly"])
+    dx = float(rx1 - lx2)
+
+    # (가드1) 좌->우 순서가 깨진 '역전'은 병합 금지 (과병합 방지)
+    # right가 left보다 확실히 왼쪽에 있으면 reversed로 본다.
+
+    if float(rx2) <= float(lx1):
+
         return False
 
-    # 4) 제목형 표현 차단
-    if text_norm.endswith(("류", "메뉴", "안내")):
+    # (가드2) 세로로 충분히 겹치지 않으면 병합 금지 (라인 섞임 방지)
+    # line_cluster가 y-center 기반이므로, 여기서 한 번 더 안정화한다.
+
+    if _y_overlap_ratio(left["poly"], right["poly"]) < 0.60:
+
         return False
 
-    # 5) detail_parts_norm(괄호) 유무는 더 이상 필수 조건이 아님
-    #    (괄호 없는 메뉴가 훨씬 많음)
+    # (핵심) dx가 음수(겹침)인 경우를 제한적으로 허용
+    # - 너무 많이 겹치면(큰 음수) 다른 컬럼/라인 토큰을 빨아들일 위험이 있으므로 제한
+    lh = _poly_height(left["poly"])
+    rh = _poly_height(right["poly"])
+    avg_h = (lh + rh) / 2.0
+
+    # overlap 허용치: min(절대 px, 상대 비율)
+    overlap_tol_px = 6.0
+    overlap_tol_ratio = 0.20  # avg_h의 20%까지 음수 dx 허용
+    overlap_tol = min(overlap_tol_px, float(avg_h) * overlap_tol_ratio)
+
+    if dx < 0.0:
+
+        if abs(dx) > overlap_tol:
+
+            return False
+      # 겹침은 허용하되, gap 제한은 '양수 dx'에만 적용
+    else:
+
+        if dx > float(gap_px):
+
+            return False
+      # 해상도 변화 안정화: gap / avg_height (양수 dx일 때만 의미가 큼)
+
+    if avg_h > 0:
+
+        if (dx / avg_h) > float(gap_ratio):
+
+            return False
 
     return True
 
 
-# Jaccard에 독이 되는 일반 메뉴 접미사
-_JACCARD_DROP_SUFFIX = [
-    "국", "탕", "찌개",
-    "면", "밥", "죽",
-    "볶음", "구이", "전", "튀김",
-    "세트", "정식"
-]
-def normalize_for_jaccard(text: str) -> str:
-    """
-    Jaccard 계산 전용 문자열 생성
-    - 한글만 유지
-    - 공백 제거
-    - 의미 없는 접미사 제거
-    """
-    s = normalize_korean_only(text)
-    if not s:
-        return ""
+def _merge_line_once(
+    line_items: List[Dict[str, Any]],
+    gap_px: int,
+    gap_ratio: float,
+    pass_mode: str,
+) -> List[Dict[str, Any]]:
+    """라인 내부 left-to-right 1회 병합"""
+    if not line_items:
+        return []
+    # center-x는 겹침 케이스에서 순서가 흔들릴 수 있으므로 bbox x1 기준으로 안정화
+    line = sorted(line_items, key=lambda d: _poly_bbox(d["poly"])[0])
+    out: List[Dict[str, Any]] = []
+    i = 0
+    while i < len(line):
+        cur = line[i]
+        j = i + 1
+        while j < len(line):
+            nxt = line[j]
 
-    for suf in _JACCARD_DROP_SUFFIX:
-        if s.endswith(suf) and len(s) > len(suf) + 1:
-            s = s[: -len(suf)]
+            # 다음 토큰이 가격/숫자면, 여기서 병합을 멈추는 것이 안정적(컬럼 넘어감 방지)
+            if _is_price_like(str(nxt.get("text", ""))):
+                break
+
+            if _should_merge_pair(cur, nxt, gap_px=gap_px, gap_ratio=gap_ratio, pass_mode=pass_mode):
+                cur = _merge_two(cur, nxt)
+                j += 1
+                continue
             break
 
-    return s
+        out.append(cur)
+        i = j
+    return out
 
 
-# Notice/guide/operation words that indicate non-menu sentences.
-_NON_MENU_SUBSTRINGS = [
-    "주문", "안내", "공지", "필수", "가능", "불가", "포장", "매장", "이용",
-    "시간", "휴무", "전화", "문의", "원산지", "알레르기", "알러지", "주의",
-]
+def merge_det_items_stable(
+    items_raw: List[Dict[str, Any]],
+    line_y_tol: int,
+    merge_gap_px: int,
+    merge_gap_ratio: float,
+    pass2_gap_px: int,
+    pass2_gap_ratio: float,
+    enable_pass2: bool,
+) -> List[Dict[str, Any]]:
+    """전체 병합: 라인 클러스터 → pass1 → (옵션) pass2"""
+    prepared: List[Dict[str, Any]] = []
+    for it in items_raw:
+        poly = _safe_poly(it.get("poly"))
+        if not poly:
+            continue
+        prepared.append(
+            {
+                "text": str(it.get("text", "")),
+                "poly": poly,
+                "score": float(it.get("score", 0.0)),
+            }
+        )
 
-# Common section titles (non-menu headers).
-_NON_MENU_TITLES = {
-    "추가메뉴", "사이드", "사리", "추가", "음료", "음료수", "주류", "메뉴",
-}
+    lines = _line_cluster(prepared, line_y_tol=int(line_y_tol))
 
-def _looks_like_notice(raw_text: str, menu_norm: str) -> bool:
-    t = (raw_text or "").strip()
+    merged_all: List[Dict[str, Any]] = []
+    for ln in lines:
+        # pass1: short fragments only (strong & safe)
+        p1 = _merge_line_once(ln, gap_px=int(merge_gap_px), gap_ratio=float(merge_gap_ratio), pass_mode="pass1")
+
+        # pass2: optional, for "김치" + "찌개" 같은 케이스를 조건부로 추가 병합
+        if enable_pass2:
+            p2 = _merge_line_once(p1, gap_px=int(pass2_gap_px), gap_ratio=float(pass2_gap_ratio), pass_mode="pass2")
+        else:
+            p2 = p1
+
+        merged_all.extend(p2)
+
+    # 안정적 출력 정렬
+    merged_all.sort(key=lambda d: (_poly_center(d["poly"])[1], _poly_center(d["poly"])[0]))
+    return merged_all
+
+
+def split_by_slash(raw_text: str) -> List[str]:
+    t = _norm_space(raw_text)
     if not t:
-        return True
+        return []
+    if "/" not in t:
+        return [t]
+    # ------------------------------------------------------------------
+    # Special case: "옵션/재료/토핑 나열 + 공백 + 메인메뉴"
+    # e.g., "새우/전복/문어 비프찹스테이크"  -> ["비프찹스테이크"]
+    #
+    # Rationale:
+    # naive split makes "문어 비프찹스테이크" -> normalize -> "문어비프찹스테이크"
+    # which is incorrect menu query for RAG.
+    # ------------------------------------------------------------------
 
-    # Bullet/marker + notice content (e.g., "※ 1인 1메뉴 주문입니다")
-    if t.startswith(("※", "*", "•", "-", "·")):
-        for s in _NON_MENU_SUBSTRINGS:
-            if s in t:
-                return True
+    if " " in t:
+        left, right = t.rsplit(" ", 1)
+  # left must contain slashes; right should look like a menu token after hangul-only normalize
 
-    # Normalized text still contains notice/operation words
-    for s in _NON_MENU_SUBSTRINGS:
-        if s in (menu_norm or ""):
-            return True
+        if "/" in left:
+            right_norm = normalize_menu_korean_only(right)
+            left_norm = normalize_menu_korean_only(left.replace("/", ""))
+    # conservative guards:
+    # - right should contain meaningful Hangul
+    # - left should not be empty (it is option list)
 
-    return False
+            if right_norm and left_norm:
+                return [right]
 
-def is_menu_candidate(raw_text: str, menu_norm: Optional[str], score: float, cfg: "NormalizeConfig") -> bool:
-    """
-    Returns True if the record should be kept as a menu candidate.
-    This function MUST NOT affect any file paths; it only determines
-    whether an OCR item is included in normalized outputs.
-    """
+    # Fallback: standard slash split
+    parts = [p.strip() for p in _SLASH_SPLIT_RE.split(t)]
+    return [p for p in parts if p]
+
+
+@dataclass
+class NormalizeConfig:
+    min_len: int = 2
+    min_score: float = 0.0
+
+
+def is_menu_candidate(raw_menu: str, menu_norm: str, score: float, cfg: NormalizeConfig) -> bool:
     if not menu_norm:
         return False
     if len(menu_norm) < cfg.min_len:
@@ -144,355 +449,69 @@ def is_menu_candidate(raw_text: str, menu_norm: Optional[str], score: float, cfg
     if menu_norm in _NON_MENU_TITLES:
         return False
 
-    if _looks_like_notice(raw_text, menu_norm):
+    t = (raw_menu or "").strip()
+    if t.startswith(("※", "*", "•", "-", "·")):
         return False
+
+    for kw in _NON_MENU_HARD_KEYWORDS:
+        if kw in menu_norm or kw in t:
+            return False
+    # set / notice / instruction filtering (reduces RAG noise)
+    if _looks_like_set_or_notice(raw_text=t, menu_norm=menu_norm):
+        return False
+
 
     return True
 
-# ============================================================
-# 1) Normalization: keep Hangul only + join spaces
-# ============================================================
-_KEEP_KO_AND_SPACE = re.compile(r"[^가-힣\s]+", re.UNICODE)
-_MULTI_SPACE = re.compile(r"\s+", re.UNICODE)
 
-def normalize_korean_only(text: str) -> str:
-    s = (text or "").strip()
-    if not s:
-        return ""
-    s = _KEEP_KO_AND_SPACE.sub("", s)      # keep Hangul + space only
-    s = _MULTI_SPACE.sub(" ", s).strip()   # normalize spaces
-    s = s.replace(" ", "")                 # join spaces: "삼 겹살" -> "삼겹살"
-    return s
-
-
-# ============================================================
-# 2) Parentheses split + detail split (BEFORE stripping symbols)
-# ============================================================
-# "만두샤브세트(만두3개+소고기+갈국수)" -> ("만두샤브세트", "만두3개+소고기+갈국수")
-_PAREN_RE = re.compile(r"^\s*(.*?)\s*\(\s*(.*?)\s*\)\s*$")
-# details split tokens: + , / · ㆍ & |  (원하면 더 추가)
-_DETAIL_SPLIT_RE = re.compile(r"[+,/·ㆍ&\|]|,", re.UNICODE)
-
-def split_parentheses(raw_text: str) -> Tuple[str, Optional[str]]:
-    t = (raw_text or "").strip()
-    m = _PAREN_RE.match(t)
-    if not m:
-        return t, None
-    return m.group(1).strip(), m.group(2).strip()
-
-def split_detail(detail_raw: str) -> List[str]:
-    parts = [p.strip() for p in _DETAIL_SPLIT_RE.split(detail_raw) if p and p.strip()]
-    return parts
-# 메뉴명 내 variant 분리: "물냉면/비빔냉면" -> ["물냉면", "비빔냉면"]
-_MENU_SPLIT_RE = re.compile(r"\s*/\s*", re.UNICODE)
-
-def split_menu_variants(menu_raw: str) -> List[str]:
-    parts = [p.strip() for p in _MENU_SPLIT_RE.split(menu_raw or "") if p and p.strip()]
-    return parts if parts else [(menu_raw or "").strip()]
-
-
-
-def build_structured_fields(raw_text: str) -> Dict[str, Any]:
-    """
-    Step_03 핵심:
-    - 괄호 바깥(메뉴명) / 괄호 안(detail) 분리
-    - 메뉴명은 "/" 기준으로 variants 분할 저장
-    - RAG 키(대표)는 menu_name_norm = 첫 번째 variant의 norm
-    """
-    menu_raw, detail_raw = split_parentheses(raw_text)
-
-    # ✅ 메뉴명 "/" variants split (정규화 이전에 수행)
-    variants_raw = split_menu_variants(menu_raw)
-    variants_norm = [normalize_korean_only(v) for v in variants_raw]
-    variants_norm = [v for v in variants_norm if v]
-
-    # ✅ Jaccard 전용 variants
-    variants_jaccard = [normalize_for_jaccard(v) for v in variants_norm]
-    variants_jaccard = [v for v in variants_jaccard if v]
-
-    menu_norm = variants_norm[0] if variants_norm else None
-    menu_jaccard = variants_jaccard[0] if variants_jaccard else None
-
-    detail_parts_raw: List[str] = []
-    detail_parts_norm: List[str] = []
-
-    if detail_raw:
-        detail_parts_raw = split_detail(detail_raw)
-        detail_parts_norm = [normalize_korean_only(p) for p in detail_parts_raw]
-        detail_parts_norm = [p for p in detail_parts_norm if p]  # 빈 값 제거
-
-    is_set = ("세트" in menu_raw) or (detail_raw is not None)
-    menu_candidate = is_strict_menu_candidate(
-        menu_norm,
-        detail_parts_norm,
-    )
-
-    return {
-        "menu_name_raw": menu_raw,
-        "menu_name_norm": menu_norm,
-        "menu_name_variants_raw": variants_raw,
-        "menu_name_variants_norm": variants_norm,
-
-        "menu_name_jaccard": menu_jaccard,
-        "menu_name_variants_jaccard": variants_jaccard,
-
-        "detail_raw": detail_raw,
-        "detail_parts_raw": detail_parts_raw,
-        "detail_parts_norm": detail_parts_norm,
-
-        "menu_candidate": menu_candidate,  # ✅ NEW
-
-        "has_parentheses": detail_raw is not None,
-        "is_set": is_set,
-    }
-
-
-# ============================================================
-# 3) bbox utils + line grouping + merging
-# ============================================================
-def bbox_center(bbox: List[int]) -> Tuple[float, float]:
-    x1, y1, x2, y2 = bbox
-    return (x1 + x2) / 2.0, (y1 + y2) / 2.0
-
-def bbox_height(bbox: List[int]) -> int:
-    return int(bbox[3] - bbox[1])
-
-def horizontal_gap(prev_bbox: List[int], cur_bbox: List[int]) -> int:
-    return int(cur_bbox[0] - prev_bbox[2])
-
-
-@dataclass
-class NormalizeConfig:
-    min_len: int = 2
-    line_y_tol: int = 20
-    merge_gap_px: int = 25       # base gap (dynamic gap uses max(base, h*ratio))
-    min_score: float = 0.0
-
-
-def group_items_by_line(items: List[Dict[str, Any]], y_tol: int) -> List[List[Dict[str, Any]]]:
-    valid = []
-    for it in items:
-        bbox = it.get("bbox")
-        if not bbox or len(bbox) != 4:
-            continue
-        cx, cy = bbox_center(bbox)
-        it["_cy"] = cy
-        it["_cx"] = cx
-        valid.append(it)
-
-    valid.sort(key=lambda x: (x["_cy"], x["_cx"]))
-
-    lines: List[List[Dict[str, Any]]] = []
-    for it in valid:
-        if not lines:
-            lines.append([it])
-            continue
-        last_line = lines[-1]
-        if abs(it["_cy"] - last_line[-1]["_cy"]) <= y_tol:
-            last_line.append(it)
-        else:
-            lines.append([it])
-
-    for line in lines:
-        line.sort(key=lambda x: x["_cx"])
-    return lines
-
-
-def merge_line_tokens(line: List[Dict[str, Any]], merge_gap_px: int = 25) -> List[Dict[str, Any]]:
-    """
-    같은 라인에서 인접 박스 병합.
-    - 병합 "대표 텍스트": menu_name_norm (첫 variant)
-    - variants: menu_name_variants_norm를 aggregate + dedup
-    - detail_parts_norm도 aggregate + dedup
-    """
-    merged: List[Dict[str, Any]] = []
-    current_jaccard_variants: List[str] = []
-    current_menu_candidate = False
-
-    def union_bbox(a, b):
-        return [min(a[0], b[0]), min(a[1], b[1]), max(a[2], b[2]), max(a[3], b[3])]
-
-    current_text = ""
-    current_bbox: Optional[List[int]] = None
-    current_members: List[int] = []
-
-    current_detail_parts: List[str] = []
-    current_variants: List[str] = []
-
-    def dedup_keep_order(seq: List[str]) -> List[str]:
-        seen = set()
-        out = []
-        for x in seq:
-            if x and x not in seen:
-                seen.add(x)
-                out.append(x)
-        return out
-
-    def flush():
-        nonlocal current_text, current_bbox, current_members
-        nonlocal current_detail_parts, current_variants, current_jaccard_variants, current_menu_candidate
-
-        j_variants = dedup_keep_order(current_jaccard_variants)
-        if current_text:
-            merged.append({
-                "text": current_text,
-                "bbox": current_bbox,
-                "members": current_members[:],
-                "menu_variants_norm": dedup_keep_order(current_variants),
-                "menu_variants_jaccard": j_variants,
-                "menu_jaccard": j_variants[0] if j_variants else None,
-                "menu_candidate": current_menu_candidate,
-                "detail_parts_norm": dedup_keep_order(current_detail_parts),
-            })
-
-        current_text, current_bbox, current_members = "", None, []
-        current_detail_parts, current_variants = [], []
-        current_jaccard_variants = []
-        current_menu_candidate = False
-
-
-
-    for it in line:
-        raw = it.get("text", "")
-
-        fields = it.get("_fields") or build_structured_fields(raw)
-        norm = fields.get("menu_name_norm") or ""
-        variants_norm = fields.get("menu_name_variants_norm") or []
-        detail_parts_norm = fields.get("detail_parts_norm") or []
-        variants_jaccard = fields.get("menu_name_variants_jaccard") or []
-
-        if not norm:
-            continue
-
-        bbox = it["bbox"]
-        idx = it.get("_idx")
-
-        if current_bbox is None:
-            current_text = norm
-            current_bbox = bbox[:]
-            current_members = [idx] if idx is not None else []
-            current_variants = list(variants_norm)
-            current_detail_parts = list(detail_parts_norm)
-            current_jaccard_variants = list(variants_jaccard)
-            current_menu_candidate = bool(fields.get("menu_candidate", False))
-
-            continue
-
-        gap = horizontal_gap(current_bbox, bbox)
-
-        # ---- dynamic gap: handle far split like "만" + "두" ----
-        prev_h = bbox_height(current_bbox)
-        cur_h = bbox_height(bbox)
-        h = (prev_h + cur_h) / 2.0
-        adaptive_gap = max(merge_gap_px, int(h * 1.8))
-
-        # ---- anti-over-merge: only allow wide-gap merge for short tokens ----
-        prev_len = len(current_text)
-        cur_len = len(norm)
-        short_token_merge = (prev_len <= 2 and cur_len <= 2 and (prev_len + cur_len) <= 4)
-
-        if gap <= adaptive_gap and short_token_merge:
-            current_text += norm
-            current_bbox = union_bbox(current_bbox, bbox)
-            if idx is not None:
-                current_members.append(idx)
-
-            # aggregate
-            current_variants.extend(variants_norm)
-            current_jaccard_variants.extend(variants_jaccard)
-            current_detail_parts.extend(detail_parts_norm)
-            current_menu_candidate = (
-                    current_menu_candidate or fields.get("menu_candidate", False)
-            )
-
-
-        else:
-            flush()
-            current_text = norm
-            current_bbox = bbox[:]
-            current_members = [idx] if idx is not None else []
-            current_variants = list(variants_norm)
-            current_detail_parts = list(detail_parts_norm)
-            current_jaccard_variants = list(variants_jaccard)
-            current_menu_candidate = bool(fields.get("menu_candidate", False))
-
-
-    flush()
-
-    return merged
-
-
-
-# ============================================================
-# 4) Step_03 runner
-# ============================================================
-def run_step_03_normalize(ocr_json_path: Path, out_json_path: Path, cfg: NormalizeConfig) -> Path:
+def run_step_03_normalize(
+    ocr_json_path: Path,
+    out_json_path: Path,
+    cfg: NormalizeConfig,
+    line_y_tol: int,
+    merge_gap_px: int,
+    merge_gap_ratio: float,
+    enable_pass2: bool,
+    pass2_gap_px: int,
+    pass2_gap_ratio: float,
+) -> Path:
     with ocr_json_path.open("r", encoding="utf-8") as f:
         ocr = json.load(f)
 
-    items = ocr.get("items", [])
+    items_raw = ocr.get("items", [])
 
-    items_normalized: List[Dict[str, Any]] = []
-    filtered_for_merge: List[Dict[str, Any]] = []
+    # 1) Stable merge det-split tokens within each line
+    merged_items = merge_det_items_stable(
+        items_raw=items_raw,
+        line_y_tol=line_y_tol,
+        merge_gap_px=merge_gap_px,
+        merge_gap_ratio=merge_gap_ratio,
+        pass2_gap_px=pass2_gap_px,
+        pass2_gap_ratio=pass2_gap_ratio,
+        enable_pass2=enable_pass2,
+    )
 
-    for i, it in enumerate(items):
-        raw_text = it.get("text", "")
+    # 2) Slash-split, then normalize + filter
+    items_out: List[Dict[str, Any]] = []
+    for it in merged_items:
+        raw_text = str(it.get("text", ""))
+        poly = it.get("poly")
         score = float(it.get("score", 0.0))
-        bbox = it.get("bbox")
 
-        fields = build_structured_fields(raw_text)
-        menu_norm = fields.get("menu_name_norm")
-
-        # ✅ Keep menus only: do not append non-menu records to outputs
-        if not is_menu_candidate(raw_text=raw_text, menu_norm=menu_norm, score=score, cfg=cfg):
+        parts = split_by_slash(raw_text)
+        if not parts:
             continue
 
-        rec = {
-            "idx": i,
-            "raw_text": raw_text,
-            "score": score,
-            "bbox": bbox,
-            "poly": it.get("poly"),
+        for part in parts:
+            raw_menu = part
+            menu_norm = normalize_menu_korean_only(raw_menu)
 
-            # ✅ 구조화 필드 저장(메뉴/variants/detail)
-            **fields,
-        }
+            if not is_menu_candidate(raw_menu=raw_menu, menu_norm=menu_norm, score=score, cfg=cfg):
+                continue
 
-        items_normalized.append(rec)
+            items_out.append({"raw_menu": raw_menu, "poly": poly, "menu_norm": menu_norm})
 
-        # ✅ 병합/후속 Step_04 RAG 대상도 '메뉴만'
-        if bbox:
-            it2 = dict(it)
-            it2["_idx"] = i
-            it2["_fields"] = fields  # ✅ 구조화 결과 재사용
-            filtered_for_merge.append(it2)
-
-    lines = group_items_by_line(filtered_for_merge, y_tol=cfg.line_y_tol)
-    merged_all: List[Dict[str, Any]] = []
-    for line in lines:
-        merged_all.extend(merge_line_tokens(line, merge_gap_px=cfg.merge_gap_px))
-
-    out = {
-        "image": ocr.get("image"),
-        "image_shape": ocr.get("image_shape"),
-        "engine": ocr.get("engine"),
-        "elapsed_ms": ocr.get("elapsed_ms"),
-        "paddleocr_config": ocr.get("paddleocr_config"),
-        "normalize_config": {
-            "min_len": cfg.min_len,
-            "line_y_tol": cfg.line_y_tol,
-            "merge_gap_px": cfg.merge_gap_px,
-            "min_score": cfg.min_score,
-            "rule": {
-                "menu_key": "menu_name_norm (outside parentheses only)",
-                "detail": "split parentheses detail into detail_parts_*",
-                "merge": "merge short adjacent tokens in same line; dynamic gap by height",
-            },
-        },
-        "items_normalized": items_normalized,
-        "items_merged": merged_all,
-    }
-
+    out = {"items": items_out}
     out_json_path.parent.mkdir(parents=True, exist_ok=True)
     with out_json_path.open("w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
@@ -500,9 +519,6 @@ def run_step_03_normalize(ocr_json_path: Path, out_json_path: Path, cfg: Normali
     return out_json_path
 
 
-# ============================================================
-# 5) CLI (input fixed: run_dir/ocr/ocr.json)
-# ============================================================
 def _find_latest_run_dir(runs_root: Path) -> Path:
     run_dirs = [p for p in runs_root.iterdir() if p.is_dir()]
     if not run_dirs:
@@ -512,17 +528,25 @@ def _find_latest_run_dir(runs_root: Path) -> Path:
 
 
 if __name__ == "__main__":
-    import argparse
-
-    p = argparse.ArgumentParser(description="Step 03: normalize + split set details + merge short tokens.")
+    p = argparse.ArgumentParser(
+        description="Step 03: stable merge det tokens, split by '/', keep raw_menu+poly, produce Hangul-only menu_norm."
+    )
     p.add_argument("--runs-root", default="menu_assistant/data/runs", help="Runs root directory")
     p.add_argument("--run-id", default=None, help="Run id (e.g., 20260112_193336). If omitted, use latest.")
     p.add_argument("--out-json", default=None, help="Override output json path")
 
     p.add_argument("--min-len", type=int, default=2)
-    p.add_argument("--line-y-tol", type=int, default=20)
-    p.add_argument("--merge-gap-px", type=int, default=25)
     p.add_argument("--min-score", type=float, default=0.0)
+
+    # pass1 (safe)
+    p.add_argument("--line-y-tol", type=int, default=20, help="Y tolerance(px) for line clustering.")
+    p.add_argument("--merge-gap-px", type=int, default=25, help="Pass1 max X gap(px) to merge short fragments.")
+    p.add_argument("--merge-gap-ratio", type=float, default=0.75, help="Pass1 max (gap/avg_height) ratio.")
+
+    # pass2 (conditional)
+    p.add_argument("--enable-merge-pass2", action="store_true", help="Enable pass2 conditional merges.")
+    p.add_argument("--pass2-gap-px", type=int, default=14, help="Pass2 max X gap(px) (tighter).")
+    p.add_argument("--pass2-gap-ratio", type=float, default=0.45, help="Pass2 max (gap/avg_height) ratio (tighter).")
 
     args = p.parse_args()
 
@@ -535,17 +559,31 @@ if __name__ == "__main__":
 
     out_json = Path(args.out_json) if args.out_json else (run_dir / "normalize" / "normalize.json")
 
-    cfg = NormalizeConfig(
-        min_len=args.min_len,
+    cfg = NormalizeConfig(min_len=args.min_len, min_score=args.min_score)
+
+    result = run_step_03_normalize(
+        ocr_json_path=in_json,
+        out_json_path=out_json,
+        cfg=cfg,
         line_y_tol=args.line_y_tol,
         merge_gap_px=args.merge_gap_px,
-        min_score=args.min_score,
+        merge_gap_ratio=args.merge_gap_ratio,
+        enable_pass2=bool(args.enable_merge_pass2),
+        pass2_gap_px=args.pass2_gap_px,
+        pass2_gap_ratio=args.pass2_gap_ratio,
     )
-
-    result = run_step_03_normalize(in_json, out_json, cfg)
 
     print("=== step_03_normalize DONE ===")
     print(f"run_dir: {run_dir}")
     print(f"input : {in_json}")
     print(f"output: {result}")
     print(f"config: {cfg}")
+    print(
+        "merge:",
+        f"line_y_tol={args.line_y_tol}",
+        f"pass1_gap_px={args.merge_gap_px}",
+        f"pass1_gap_ratio={args.merge_gap_ratio}",
+        f"pass2={'ON' if args.enable_merge_pass2 else 'OFF'}",
+        f"pass2_gap_px={args.pass2_gap_px}",
+        f"pass2_gap_ratio={args.pass2_gap_ratio}",
+    )

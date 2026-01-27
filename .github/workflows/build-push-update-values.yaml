@@ -39,7 +39,7 @@ jobs:
         with:
           context: .
           file: backend/Dockerfile
-          target: api-verify
+          target: api-final
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -48,8 +48,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: backend/Dockerfile
-          target: worker-verify
+          file: backend/Dockerfile.worker
+          target: runtime
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -59,7 +59,7 @@ jobs:
         with:
           context: .
           file: frontend/Dockerfile
-          target: verify
+          target: final
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -98,12 +98,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build & Push (Worker worker-final)
+      - name: Build & Push (Worker runtime)
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: backend/Dockerfile
-          target: worker-final
+          file: backend/Dockerfile.worker
+          target: runtime
           push: true
           tags: |
             ${{ env.WORKER_IMAGE }}:${{ env.TAG }}

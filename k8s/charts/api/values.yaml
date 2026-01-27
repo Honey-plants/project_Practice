@@ -14,8 +14,10 @@ autoscaling:
 
 image:
   repository: ghcr.io/mingoo684/cicdex2-api
-  tag: dev-001
+  tag: dev-006
   pullPolicy: IfNotPresent
+
+imagePullSecrets: []
 
 service:
   type: ClusterIP

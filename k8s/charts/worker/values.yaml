@@ -2,8 +2,10 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/mingoo684/cicdex2-worker
-  tag: dev-001
+  tag: dev-003
   pullPolicy: IfNotPresent
+
+imagePullSecrets: []
 
 nameOverride: ""
 fullnameOverride: ""
@@ -59,6 +61,9 @@ secrets:
 secretMount:
   enabled: true
   mountPath: /run/app-secrets
+  openaiApiKeyKey: OPENAI_API_KEY
+  dbPasswordKey: DB_PASSWORD
+  jwtSecretKeyKey: JWT_SECRET_KEY
 
 resources: {}
 nodeSelector: {}

@@ -22,6 +22,10 @@ spec:
       {{- end }}
     spec:
       serviceAccountName: {{ include "worker.serviceAccountName" . }}
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
       containers:
         - name: worker
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -41,6 +45,15 @@ spec:
           env:
             - name: PYTHONPATH
               value: "/app"
+            {{- $sm := .Values.secretMount | default dict -}}
+            {{- if $sm.enabled }}
+            - name: OPENAI_API_KEY_FILE
+              value: "{{ $sm.mountPath | default "/run/app-secrets" }}/{{ $sm.openaiApiKeyKey | default "OPENAI_API_KEY" }}"
+            - name: DB_PASSWORD_FILE
+              value: "{{ $sm.mountPath | default "/run/app-secrets" }}/{{ $sm.dbPasswordKey | default "DB_PASSWORD" }}"
+            - name: JWT_SECRET_KEY_FILE
+              value: "{{ $sm.mountPath | default "/run/app-secrets" }}/{{ $sm.jwtSecretKeyKey | default "JWT_SECRET_KEY" }}"
+            {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ include "worker.fullname" . }}-config

@@ -1,0 +1,16 @@
+{
+  "store_name": "서해상사",
+  "address": "충청남도 보령시 남포면 용두욕장길 37-24",
+  "city": "충청남도",
+  "phone": "0419348885",
+  "coords": {
+    "x": "1265493297",
+    "y": "362644108"
+  },
+  "menu_ko": [
+    "삼합 스페셜 인"
+  ],
+  "menu_en": [
+    "Three-Flavor Special (a combination of fermented skate, boiled pork, and kimchi)"
+  ]
+}
