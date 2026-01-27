@@ -11,7 +11,7 @@ env:
 
 queue:
     type: redis
-    redisUrl: redis://redis-master.app-prod.svc.cluster.local:6379/0
+    redisUrl: redis://redis-master:6379/0
 
 config:
     LOG_LEVEL: INFO
