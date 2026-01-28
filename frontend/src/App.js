@@ -36,7 +36,7 @@ export default function App() {
 
           <Route path="/login" element={<Login />} />
 
-          // Routes 안에 추가
+          {/* Routes 안에 추가 */}
           <Route path="/register" element={<Register />} />
 
           {/* member */}
