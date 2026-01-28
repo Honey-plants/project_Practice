@@ -1,0 +1,13 @@
+image:
+    repository: ghcr.io/mingoo684/cicdex2-frontend
+    tag: dev-007
+    pullPolicy: IfNotPresent
+
+imagePullSecrets:
+    - name: ghcr-pull2
+
+ingress:
+    enabled: true
+    className: nginx
+    host: app.local
+    path: /

@@ -64,3 +64,21 @@ key 확인 : docker exec -it app_redis redis-cli keys "*"
 - Model: Boolean
 - Schema: bool
 - Front: true/false
+
+# FILE UPLOAD
+- path = /images/{memberId}/{file_key}
+- 형태로 PATH 지정
+- 테이블 문의 ERD CLOUD 확인 필수!
+
+# FILE UPLOAD 파일 구성 안내
+- util.py는 “정책/선택/규칙”만 (factory, validate, path)
+- storage/local, s3는 “구현체”만 (save/store/delete)
+
+# ADMIN 관리자 계정 
+- GET /members/me
+- PATCH /members/me
+- DELETE /members/me
+- (관리자용이 필요하면) GET /members/{member_id} 는 admin만 허용
+
+# docker refresh 확인
+- SCAN 0 MATCH bl:* COUNT 100

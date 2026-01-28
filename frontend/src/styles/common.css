@@ -1,0 +1,32 @@
+.header {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nav, .auth {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.me {
+  font-weight: 700;
+}
+
+.errorBox {
+  margin-top: 12px;
+  padding: 10px;
+  background: #ffe8e8;
+  border-radius: 8px;
+}
+
+.card {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f6f6f6;
+  border-radius: 10px;
+  overflow: auto;
+}

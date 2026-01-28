@@ -15,7 +15,7 @@ import json
 
 # 등록
 def create_member(db: Session, payload) -> None:
-    # db.begin() :: commit, reset 둘중 처리
+    # db.begin() :: commit, rollback 둘중 처리
     print(payload)
 
     # password 변경 작업 추가 예정

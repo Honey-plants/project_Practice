@@ -1,20 +1,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: project-app
+  name: app-platform
   namespace: argocd
 spec:
-  description: "api/frontend GitOps project"
+  description: "App-of-Apps project for app-dev/app-prod (redis/frontend/api/worker)"
+
   sourceRepos:
-    - "*"   # 필요 시 특정 repo로 제한 권장
+    - https://github.com/mingoo684/cicdex2.git
+    - https://charts.bitnami.com/bitnami
+
   destinations:
-    - namespace: app-dev
-      server: https://kubernetes.default.svc
-    - namespace: app-prod
-      server: https://kubernetes.default.svc
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+    - server: https://kubernetes.default.svc
+      namespace: app-dev
+    - server: https://kubernetes.default.svc
+      namespace: app-prod
+
+  # AppProject 자체는 namespace 리소스를 폭넓게 허용(단순화)
   clusterResourceWhitelist:
-    - group: ""
-      kind: Namespace
+    - group: "*"
+      kind: "*"
   namespaceResourceWhitelist:
     - group: "*"
       kind: "*"

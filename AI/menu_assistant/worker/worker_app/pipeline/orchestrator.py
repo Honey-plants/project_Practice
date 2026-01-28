@@ -102,6 +102,7 @@ def run_cmd(cmd: List[str], env: Optional[dict] = None, cwd: Optional[Path] = No
         raise RuntimeError(f"Command failed (exit={p.returncode}): {' '.join(cmd)}")
 
 
+
 def ensure_exists(path: Path, msg: str) -> None:
     if not path.exists():
         raise RuntimeError(f"{msg}: {path}")
@@ -243,6 +244,7 @@ class PipelineOrchestrator:
         self.runs_root = runs_root
         self.data_dir = runs_root.parent
         self.ai_root = runs_root.parents[2]  # .../AI
+
 
     def run(
             self,

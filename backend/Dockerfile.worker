@@ -1,0 +1,73 @@
+# syntax=docker/dockerfile:1.7
+
+########################
+# 1) builder: wheels
+########################
+FROM python:3.11-slim AS builder
+WORKDIR /build
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements.txt /tmp/requirements.txt
+RUN pip install --upgrade pip \
+    && pip wheel --no-cache-dir --wheel-dir /wheels -r /tmp/requirements.txt
+
+
+########################
+# 2) runtime: run deps
+########################
+FROM python:3.11-slim AS runtime
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# 핵심: libgomp1 (Paddle / OpenMP runtime)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+# Note: Added libgl1-mesa-glx and libglib2.0-0 as they are common requirements for CV libraries like PaddleOCR/OpenCV
+
+RUN pip install --upgrade pip
+
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir /wheels/* \
+    && rm -rf /wheels
+
+# Pre-cache PaddleOCR models during image build.
+ENV HOME=/app
+ENV PADDLEOCR_HOME=/app/.paddleocr
+RUN set -eux; \
+    mkdir -p /app/.paddleocr; \
+    python - <<'PY'
+from paddleocr import PaddleOCR
+PaddleOCR(
+    lang="korean",
+    use_textline_orientation=True,
+    use_doc_unwarping=False,
+    text_det_limit_side_len=1280,
+    text_det_thresh=0.3,
+    text_det_box_thresh=0.2,
+    text_det_unclip_ratio=1.5,
+    enable_mkldnn=False,
+)
+print("PaddleOCR model pre-cache complete")
+PY
+
+# 소스 복사 (Worker는 AI 포함)
+COPY backend /app/backend
+COPY AI /app/AI
+COPY README.md /app/README.md
+
+# PYTHONPATH 설정 (필요시)
+ENV PYTHONPATH=/app
+
+# Worker 실행은 k8s command에서 제어하므로 기본 CMD는 셸
+CMD ["/bin/bash"]
