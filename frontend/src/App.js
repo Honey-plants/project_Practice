@@ -22,6 +22,8 @@ import ReviewCreate from "./pages/review/ReviewCreate";
 import ReviewEdit from "./pages/review/ReviewEdit";
 
 import UploadTest from "./pages/upload/UploadTest";
+import MenuAssistant from "./pages/menu/MenuAssistant";
+import JournalGenerate from "./pages/journal/JournalGenerate";
 
 import Register from "./pages/auth/Register";
 
@@ -93,6 +95,27 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ReviewEdit />
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* menu */}
+          <Route
+            path="/menu/assistant"
+            element={
+              <ProtectedRoute>
+                <MenuAssistant />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* journal */}
+          <Route
+            path="/journal/generate"
+            element={
+              <ProtectedRoute>
+                <JournalGenerate />
               </ProtectedRoute>
             }
           />

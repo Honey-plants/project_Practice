@@ -1,10 +1,7 @@
 image:
-    repository: ghcr.io/mingoo684/cicdex2-api
-    tag: prod-002
+    repository: 624280434939.dkr.ecr.ap-northeast-2.amazonaws.com/projecta-api
+    tag: dev-001
     pullPolicy: IfNotPresent
-
-imagePullSecrets:
-    - name: ghcr-pull2
 
 env:
     APP_ENV: prod
