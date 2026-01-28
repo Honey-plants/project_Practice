@@ -1,0 +1,58 @@
+{
+  "request_id": "jrnl_20260123_0001",
+  "template": {
+    "template_id": 2,
+    "template_type": "funny_journal",
+    "language": "en",
+    "style": {
+      "tone": "warm",
+      "humor": "max",
+      "length": "short"
+    }
+  },
+  "member": {
+    "member_id": 17,
+    "email": "jisu@example.com",
+    "nickname": "Nicholas",
+    "gender": "male",
+    "country": "NZ",
+    "role": "USER",
+    "item_ids": ["egg", "peanut"],
+    "dislike_tags": ["coriander"]
+  },
+  "reviews": [
+    {
+      "review_id": 101,
+      "review_title": "Super kind staff, safe meal",
+      "review_content": "I have peanut allergy and the app was correct! thanks to the app i could eat menus without peanut, egg, coriander. food was great too! ",
+      "rating": 5,
+      "city": "충청북도",
+      "coords": {
+        "x": "1268597439",
+        "y": "375266925"
+      }
+    },
+    {
+      "review_id": 102,
+      "review_title": "best napjak mandu",
+      "review_content": "OMG best mandu ever!!! i can't eat peanut and the app gave me options to what i can eat! and as a result, best food ever! couldnt even find this store in google but with this app, i can go anywhere!  ",
+      "rating": 4,
+      "city": "대구",
+      "coords": {
+        "x": "1265493297",
+        "y": "362644108"
+      }
+    },
+    {
+      "review_id": 103,
+      "review_title": "Menu was confusing but app helped",
+      "review_content": "The menu was only in Korean. Using the app translation + allergy note made it easy to order safely.",
+      "rating": 5,
+      "city": "경기도",
+      "coords": {
+        "x": "1274042717",
+        "y": "368267496"
+      }
+    }
+  ]
+}
