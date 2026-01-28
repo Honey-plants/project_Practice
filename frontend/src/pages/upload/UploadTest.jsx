@@ -106,6 +106,37 @@ export default function UploadTest() {
       {stateUpload.lastResult && (
         <pre className="card">{JSON.stringify(stateUpload.lastResult, null, 2)}</pre>
       )}
+
+      <hr style={{ margin: "24px 0" }} />
+
+      <h3>Menu Assistant Enqueue</h3>
+      <div style={{ display: "grid", gap: 10 }}>
+        <input type="file" onChange={(e) => setMenuFile(e.target.files?.[0] || null)} />
+        <textarea
+          rows={6}
+          value={menuProfileText}
+          onChange={(e) => setMenuProfileText(e.target.value)}
+          placeholder="user_profile_json"
+        />
+        <button onClick={onMenuEnqueue}>Enqueue menu_assistant_pipeline</button>
+      </div>
+      {menuError && <div className="errorBox">{menuError}</div>}
+      {menuResult && <pre className="card">{JSON.stringify(menuResult, null, 2)}</pre>}
+
+      <hr style={{ margin: "24px 0" }} />
+
+      <h3>Journal Enqueue</h3>
+      <div style={{ display: "grid", gap: 10 }}>
+        <textarea
+          rows={12}
+          value={journalText}
+          onChange={(e) => setJournalText(e.target.value)}
+          placeholder="journal payload JSON"
+        />
+        <button onClick={onJournalEnqueue}>Enqueue journal_generate</button>
+      </div>
+      {journalError && <div className="errorBox">{journalError}</div>}
+      {journalResult && <pre className="card">{JSON.stringify(journalResult, null, 2)}</pre>}
     </div>
   );
 }

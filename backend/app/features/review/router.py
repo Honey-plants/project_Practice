@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException
 from backend.app.core.security.deps import get_current_member
 from backend.app.common.service.file_upload_service import (
@@ -40,7 +38,6 @@ async def review_upload(type: str = Form("review"), image: UploadFile = File(...
         delete_input_file(file_key=obj.file_key)
 
 
->>>>>>> 2f58d98 (backend update and front update)
 # from fastapi import APIRouter, Depends, HTTPException
 # from sqlalchemy.orm import Session
 #

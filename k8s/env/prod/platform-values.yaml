@@ -1,0 +1,3 @@
+host: app.example.com
+apiServiceName: api-prod
+frontendServiceName: frontend-prod

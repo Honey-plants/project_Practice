@@ -24,5 +24,6 @@ class Member(Base):
     restrictions = relationship("MemberRestrictions", back_populates="member", cascade="all, delete-orphan", passive_deletes=True)
     dislike = relationship("Dislike", back_populates="member", cascade="all, delete-orphan", passive_deletes=True)
     refresh_token = relationship("RefreshToken", uselist=False, back_populates="member", cascade="all, delete-orphan")
+    file_upload = relationship("FileUpload", back_populates="member", cascade="all, delete-orphan")
     # review = relationship("Review", back_populates="member", cascade="all, delete-orphan")
     # community = relationship("Community", back_populates="member", cascade="all, delete-orphan")

@@ -1,5 +1,4 @@
 import sys
-import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -16,6 +15,8 @@ from pydantic import BaseModel, Field
 # import backend.app.models                            # 모델 로딩 보장(필수)
 from backend.app.api_router import api_router        # 상대경로 말고 절대경로 추천
 
+
+# import api_router  # 공통 router 설정
 app = FastAPI()
 
 
@@ -23,6 +24,7 @@ class ForceUTF8Middleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         ct = response.headers.get("content-type", "")
+        # JSON 응답에 charset이 없으면 강제로 붙임
         if ct.startswith("application/json") and "charset=" not in ct:
             response.headers["content-type"] = "application/json; charset=utf-8"
         return response
@@ -91,11 +93,11 @@ def create_job(req: EnqueueRequest):
         raise HTTPException(status_code=503, detail=f"redis unavailable: {type(e).__name__}: {e}")
 
     job_id = enqueue_task(r, req.task, req.payload)
-    
+
     # job_id로 조회하여 queued_at 등 확인 (enqueue_task 내부에서 이미 세팅됨)
     # 성능 최적화를 위해 여기서는 직접 생성했던 값 등을 반환하거나 재조회
     # 여기선 간단히 get_job 호출 없이 리턴
-    
+
     return EnqueueResponse(job_id=job_id, status="PENDING", queued_at=utc_now_iso())
 
 

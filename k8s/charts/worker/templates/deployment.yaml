@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "worker.fullname" . }}
+  labels:
+    {{- include "worker.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "worker.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "worker.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "worker.serviceAccountName" . }}
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          workingDir: /app
+
+          {{- $w := .Values.worker | default dict -}}
+          {{- with ($w.command | default list) }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with ($w.args | default list) }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          env:
+            - name: PYTHONPATH
+              value: "/app"
+            {{- $sm := .Values.secretMount | default dict -}}
+            {{- if $sm.enabled }}
+            - name: OPENAI_API_KEY_FILE
+              value: "{{ $sm.mountPath | default "/run/app-secrets" }}/{{ $sm.openaiApiKeyKey | default "OPENAI_API_KEY" }}"
+            - name: DB_PASSWORD_FILE
+              value: "{{ $sm.mountPath | default "/run/app-secrets" }}/{{ $sm.dbPasswordKey | default "DB_PASSWORD" }}"
+            - name: JWT_SECRET_KEY_FILE
+              value: "{{ $sm.mountPath | default "/run/app-secrets" }}/{{ $sm.jwtSecretKeyKey | default "JWT_SECRET_KEY" }}"
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "worker.fullname" . }}-config
+
+          {{- $secrets := .Values.secrets | default dict -}}
+          {{- $sm := .Values.secretMount | default dict -}}
+          {{- if and ($secrets.enabled | default false) ($sm.enabled | default false) }}
+          volumeMounts:
+            - name: app-secrets
+              mountPath: {{ $sm.mountPath | default "/run/app-secrets" | quote }}
+              readOnly: true
+          {{- end }}
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+      {{- $secrets := .Values.secrets | default dict -}}
+      {{- $sm := .Values.secretMount | default dict -}}
+      {{- if and ($secrets.enabled | default false) ($sm.enabled | default false) }}
+      volumes:
+        - name: app-secrets
+          secret:
+            secretName: {{ include "worker.fullname" . }}-secrets
+      {{- end }}
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -5,6 +5,7 @@ import time
 
 from jose import jwt
 from backend.app.core.config import JWT_SECRET_KEY, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
+# from backend.app.core.config import JWT_SECRET_KEY, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -28,7 +29,9 @@ def create_access_token(subject: str, role: str, additional_claims: Optional[dic
 # REFRESH TOKEN
 def create_refresh_token(subject: str) -> str:
     now = _now()
+    # exp = now + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
     exp = now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    print("exp :: ", exp)
     payload: dict[str, Any] = {
         "sub": subject,
         "type": "refresh",
