@@ -80,11 +80,60 @@ def _handle_task(task: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         sec = int(payload.get("seconds", 1))
         time.sleep(max(0, sec))
         return {"slept": sec}
-    if task == "menu_assistant":
-        raise NotImplementedError(
-            "menu_assistant handler is not wired yet. "
-            "Implement the handler and call it here."
+    if task == "menu_assistant_pipeline":
+        import base64
+        import json as _json
+        from pathlib import Path
+        from AI.menu_assistant.worker.worker_app.pipeline.orchestrator import (
+            PipelineOrchestrator,
+            Step5Options,
+            _default_runs_root,
         )
+
+        run_id = str(payload.get("run_id") or "").strip() or None
+        run_step4 = bool(payload.get("run_step4", True))
+        run_step5 = bool(payload.get("run_step5", True))
+        run_step6 = bool(payload.get("run_step6", True))
+
+        runs_root = Path(payload.get("runs_root") or _default_runs_root()).expanduser().resolve()
+        tmp_dir = runs_root / "tmp"
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+
+        image_path = payload.get("image_path")
+        if image_path:
+            image_path = Path(image_path).expanduser().resolve()
+        else:
+            encoded = payload.get("image_base64")
+            if not encoded:
+                raise ValueError("Missing 'image_base64' or 'image_path' in payload")
+            img_bytes = base64.b64decode(encoded)
+            image_path = tmp_dir / f"menu_{run_id or uuid.uuid4().hex}.jpg"
+            image_path.write_bytes(img_bytes)
+
+        user_profile = payload.get("user_profile")
+        user_profile_json = payload.get("user_profile_json")
+        if user_profile and not user_profile_json:
+            profile_path = tmp_dir / f"user_profile_{run_id or uuid.uuid4().hex}.json"
+            profile_path.write_text(_json.dumps(user_profile, ensure_ascii=False), encoding="utf-8")
+            user_profile_json = str(profile_path)
+
+        step5 = Step5Options(user_profile_json=user_profile_json)
+
+        orch = PipelineOrchestrator(runs_root)
+        run_dir = orch.run(
+            image_path=image_path,
+            run_id=run_id,
+            step5=step5,
+            run_step4=run_step4,
+            run_step5=run_step5,
+            run_step6=run_step6,
+            do_check=False,
+        )
+
+        result_path = run_dir / "final" / ("final_translated.json" if run_step6 else "final.json")
+        if not result_path.exists():
+            raise FileNotFoundError(f"Menu assistant result not found: {result_path}")
+        return _json.loads(result_path.read_text(encoding="utf-8"))
 
     raise ValueError(f"Unsupported task: {task}")
 

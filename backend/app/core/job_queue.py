@@ -8,6 +8,9 @@ from typing import Any, Dict, Optional, Tuple
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 QUEUE_NAME = os.getenv("QUEUE_NAME", "cicdex:jobs")
+QUEUE_NAME_MENU_ASSISTANT = os.getenv("QUEUE_NAME_MENU_ASSISTANT", "cicdex:jobs:menu_assistant")
+QUEUE_NAME_JOURNAL = os.getenv("QUEUE_NAME_JOURNAL", "cicdex:jobs:journal")
+QUEUE_NAME_REVIEW = os.getenv("QUEUE_NAME_REVIEW", "cicdex:jobs:review")
 
 
 def utc_now_iso() -> str:
@@ -51,13 +54,23 @@ def get_job(r: redis.Redis, job_id: str) -> Dict[str, str]:
     return r.hgetall(_job_key(job_id))
 
 
+def _queue_for_task(task: str) -> str:
+    if task.startswith("menu_assistant_"):
+        return QUEUE_NAME_MENU_ASSISTANT
+    if task.startswith("journal_"):
+        return QUEUE_NAME_JOURNAL
+    if task.startswith("review_"):
+        return QUEUE_NAME_REVIEW
+    return QUEUE_NAME
+
+
 def enqueue_task(r: redis.Redis, task: str, payload: Dict[str, Any]) -> str:
     """
     작업을 Redis 큐에 추가합니다.
     
     Args:
         r: Redis 클라이언트 인스턴스
-        task: 작업 이름 (예: 'receipt_ocr')
+        task: 작업 이름 (예: 'review_receipt_ocr', 'menu_assistant_pipeline', 'journal_generate')
         payload: 작업 실행에 필요한 데이터
         
     Returns:
@@ -78,6 +91,7 @@ def enqueue_task(r: redis.Redis, task: str, payload: Dict[str, Any]) -> str:
     }
 
     # Worker 큐에 푸시 (Worker는 BRPOPLPUSH 등으로 처리)
-    r.lpush(QUEUE_NAME, json.dumps(msg, ensure_ascii=False))
+    queue_name = _queue_for_task(task)
+    r.lpush(queue_name, json.dumps(msg, ensure_ascii=False))
     
     return job_id

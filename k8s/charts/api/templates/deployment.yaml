@@ -45,6 +45,12 @@ spec:
               value: {{ .Values.env.DB_USER | quote }}
             - name: REDIS_URL
               value: {{ .Values.env.REDIS_URL | quote }}
+            - name: QUEUE_NAME_MENU_ASSISTANT
+              value: {{ .Values.env.QUEUE_NAME_MENU_ASSISTANT | quote }}
+            - name: QUEUE_NAME_JOURNAL
+              value: {{ .Values.env.QUEUE_NAME_JOURNAL | quote }}
+            - name: QUEUE_NAME_REVIEW
+              value: {{ .Values.env.QUEUE_NAME_REVIEW | quote }}
 
             {{- if .Values.secretsMount.enabled }}
             - name: DB_PASSWORD_FILE

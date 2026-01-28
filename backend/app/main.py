@@ -1,13 +1,16 @@
 import sys
+import json
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 # 1) sys.path 세팅은 다른 import들보다 먼저
 ROOT_DIR = Path(__file__).resolve().parents[2]  # final_project
 sys.path.insert(0, str(ROOT_DIR))
 
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 # from backend.app.core.database import Base, engine   # engine 가져와야 create_all 가능
 # import backend.app.models                            # 모델 로딩 보장(필수)
@@ -58,7 +61,7 @@ def favicon():
 from .core.job_queue import connect_redis, set_job, get_job, enqueue_task, utc_now_iso, QUEUE_NAME
 
 class EnqueueRequest(BaseModel):
-    task: str = Field(..., examples=["ping", "sleep", "receipt_ocr"])
+    task: str = Field(..., examples=["ping", "sleep", "review_receipt_ocr", "menu_assistant_pipeline", "journal_generate"])
     payload: Dict[str, Any] = Field(default_factory=dict)
 
 
