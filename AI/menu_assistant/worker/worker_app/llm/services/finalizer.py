@@ -48,6 +48,7 @@ def merge_llm_output_to_final(
                     "reason_bullets": llm.get("reason_bullets", []),
                     "confidence": llm.get("confidence", 0.0),
                     "matched_constraints": llm.get("matched_constraints"),
+                    "comment": llm.get("comment", ""),
                 },
             }
         )
