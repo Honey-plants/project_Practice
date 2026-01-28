@@ -55,19 +55,14 @@ def _profile_categories_to_minimal(obj: Dict[str, Any]) -> Dict[str, Any]:
     """
     Convert "categories-based" profile schema to the minimal schema consumed by Step05/LLM.
 
-    Expected (example):
-      {
-        "user_id": 1,
-        "categories": [
-          {"category_label_en": "allergy", "items": [{"alg_tags": ["ALG_PEANUT"], ...}, ...]},
-          {"category_label_en": "religion", "items": [{"item_label_en": "islam_halal", "blocked_ingredients_ko": [...] }]}
-        ]
-      }
+    Supports both:
+      - category_label_en: allergy/religion/dislike/vegan
+      - category_label_ko: 알러지/종교/싫어하는 음식/비건
 
     Output (minimal):
       {
         "allergy_tags": ["ALG_PEANUT", ...],
-        "avoid_foods": ["돼지고기", ...],   # union of blocked_ingredients_ko from dislike/vegan (+ religion as extra safety)
+        "avoid_foods": ["돼지고기", ...],   # union of blocked_ingredients_ko across relevant categories
         "religion": "islam_halal" | None
       }
     """
@@ -76,29 +71,49 @@ def _profile_categories_to_minimal(obj: Dict[str, Any]) -> Dict[str, Any]:
         # Not categories schema
         return {}
 
-    allergy_tags: List[str] = []
-    avoid_foods: List[str] = []
+    # Use sets for stable de-dup
+    allergy_tags_set: set[str] = set()
+    avoid_foods_set: set[str] = set()
     religion: Any = None
 
-    def _add_unique(dst: List[str], values: Any) -> None:
+    KO_LABEL_MAP = {
+        "알러지": "allergy",
+        "알레르기": "allergy",
+        "종교": "religion",
+        "싫어하는 음식": "dislike",
+        "기피": "dislike",
+        "비건": "vegan",
+        "채식": "vegan",
+    }
+
+    def _norm_str(x: Any) -> str:
+        if not isinstance(x, str):
+            return ""
+        return x.strip()
+
+    def _add_values(dst: set[str], values: Any) -> None:
         if not values:
             return
         if isinstance(values, str):
             v = values.strip()
-            if v and v not in dst:
-                dst.append(v)
+            if v:
+                dst.add(v)
             return
         if isinstance(values, list):
             for x in values:
                 if isinstance(x, str):
                     v = x.strip()
-                    if v and v not in dst:
-                        dst.append(v)
+                    if v:
+                        dst.add(v)
 
     for cat in categories:
         if not isinstance(cat, dict):
             continue
-        label_en = str(cat.get("category_label_en") or "").strip().lower()
+
+        label_en = _norm_str(cat.get("category_label_en")).lower()
+        if not label_en:
+            label_ko = _norm_str(cat.get("category_label_ko"))
+            label_en = KO_LABEL_MAP.get(label_ko, "")
         items = cat.get("items")
         if not isinstance(items, list):
             continue
@@ -108,13 +123,13 @@ def _profile_categories_to_minimal(obj: Dict[str, Any]) -> Dict[str, Any]:
                 if not isinstance(it, dict):
                     continue
                 # Primary: alg_tags
-                _add_unique(allergy_tags, it.get("alg_tags"))
+                _add_values(allergy_tags_set, it.get("alg_tags"))
                 # Fallback: item_label_en (when it is an ALG_* tag)
                 ile = it.get("item_label_en")
                 if isinstance(ile, str) and ile.strip().upper().startswith("ALG_"):
-                    _add_unique(allergy_tags, ile.strip().upper())
+                    allergy_tags_set.add(ile.strip().upper())
                 # Some profiles might store blocked_ingredients_ko even for allergies
-                _add_unique(avoid_foods, it.get("blocked_ingredients_ko"))
+                _add_values(avoid_foods_set, it.get("blocked_ingredients_ko"))
 
         elif label_en == "religion":
             # Use the first item as the active religion (MVP)
@@ -128,24 +143,23 @@ def _profile_categories_to_minimal(obj: Dict[str, Any]) -> Dict[str, Any]:
             for it in items:
                 if not isinstance(it, dict):
                     continue
-                _add_unique(avoid_foods, it.get("blocked_ingredients_ko"))
+                _add_values(avoid_foods_set, it.get("blocked_ingredients_ko"))
 
         elif label_en in ("dislike", "vegan"):
             for it in items:
                 if not isinstance(it, dict):
                     continue
-                _add_unique(avoid_foods, it.get("blocked_ingredients_ko"))
+                _add_values(avoid_foods_set, it.get("blocked_ingredients_ko"))
 
         else:
-            # Unknown category: keep compatible by ignoring
+            # Unknown category: ignore
             continue
 
     return {
-        "allergy_tags": allergy_tags,
-        "avoid_foods": avoid_foods,
+        "allergy_tags": sorted(allergy_tags_set),
+        "avoid_foods": sorted(avoid_foods_set),
         "religion": religion,
     }
-
 
 def _load_user_profile(user_profile_json: str) -> Dict[str, Any]:
     # """
@@ -157,9 +171,7 @@ def _load_user_profile(user_profile_json: str) -> Dict[str, Any]:
     #     "religion": "..." | None
     #   }
     #
-    # However, your project also uses a richer "categories" schema in:
-    #   C:\Users\201\Desktop\PGHfolder\haenet\AI\Upload_Images\user_profile_mock.json
-    #
+    # However, your project also uses a richer "categories" schema.
     # This loader supports BOTH shapes:
     #   - If the JSON already has allergy_tags/avoid_foods/religion, it is used as-is (with defaults).
     #   - If the JSON has a "categories" list, it is converted into the minimal schema above.
@@ -174,6 +186,12 @@ def _load_user_profile(user_profile_json: str) -> Dict[str, Any]:
     if not isinstance(obj, dict):
         raise ValueError("user_profile_json must be a JSON object (dict).")
 
+    # Common wrapper keys (front/back-end payloads often wrap the profile)
+    for wrap_key in ("user_profile", "profile", "data"):
+        if isinstance(obj.get(wrap_key), dict):
+            obj = obj[wrap_key]
+            break
+
     # 1) If it is already minimal schema, keep it.
     if any(k in obj for k in ("allergy_tags", "avoid_foods", "religion")):
         obj.setdefault("allergy_tags", [])
@@ -183,12 +201,11 @@ def _load_user_profile(user_profile_json: str) -> Dict[str, Any]:
 
     # 2) Convert categories schema -> minimal schema
     converted = _profile_categories_to_minimal(obj)
-    if converted:
+    if isinstance(converted, dict) and set(converted.keys()) >= {"allergy_tags", "avoid_foods", "religion"}:
         return converted
 
     # 3) Fallback: return safe defaults
     return {"allergy_tags": [], "avoid_foods": [], "religion": None}
-
 
 def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """

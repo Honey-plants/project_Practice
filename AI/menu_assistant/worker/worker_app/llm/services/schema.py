@@ -125,7 +125,8 @@ class LLMItemOutputV1:
       - poly                 : 해당 메뉴 텍스트 영역(오버레이/하이라이트 목적)
       - menu_description_ko  : 메뉴 설명(한국어) - 외국인용 번역/추가설명 만들 때 기반 정보
       - risk_description_ko  : 위험도 설명(한국어) - 사용자의 알러지/종교/회피를 반영한 요약 근거
-
+      - comment            : 직원에게 확인할 질문(한국어, yes or no 로 대답할수있게)
+    
     OPTIONAL (있으면 좋은 필드):
       - risk_level     : OK / CAUTION / NO (기본 CAUTION)
       - reason_bullets : 근거를 bullet로 분리(프론트 UI에 그대로 활용 가능)
@@ -145,6 +146,7 @@ class LLMItemOutputV1:
     poly: Any
     menu_description_ko: str
     risk_description_ko: str
+    comment: str
 
     # OPTIONAL but recommended
     risk_level: RiskLevel = "CAUTION"
@@ -209,7 +211,7 @@ def validate_llm_output_v1(obj: Dict[str, Any]) -> Tuple[bool, str]:
         if not isinstance(it, dict):
             return False, f"items[{i}] must be dict"
 
-        # REQUIRED 5 fields
+        # REQUIRED 6 fields
         ok, msg = _require_nonempty_str(it, "item_id", f"items[{i}]")
         if not ok:
             return False, msg
@@ -228,6 +230,10 @@ def validate_llm_output_v1(obj: Dict[str, Any]) -> Tuple[bool, str]:
             return False, msg
 
         ok, msg = _require_nonempty_str(it, "risk_description_ko", f"items[{i}]")
+        if not ok:
+            return False, msg
+
+        ok, msg = _require_nonempty_str(it, "comment", f"items[{i}]")
         if not ok:
             return False, msg
 
