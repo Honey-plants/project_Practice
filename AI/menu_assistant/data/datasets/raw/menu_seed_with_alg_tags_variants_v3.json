@@ -6,8 +6,12 @@
       "가라아게",
       "닭튀김"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_0001",
@@ -156,9 +160,11 @@
       "간장닭튀김"
     ],
     "ingredients_ko": [
+      "Crab",
       "Soybean"
     ],
     "alg_tags": [
+      "ALG_CRUSTACEANS",
       "ALG_SOY"
     ]
   },
@@ -224,9 +230,11 @@
       "간장달걀밥"
     ],
     "ingredients_ko": [
+      "Egg",
       "Soybean"
     ],
     "alg_tags": [
+      "ALG_EGG",
       "ALG_SOY"
     ]
   },
@@ -467,11 +475,13 @@
       "간장오징어"
     ],
     "ingredients_ko": [
-      "Squid/Octopus",
-      "Soybean"
+      "Soybean",
+      "Squid",
+      "Squid/Octopus"
     ],
     "alg_tags": [
       "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS",
       "ALG_SOY"
     ]
   },
@@ -935,8 +945,12 @@
     "variants": [
       "게무침"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_0078",
@@ -1104,11 +1118,12 @@
       "계란빵"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Egg"
+      "Egg",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
+      "ALG_EGG",
       "ALG_EGGS"
     ]
   },
@@ -1122,6 +1137,7 @@
       "Egg"
     ],
     "alg_tags": [
+      "ALG_EGG",
       "ALG_EGGS"
     ]
   },
@@ -1197,6 +1213,7 @@
       "고구마치즈돈가스"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -1487,10 +1504,12 @@
       "고추오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -1815,10 +1834,12 @@
       "굴국밥"
     ],
     "ingredients_ko": [
+      "Oyster",
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -1828,10 +1849,12 @@
       "굴보쌈"
     ],
     "ingredients_ko": [
+      "Oyster",
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -1841,10 +1864,12 @@
       "굴비구이"
     ],
     "ingredients_ko": [
+      "Oyster",
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -1854,10 +1879,12 @@
       "굴비찜"
     ],
     "ingredients_ko": [
+      "Oyster",
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -1867,10 +1894,12 @@
       "굴소스가지"
     ],
     "ingredients_ko": [
+      "Oyster",
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -1880,10 +1909,12 @@
       "굴소스덮밥"
     ],
     "ingredients_ko": [
+      "Oyster",
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -1893,10 +1924,12 @@
       "굴소스버섯"
     ],
     "ingredients_ko": [
+      "Oyster",
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -1906,12 +1939,14 @@
       "굴소스볶음면"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Shellfish"
+      "Oyster",
+      "Shellfish",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -1921,12 +1956,14 @@
       "굴소스새우"
     ],
     "ingredients_ko": [
-      "Shrimp",
-      "Shellfish"
+      "Oyster",
+      "Shellfish",
+      "Shrimp"
     ],
     "alg_tags": [
       "ALG_CRUSTACEANS",
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -1936,10 +1973,12 @@
       "굴소스양고기"
     ],
     "ingredients_ko": [
+      "Oyster",
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -2006,7 +2045,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -2062,10 +2102,12 @@
       "김치낙지죽"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -2515,10 +2557,12 @@
       "낙지구이"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -2528,10 +2572,12 @@
       "낙지국밥"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -2541,10 +2587,12 @@
       "낙지덮밥"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -2554,10 +2602,12 @@
       "낙지전골"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -2567,10 +2617,12 @@
       "낙지죽"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -2580,10 +2632,12 @@
       "낙지탕탕이"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -2593,10 +2647,12 @@
       "낙지호롱"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -3034,6 +3090,7 @@
       "Egg"
     ],
     "alg_tags": [
+      "ALG_EGG",
       "ALG_EGGS"
     ]
   },
@@ -3046,8 +3103,12 @@
       "스시",
       "초밥"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Egg"
+    ],
+    "alg_tags": [
+      "ALG_EGG"
+    ]
   },
   {
     "id": "rep_0260",
@@ -3468,8 +3529,9 @@
       "햄버거"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Cheese",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -3528,10 +3590,12 @@
       "덮밥오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -3826,11 +3890,13 @@
       "된장낙지"
     ],
     "ingredients_ko": [
-      "Squid/Octopus",
-      "Soybean"
+      "Octopus",
+      "Soybean",
+      "Squid/Octopus"
     ],
     "alg_tags": [
       "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS",
       "ALG_SOY"
     ]
   },
@@ -4211,11 +4277,13 @@
       "샌드위치"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Soybean"
+      "Peanut",
+      "Soybean",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
+      "ALG_PEANUT",
       "ALG_SOY"
     ]
   },
@@ -4785,6 +4853,7 @@
       "리조토"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk"
     ],
     "alg_tags": [
@@ -4930,10 +4999,12 @@
       "레몬오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -5315,6 +5386,7 @@
       "샐러드"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -5328,8 +5400,12 @@
       "마늘가라아게",
       "마늘닭튀김"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_0462",
@@ -5419,8 +5495,12 @@
     "variants": [
       "마늘바게트"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_0470",
@@ -5567,10 +5647,12 @@
       "마늘오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -5817,10 +5899,12 @@
       "피자"
     ],
     "ingredients_ko": [
+      "Crab",
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_CRUSTACEANS"
     ]
   },
   {
@@ -6202,10 +6286,12 @@
       "매생이굴국밥"
     ],
     "ingredients_ko": [
+      "Oyster",
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -6215,8 +6301,12 @@
       "매운가라아게",
       "매운닭튀김"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_0543",
@@ -6267,10 +6357,12 @@
       "매운낙지"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -6508,10 +6600,12 @@
       "매운오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -6595,6 +6689,7 @@
       "맥앤치즈"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -6643,8 +6738,12 @@
     "variants": [
       "멍게비빔밥"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_0578",
@@ -6652,8 +6751,12 @@
     "variants": [
       "멍게활"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_0579",
@@ -6678,7 +6781,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -6692,7 +6796,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -6705,7 +6810,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -6746,8 +6852,12 @@
       "명란가라아게",
       "명란닭튀김"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_0587",
@@ -6815,8 +6925,12 @@
     "variants": [
       "명란바게트"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_0593",
@@ -7180,10 +7294,12 @@
       "문어전"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -7193,10 +7309,12 @@
       "문어전골"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -7206,10 +7324,12 @@
       "문어조림"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -7219,10 +7339,12 @@
       "문어찌개"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -7232,10 +7354,12 @@
       "문어찜"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -7248,10 +7372,12 @@
       "초밥"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -7299,7 +7425,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -7570,7 +7697,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -7583,7 +7711,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -7596,7 +7725,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -7609,7 +7739,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -7619,10 +7750,12 @@
       "바게트빵"
     ],
     "ingredients_ko": [
+      "Crab",
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_CRUSTACEANS"
     ]
   },
   {
@@ -8227,8 +8360,9 @@
       "버터갈릭새우"
     ],
     "ingredients_ko": [
-      "Shrimp",
-      "Milk"
+      "Butter",
+      "Milk",
+      "Shrimp"
     ],
     "alg_tags": [
       "ALG_CRUSTACEANS",
@@ -8243,6 +8377,7 @@
       "버터소고기덮밥"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk"
     ],
     "alg_tags": [
@@ -8256,6 +8391,7 @@
       "버터나베"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk"
     ],
     "alg_tags": [
@@ -8269,6 +8405,7 @@
       "버터난"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk"
     ],
     "alg_tags": [
@@ -8282,6 +8419,7 @@
       "버터덮밥"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk"
     ],
     "alg_tags": [
@@ -8302,6 +8440,7 @@
       "카츠"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk"
     ],
     "alg_tags": [
@@ -8318,8 +8457,9 @@
       "버터라면"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Butter",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -8336,8 +8476,9 @@
       "소바"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Butter",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -8354,8 +8495,9 @@
       "소바"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Butter",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -8370,6 +8512,7 @@
       "버터야키토리"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk"
     ],
     "alg_tags": [
@@ -8384,6 +8527,7 @@
       "버터오야코동"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk"
     ],
     "alg_tags": [
@@ -8398,8 +8542,9 @@
       "우동"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Butter",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -8413,8 +8558,9 @@
       "버터크림빵"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Butter",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -8429,6 +8575,7 @@
       "버터튀김덮밥"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk"
     ],
     "alg_tags": [
@@ -8602,8 +8749,9 @@
       "햄버거"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Cheese",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -9096,10 +9244,12 @@
       "볶음오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -9242,10 +9392,12 @@
       "북경오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -9483,7 +9635,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -9676,7 +9829,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -9991,10 +10145,12 @@
       "회"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -10480,6 +10636,7 @@
       "새우토마토스파게티"
     ],
     "ingredients_ko": [
+      "Crab",
       "Shrimp"
     ],
     "alg_tags": [
@@ -10691,10 +10848,12 @@
       "새콤오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -10929,8 +11088,12 @@
       "소금가라아게",
       "소금닭튀김"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_0942",
@@ -11554,10 +11717,12 @@
       "숯불낙지"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -11625,9 +11790,10 @@
       "피자"
     ],
     "ingredients_ko": [
-      "Wheat",
+      "Butter",
+      "Milk",
       "Salmon",
-      "Milk"
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -12322,6 +12488,7 @@
       "앙버터치아바타"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk"
     ],
     "alg_tags": [
@@ -12335,6 +12502,7 @@
       "앙버터크로와상"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk"
     ],
     "alg_tags": [
@@ -12348,6 +12516,7 @@
       "앙버터호두과자"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk",
       "Tree nuts"
     ],
@@ -12796,7 +12965,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -12894,10 +13064,12 @@
       "얼큰오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13639,10 +13811,12 @@
       "오징어구이"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13652,10 +13826,12 @@
       "오징어덮밥"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13665,10 +13841,12 @@
       "오징어비빔밥"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13681,10 +13859,12 @@
       "회"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13694,10 +13874,12 @@
       "오징어순대"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13707,10 +13889,12 @@
       "오징어전골"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13720,10 +13904,12 @@
       "오징어조림"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13733,10 +13919,12 @@
       "오징어죽"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13746,10 +13934,12 @@
       "오징어찜"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13762,10 +13952,12 @@
       "초밥"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13778,10 +13970,12 @@
       "회"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -13814,7 +14008,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -13827,7 +14022,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -13920,8 +14116,12 @@
       "와사비가라아게",
       "와사비닭튀김"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_1197",
@@ -14343,8 +14543,12 @@
       "유자가라아게",
       "유자닭튀김"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_1234",
@@ -15061,6 +15265,7 @@
       "전복버터구이"
     ],
     "ingredients_ko": [
+      "Butter",
       "Milk",
       "Shellfish"
     ],
@@ -15311,7 +15516,8 @@
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -15324,7 +15530,8 @@
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -15337,7 +15544,8 @@
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -15383,10 +15591,12 @@
       "조림오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -15990,10 +16200,12 @@
       "철판오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -16284,7 +16496,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -16601,9 +16814,12 @@
       "치즈닭튀김"
     ],
     "ingredients_ko": [
+      "Cheese",
+      "Crab",
       "Milk"
     ],
     "alg_tags": [
+      "ALG_CRUSTACEANS",
       "ALG_MILK"
     ]
   },
@@ -16614,6 +16830,7 @@
       "치즈곱창"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16627,6 +16844,7 @@
       "치즈국밥"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16641,6 +16859,7 @@
       "치즈소고기덮밥"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16654,6 +16873,7 @@
       "치즈나베"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16667,9 +16887,12 @@
       "치즈달걀말이"
     ],
     "ingredients_ko": [
+      "Cheese",
+      "Egg",
       "Milk"
     ],
     "alg_tags": [
+      "ALG_EGG",
       "ALG_MILK"
     ]
   },
@@ -16680,6 +16903,7 @@
       "치즈닭갈비"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16693,6 +16917,7 @@
       "치즈덮밥"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16713,6 +16938,7 @@
       "카츠"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16726,6 +16952,7 @@
       "치즈떡볶이"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16739,6 +16966,7 @@
       "치즈라볶이"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16755,8 +16983,9 @@
       "햄버거"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Cheese",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -16770,6 +16999,7 @@
       "치즈번"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16783,6 +17013,7 @@
       "치즈볼"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16797,8 +17028,9 @@
       "치즈샌드위치"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Cheese",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -16815,8 +17047,9 @@
       "치즈소바"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Cheese",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -16830,6 +17063,7 @@
       "치즈스틱"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16846,8 +17080,9 @@
       "치즈야키소바"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Cheese",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -16862,8 +17097,9 @@
       "치즈야키우동"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Cheese",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -16878,6 +17114,7 @@
       "치즈야키토리"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16892,6 +17129,7 @@
       "치즈오야코동"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16906,8 +17144,9 @@
       "치즈우동"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Cheese",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -16926,6 +17165,7 @@
       "카츠"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16940,8 +17180,9 @@
       "케이크"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Cheese",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -16955,6 +17196,7 @@
       "치즈크로플"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16969,6 +17211,7 @@
       "타르트"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -16983,8 +17226,9 @@
       "피자"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Cheese",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -17335,10 +17579,12 @@
       "칠리오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -18270,6 +18516,7 @@
       "크림치즈베이글"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -18283,9 +18530,10 @@
       "크림치즈호두빵"
     ],
     "ingredients_ko": [
-      "Wheat",
+      "Cheese",
       "Milk",
-      "Tree nuts"
+      "Tree nuts",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -18600,6 +18848,7 @@
       "Egg"
     ],
     "alg_tags": [
+      "ALG_EGG",
       "ALG_EGGS"
     ]
   },
@@ -18760,7 +19009,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -18854,10 +19104,12 @@
       "튀김오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -18887,8 +19139,12 @@
       "트러플가라아게",
       "트러플닭튀김"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_1623",
@@ -19492,8 +19748,9 @@
       "포크레몬버터파스타"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Butter",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -20132,8 +20389,9 @@
       "햄레몬버터파스타"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Butter",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -20177,6 +20435,7 @@
       "햄치즈베이글"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -20191,8 +20450,9 @@
       "햄치즈샌드위치"
     ],
     "ingredients_ko": [
-      "Wheat",
-      "Milk"
+      "Cheese",
+      "Milk",
+      "Wheat"
     ],
     "alg_tags": [
       "ALG_CEREALS_GLUTEN",
@@ -20206,6 +20466,7 @@
       "햄치즈토스트"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -20219,6 +20480,7 @@
       "햄치즈파니니"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -20369,11 +20631,13 @@
       "홍콩오징어"
     ],
     "ingredients_ko": [
-      "Squid/Octopus",
-      "Soybean"
+      "Soybean",
+      "Squid",
+      "Squid/Octopus"
     ],
     "alg_tags": [
       "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS",
       "ALG_SOY"
     ]
   },
@@ -20446,6 +20710,7 @@
       "황치즈마카롱"
     ],
     "ingredients_ko": [
+      "Cheese",
       "Milk"
     ],
     "alg_tags": [
@@ -20646,10 +20911,12 @@
       "후추오징어"
     ],
     "ingredients_ko": [
+      "Squid",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -20768,7 +21035,8 @@
       "Wheat"
     ],
     "alg_tags": [
-      "ALG_CEREALS_GLUTEN"
+      "ALG_CEREALS_GLUTEN",
+      "ALG_WHEAT"
     ]
   },
   {
@@ -21112,10 +21380,12 @@
       "산낙지"
     ],
     "ingredients_ko": [
+      "Octopus",
       "Squid/Octopus"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -21173,8 +21443,12 @@
     "variants": [
       "멍게"
     ],
-    "ingredients_ko": [],
-    "alg_tags": []
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
   },
   {
     "id": "rep_1822",
@@ -21304,10 +21578,12 @@
       "생굴"
     ],
     "ingredients_ko": [
+      "Oyster",
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -21317,10 +21593,12 @@
       "굴구이"
     ],
     "ingredients_ko": [
+      "Oyster",
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -21455,7 +21733,8 @@
       "Shellfish"
     ],
     "alg_tags": [
-      "ALG_MOLLUSCS"
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
     ]
   },
   {
@@ -21830,5 +22109,1362 @@
       "ALG_CEREALS_GLUTEN",
       "ALG_EGGS"
     ]
+  },
+  {
+    "id": "rep_1883",
+    "menu": "오곡밥",
+    "variants": [
+      "오곡밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1884",
+    "menu": "오징어볶음",
+    "variants": [
+      "오징어볶음"
+    ],
+    "ingredients_ko": [
+      "Squid"
+    ],
+    "alg_tags": [
+      "ALG_MOLLUSKS"
+    ]
+  },
+  {
+    "id": "rep_1885",
+    "menu": "골뱅이무침",
+    "variants": [
+      "골뱅이무침"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1886",
+    "menu": "생선회",
+    "variants": [
+      "생선회"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1887",
+    "menu": "탕평채",
+    "variants": [
+      "탕평채"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1888",
+    "menu": "오미자화채",
+    "variants": [
+      "오미자화채"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1889",
+    "menu": "수정과",
+    "variants": [
+      "수정과"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1890",
+    "menu": "인삼차",
+    "variants": [
+      "인삼차"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1891",
+    "menu": "매실차",
+    "variants": [
+      "매실차"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1892",
+    "menu": "약과",
+    "variants": [
+      "약과"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1893",
+    "menu": "강정",
+    "variants": [
+      "강정"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1894",
+    "menu": "다식",
+    "variants": [
+      "다식"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1895",
+    "menu": "약식",
+    "variants": [
+      "약식"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1896",
+    "menu": "화전",
+    "variants": [
+      "화전"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1897",
+    "menu": "꿀떡",
+    "variants": [
+      "꿀떡"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1898",
+    "menu": "송편",
+    "variants": [
+      "송편"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1899",
+    "menu": "경단",
+    "variants": [
+      "경단"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1900",
+    "menu": "백설기",
+    "variants": [
+      "백설기"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1901",
+    "menu": "회무침",
+    "variants": [
+      "회무침"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1902",
+    "menu": "홍어회무침",
+    "variants": [
+      "홍어회무침"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1903",
+    "menu": "죽순채",
+    "variants": [
+      "죽순채"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1904",
+    "menu": "구절판",
+    "variants": [
+      "구절판"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1905",
+    "menu": "오이선",
+    "variants": [
+      "오이선"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1906",
+    "menu": "고사리나물·도라지나물",
+    "variants": [
+      "고사리나물·도라지나물"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1907",
+    "menu": "나물_버섯나물·콩나물무침·시금치나물",
+    "variants": [
+      "나물_버섯나물·콩나물무침·시금치나물"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_1908",
+    "menu": "대하냉채",
+    "variants": [
+      "대하냉채"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1909",
+    "menu": "해파리냉채",
+    "variants": [
+      "해파리냉채"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1910",
+    "menu": "도토리묵",
+    "variants": [
+      "도토리묵"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1911",
+    "menu": "새우젓",
+    "variants": [
+      "새우젓"
+    ],
+    "ingredients_ko": [
+      "Shrimp"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
+  },
+  {
+    "id": "rep_1912",
+    "menu": "멸치젓",
+    "variants": [
+      "멸치젓"
+    ],
+    "ingredients_ko": [
+      "Anchovy"
+    ],
+    "alg_tags": [
+      "ALG_FISH"
+    ]
+  },
+  {
+    "id": "rep_1913",
+    "menu": "어리굴젓",
+    "variants": [
+      "어리굴젓"
+    ],
+    "ingredients_ko": [
+      "Oyster",
+      "Shellfish"
+    ],
+    "alg_tags": [
+      "ALG_MOLLUSCS",
+      "ALG_MOLLUSKS"
+    ]
+  },
+  {
+    "id": "rep_1914",
+    "menu": "마늘장아찌",
+    "variants": [
+      "마늘장아찌"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1915",
+    "menu": "양념게장",
+    "variants": [
+      "양념게장"
+    ],
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
+  },
+  {
+    "id": "rep_1916",
+    "menu": "약고추장",
+    "variants": [
+      "약고추장"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_1917",
+    "menu": "고추장",
+    "variants": [
+      "고추장"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_1918",
+    "menu": "된장",
+    "variants": [
+      "된장"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_1919",
+    "menu": "간장",
+    "variants": [
+      "간장"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_1920",
+    "menu": "총각김치",
+    "variants": [
+      "총각김치"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1921",
+    "menu": "오이소박이",
+    "variants": [
+      "오이소박이"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1922",
+    "menu": "무생채",
+    "variants": [
+      "무생채"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1923",
+    "menu": "열무김치",
+    "variants": [
+      "열무김치"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1924",
+    "menu": "보쌈김치",
+    "variants": [
+      "보쌈김치"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1925",
+    "menu": "백김치",
+    "variants": [
+      "백김치"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1926",
+    "menu": "동치미",
+    "variants": [
+      "동치미"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1927",
+    "menu": "나박김치",
+    "variants": [
+      "나박김치"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1928",
+    "menu": "깍두기",
+    "variants": [
+      "깍두기"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1929",
+    "menu": "겉절이",
+    "variants": [
+      "겉절이"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1930",
+    "menu": "계란말이",
+    "variants": [
+      "계란말이"
+    ],
+    "ingredients_ko": [
+      "Egg"
+    ],
+    "alg_tags": [
+      "ALG_EGG",
+      "ALG_EGGS"
+    ]
+  },
+  {
+    "id": "rep_1931",
+    "menu": "메밀전병",
+    "variants": [
+      "메밀전병"
+    ],
+    "ingredients_ko": [
+      "Wheat"
+    ],
+    "alg_tags": [
+      "ALG_WHEAT"
+    ]
+  },
+  {
+    "id": "rep_1932",
+    "menu": "화양적",
+    "variants": [
+      "화양적"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1933",
+    "menu": "파전",
+    "variants": [
+      "파전"
+    ],
+    "ingredients_ko": [
+      "Wheat"
+    ],
+    "alg_tags": [
+      "ALG_CEREALS_GLUTEN"
+    ]
+  },
+  {
+    "id": "rep_1934",
+    "menu": "새송이버섯산적",
+    "variants": [
+      "새송이버섯산적"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1935",
+    "menu": "녹두전",
+    "variants": [
+      "녹두전"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1936",
+    "menu": "새우전·버섯전",
+    "variants": [
+      "새우전·버섯전"
+    ],
+    "ingredients_ko": [
+      "Shrimp"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
+  },
+  {
+    "id": "rep_1937",
+    "menu": "감자전",
+    "variants": [
+      "감자전"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1938",
+    "menu": "모둠전",
+    "variants": [
+      "모둠전"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1939",
+    "menu": "김부각",
+    "variants": [
+      "김부각"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1940",
+    "menu": "김구이",
+    "variants": [
+      "김구이"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1941",
+    "menu": "황태구이",
+    "variants": [
+      "황태구이"
+    ],
+    "ingredients_ko": [
+      "Pollock"
+    ],
+    "alg_tags": [
+      "ALG_FISH"
+    ]
+  },
+  {
+    "id": "rep_1942",
+    "menu": "더덕구이",
+    "variants": [
+      "더덕구이"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1943",
+    "menu": "병어고추장구이",
+    "variants": [
+      "병어고추장구이"
+    ],
+    "ingredients_ko": [
+      "Fish"
+    ],
+    "alg_tags": [
+      "ALG_FISH"
+    ]
+  },
+  {
+    "id": "rep_1944",
+    "menu": "오리구이",
+    "variants": [
+      "오리구이"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1945",
+    "menu": "소고기편채",
+    "variants": [
+      "소고기편채"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1946",
+    "menu": "소갈비구이",
+    "variants": [
+      "소갈비구이"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1947",
+    "menu": "양념갈비",
+    "variants": [
+      "양념갈비"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1948",
+    "menu": "돼지갈비구이",
+    "variants": [
+      "돼지갈비구이"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1949",
+    "menu": "삼겹살구이",
+    "variants": [
+      "삼겹살구이"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1950",
+    "menu": "뚝배기불고기",
+    "variants": [
+      "뚝배기불고기"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1951",
+    "menu": "떡갈비",
+    "variants": [
+      "떡갈비"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1952",
+    "menu": "너비아니",
+    "variants": [
+      "너비아니"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1953",
+    "menu": "곱창구이",
+    "variants": [
+      "곱창구이"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1954",
+    "menu": "두부김치",
+    "variants": [
+      "두부김치"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_1955",
+    "menu": "낙지볶음",
+    "variants": [
+      "낙지볶음"
+    ],
+    "ingredients_ko": [
+      "Octopus"
+    ],
+    "alg_tags": [
+      "ALG_MOLLUSKS"
+    ]
+  },
+  {
+    "id": "rep_1956",
+    "menu": "궁중떡볶이",
+    "variants": [
+      "궁중떡볶이"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1957",
+    "menu": "두부조림",
+    "variants": [
+      "두부조림"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_1958",
+    "menu": "감자조림",
+    "variants": [
+      "감자조림"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1959",
+    "menu": "장조림",
+    "variants": [
+      "장조림"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1960",
+    "menu": "은대구조림",
+    "variants": [
+      "은대구조림"
+    ],
+    "ingredients_ko": [
+      "Fish"
+    ],
+    "alg_tags": [
+      "ALG_FISH"
+    ]
+  },
+  {
+    "id": "rep_1961",
+    "menu": "갈치조림",
+    "variants": [
+      "갈치조림"
+    ],
+    "ingredients_ko": [
+      "Hairtail"
+    ],
+    "alg_tags": [
+      "ALG_FISH"
+    ]
+  },
+  {
+    "id": "rep_1962",
+    "menu": "아귀찜",
+    "variants": [
+      "아귀찜"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1963",
+    "menu": "양지머리 편육",
+    "variants": [
+      "양지머리 편육"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1964",
+    "menu": "보쌈",
+    "variants": [
+      "보쌈"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1965",
+    "menu": "묵은지찜",
+    "variants": [
+      "묵은지찜"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1966",
+    "menu": "계란찜",
+    "variants": [
+      "계란찜"
+    ],
+    "ingredients_ko": [
+      "Egg"
+    ],
+    "alg_tags": [
+      "ALG_EGG"
+    ]
+  },
+  {
+    "id": "rep_1967",
+    "menu": "닭볶음탕",
+    "variants": [
+      "닭볶음탕"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1968",
+    "menu": "닭백숙",
+    "variants": [
+      "닭백숙"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1969",
+    "menu": "소고기전골",
+    "variants": [
+      "소고기전골"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1970",
+    "menu": "버섯전골",
+    "variants": [
+      "버섯전골"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1971",
+    "menu": "두부전골",
+    "variants": [
+      "두부전골"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_1972",
+    "menu": "김치전골",
+    "variants": [
+      "김치전골"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1973",
+    "menu": "국수전골",
+    "variants": [
+      "국수전골"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1974",
+    "menu": "신선로",
+    "variants": [
+      "신선로"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1975",
+    "menu": "청국장찌개",
+    "variants": [
+      "청국장찌개"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_1976",
+    "menu": "동태찌개",
+    "variants": [
+      "동태찌개"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1977",
+    "menu": "된장찌개",
+    "variants": [
+      "된장찌개"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_1978",
+    "menu": "알탕",
+    "variants": [
+      "알탕"
+    ],
+    "ingredients_ko": [
+      "Fish"
+    ],
+    "alg_tags": [
+      "ALG_FISH"
+    ]
+  },
+  {
+    "id": "rep_1979",
+    "menu": "꽃게탕",
+    "variants": [
+      "꽃게탕"
+    ],
+    "ingredients_ko": [
+      "Crab"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ]
+  },
+  {
+    "id": "rep_1980",
+    "menu": "해물탕",
+    "variants": [
+      "해물탕"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1981",
+    "menu": "복매운탕",
+    "variants": [
+      "복매운탕"
+    ],
+    "ingredients_ko": [
+      "Fish"
+    ],
+    "alg_tags": [
+      "ALG_FISH"
+    ]
+  },
+  {
+    "id": "rep_1982",
+    "menu": "복맑은탕",
+    "variants": [
+      "복맑은탕"
+    ],
+    "ingredients_ko": [
+      "Fish"
+    ],
+    "alg_tags": [
+      "ALG_FISH"
+    ]
+  },
+  {
+    "id": "rep_1983",
+    "menu": "대구매운탕",
+    "variants": [
+      "대구매운탕"
+    ],
+    "ingredients_ko": [
+      "Fish"
+    ],
+    "alg_tags": [
+      "ALG_FISH"
+    ]
+  },
+  {
+    "id": "rep_1984",
+    "menu": "대구맑은탕",
+    "variants": [
+      "대구맑은탕"
+    ],
+    "ingredients_ko": [
+      "Fish"
+    ],
+    "alg_tags": [
+      "ALG_FISH"
+    ]
+  },
+  {
+    "id": "rep_1985",
+    "menu": "민어매운탕",
+    "variants": [
+      "민어매운탕"
+    ],
+    "ingredients_ko": [
+      "Fish"
+    ],
+    "alg_tags": [
+      "ALG_FISH"
+    ]
+  },
+  {
+    "id": "rep_1986",
+    "menu": "감자탕",
+    "variants": [
+      "감자탕"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1987",
+    "menu": "도가니탕",
+    "variants": [
+      "도가니탕"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1988",
+    "menu": "우거지갈비탕",
+    "variants": [
+      "우거지갈비탕"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1989",
+    "menu": "오이냉국",
+    "variants": [
+      "오이냉국"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1990",
+    "menu": "재첩국",
+    "variants": [
+      "재첩국"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1991",
+    "menu": "콩나물국",
+    "variants": [
+      "콩나물국"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_1992",
+    "menu": "근대된장국",
+    "variants": [
+      "근대된장국"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1993",
+    "menu": "만두",
+    "variants": [
+      "만두"
+    ],
+    "ingredients_ko": [
+      "Wheat"
+    ],
+    "alg_tags": [
+      "ALG_CEREALS_GLUTEN"
+    ]
+  },
+  {
+    "id": "rep_1994",
+    "menu": "막국수",
+    "variants": [
+      "막국수"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1995",
+    "menu": "수제비",
+    "variants": [
+      "수제비"
+    ],
+    "ingredients_ko": [
+      "Wheat"
+    ],
+    "alg_tags": [
+      "ALG_CEREALS_GLUTEN"
+    ]
+  },
+  {
+    "id": "rep_1996",
+    "menu": "회냉면",
+    "variants": [
+      "회냉면"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1997",
+    "menu": "채소죽",
+    "variants": [
+      "채소죽"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1998",
+    "menu": "삼계죽",
+    "variants": [
+      "삼계죽"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_1999",
+    "menu": "잡채덮밥",
+    "variants": [
+      "잡채덮밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2000",
+    "menu": "회덮밥",
+    "variants": [
+      "회덮밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2001",
+    "menu": "육회비빔밥",
+    "variants": [
+      "육회비빔밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2002",
+    "menu": "우렁된장비빔밥",
+    "variants": [
+      "우렁된장비빔밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2003",
+    "menu": "제육덮밥",
+    "variants": [
+      "제육덮밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2004",
+    "menu": "우거지사골국밥",
+    "variants": [
+      "우거지사골국밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2005",
+    "menu": "콩나물밥",
+    "variants": [
+      "콩나물밥"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_2006",
+    "menu": "콩나물국밥",
+    "variants": [
+      "콩나물국밥"
+    ],
+    "ingredients_ko": [
+      "Soybean"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ]
+  },
+  {
+    "id": "rep_2007",
+    "menu": "순댓국밥",
+    "variants": [
+      "순댓국밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2008",
+    "menu": "소고기국밥",
+    "variants": [
+      "소고기국밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2009",
+    "menu": "돼지국밥",
+    "variants": [
+      "돼지국밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2010",
+    "menu": "산채비빔밥",
+    "variants": [
+      "산채비빔밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2011",
+    "menu": "누룽지",
+    "variants": [
+      "누룽지"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2012",
+    "menu": "김치볶음밥",
+    "variants": [
+      "김치볶음밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2013",
+    "menu": "곤드레나물밥",
+    "variants": [
+      "곤드레나물밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2014",
+    "menu": "보리밥",
+    "variants": [
+      "보리밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2015",
+    "menu": "잡곡밥",
+    "variants": [
+      "잡곡밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2016",
+    "menu": "흰밥",
+    "variants": [
+      "흰밥"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
   }
 ]
