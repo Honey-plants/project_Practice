@@ -7,7 +7,6 @@ from sqlalchemy.orm import relationship
 class RefreshToken(Base):
     __tablename__ = "refresh_token"
 
-    # ✅ 1인 1 refresh만 유지(현재 네 Redis 구조랑 동일)
     member_id = Column(Integer, ForeignKey("member.member_id", ondelete="CASCADE"), primary_key=True)
 
     jti = Column(String(255), nullable=False, index=True)

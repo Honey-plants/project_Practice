@@ -11,6 +11,8 @@ from backend.app.core.job_queue import connect_redis, enqueue_task, utc_now_iso
 
 router = APIRouter(prefix="/upload", tags=["upload"])
 
+print("IMAGE ROUTER", __file__)
+
 @router.post("/receipt")
 async def receipt_ocr(image: UploadFile = File(...)):
     """

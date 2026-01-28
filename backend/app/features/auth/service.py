@@ -11,6 +11,7 @@ from backend.app.core.security.jwt import (
     decode_token,
     exp_seconds_left,
 )
+# from backend.app.core.config import REFRESH_TOKEN_EXPIRE_MINUTES
 from backend.app.core.config import REFRESH_TOKEN_EXPIRE_DAYS
 from backend.app.features.auth import token_store
 # 추가 예정

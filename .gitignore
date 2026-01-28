@@ -23,6 +23,9 @@ k8s/env/**/.env
 .idea/
 *.iml
 
+# config
+
+
 #interpreter_packages.txt
 
 

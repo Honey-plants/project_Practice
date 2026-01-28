@@ -133,4 +133,3 @@
 #         f.write(image_bytes)
 #
 #     print(f"✅ Food journal image saved as: {output_filename}")
-

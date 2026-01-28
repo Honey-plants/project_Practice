@@ -6,10 +6,8 @@ from fastapi import UploadFile
 from backend.app.common.utils.util import validate_image
 from backend.app.common.storage.types import UploadObject
 
-
 def _ext(filename: str) -> str:
     return os.path.splitext(filename)[1].lower()
-
 
 class LocalUploadStorage:
     def __init__(self, upload_root: Path):
@@ -73,7 +71,7 @@ class LocalUploadStorage:
                     member_dir.rmdir()
             except Exception:
                 pass
-
+    
     # local 체크
     def is_local(self) -> bool:
         return True
