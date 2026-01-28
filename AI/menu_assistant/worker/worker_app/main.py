@@ -80,23 +80,11 @@ def _handle_task(task: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         sec = int(payload.get("seconds", 1))
         time.sleep(max(0, sec))
         return {"slept": sec}
-
-    if task == "receipt_ocr":
-        import base64
-        from AI.review.pipeline.receipt_service import process_receipt_ocr
-
-        encoded = payload.get("image_base64")
-        if not encoded:
-            raise ValueError("Missing 'image_base64' in payload")
-        
-        # Base64 Decoding
-        # payload가 dict가 아닐 경우 에러날 수 있으나 위에서 dict 변환 보장함
-        img_bytes = base64.b64decode(encoded)
-        
-        # OCR 처리
-        result = process_receipt_ocr(img_bytes)
-        
-        return result
+    if task == "menu_assistant":
+        raise NotImplementedError(
+            "menu_assistant handler is not wired yet. "
+            "Implement the handler and call it here."
+        )
 
     raise ValueError(f"Unsupported task: {task}")
 

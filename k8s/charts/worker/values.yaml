@@ -39,6 +39,8 @@ queue:
     # dev: redis 권장, prod: sqs 등으로 확장 가능
     type: redis # redis | sqs
     redisUrl: "redis://redis-master:6379/0"
+    name: "cicdex:jobs"
+    processingName: "cicdex:jobs:processing"
     sqsQueueUrl: ""
     awsRegion: "ap-northeast-2"
 

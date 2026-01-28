@@ -12,6 +12,8 @@ env:
 queue:
     type: redis
     redisUrl: redis://redis-master:6379/0
+    name: "cicdex:jobs:menu_assistant"
+    processingName: "cicdex:jobs:menu_assistant:processing"
 
 config:
     LOG_LEVEL: INFO

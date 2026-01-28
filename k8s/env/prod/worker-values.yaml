@@ -12,6 +12,8 @@ env:
 queue:
     type: redis
     redisUrl: redis://:PROD_REDIS_PASSWORD_CHANGE_ME@redis-master.app-prod.svc.cluster.local:6379/0
+    name: "cicdex:jobs:menu_assistant"
+    processingName: "cicdex:jobs:menu_assistant:processing"
 config:
     LOG_LEVEL: INFO
     S3_BUCKET: prod-bucket-name
