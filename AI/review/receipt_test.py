@@ -93,8 +93,6 @@ def normalize_ocr_lines(result_item):
         })
     return tokens
 
-
-
 # =======================================
 # TOKEN 라인별로 조인해주기
 # =======================================
@@ -384,7 +382,6 @@ def preprocess_image(image_bytes: bytes) -> np.ndarray:
 
     # ✅ 이걸 OCR로 보낸다
     return cv2.cvtColor(sharp, cv2.COLOR_GRAY2BGR)
-
 
 
 def ocr_result_to_json_safe(ocr_item: dict) -> dict:
