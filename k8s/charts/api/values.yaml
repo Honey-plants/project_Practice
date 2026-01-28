@@ -40,6 +40,10 @@ env:
   DB_PORT: "3306"
   DB_NAME: "app_db"
   DB_USER: "app_user"
+  REDIS_URL: "redis://redis:6379/0"
+  QUEUE_NAME_MENU_ASSISTANT: "cicdex:jobs:menu_assistant"
+  QUEUE_NAME_JOURNAL: "cicdex:jobs:journal"
+  QUEUE_NAME_REVIEW: "cicdex:jobs:review"
 
 secret:
   enabled: true
