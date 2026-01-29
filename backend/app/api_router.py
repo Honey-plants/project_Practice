@@ -9,8 +9,9 @@ from backend.app.features.menu.router import router as menu_router
 
 # from backend.app.features.images.router import router as receipt_router
 # router 미작업
-# from .features.review.router import router as review_router
-# from .features.community.router import router as community_router
+from backend.app.features.review.router import router as review_router
+from backend.app.features.meta.router import router as meta_router
+# from backend.app.features.community.router import router as community_router
 
 # router 전체 관리
 api_router = APIRouter()
@@ -23,10 +24,10 @@ api_router.include_router(restrictions_admin)
 api_router.include_router(menu_router)
 
 # 임시 menu img upload 테스트 router
+api_router.include_router(review_router)
+api_router.include_router(meta_router)
 # api_router.include_router(menu_router)
 
-
 # router 미작업
-# api_router.include_router(review_router)
 # api_router.include_router(community_router)
 

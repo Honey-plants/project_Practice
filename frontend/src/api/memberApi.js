@@ -1,6 +1,7 @@
 import api from "./axiosInstance";
 
 export const MemberAPI = {
+
   me: async () => {
     // /member/me 우선, 없으면 /members/me fallback
     try {
@@ -12,6 +13,8 @@ export const MemberAPI = {
     }
   },
   updateMe: (payload) => api.patch("/member/me", payload),
-  register: (payload) => api.post("/member/register", payload),
+
+  register: (payload) => api.post("/member", payload),
+
 //  getCategoriesWithItems: () => api.get("/member/categories-with-items"),
 };

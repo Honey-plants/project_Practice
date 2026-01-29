@@ -9,7 +9,7 @@ import './Admin_new.css';
  */
 export default function AdminRestrictionsPage() {
   // ------------------ API ------------------
-  const BASE = "http://127.0.0.1:8004";
+  const BASE = "http://127.0.0.1:8003";
   const API = {
     list: `${BASE}/admin/restrictions`,                 // GET
     batchCreate: `${BASE}/admin/restrictions/batch`,    // POST
@@ -131,6 +131,11 @@ export default function AdminRestrictionsPage() {
 
   // ------------------ Inline edit: category/item ------------------
   const updateCategoryLocal = (category_id, patch) => {
+    console.log("클릭시 나 여기 들어왔어요!")
+
+
+
+
     setData((prev) =>
       prev.map((c) => (c.category_id === category_id ? { ...c, ...patch } : c))
     );
@@ -204,7 +209,9 @@ export default function AdminRestrictionsPage() {
   };
 
   // ------------------ Batch create (등록) ------------------
-  const addDraftCategory = () => setDraftCategories((p) => [...p, emptyCategory()]);
+  const addDraftCategory = () => setDraftCategories(
+      (p) => [...p, emptyCategory()]
+      );
   const removeDraftCategory = (idx) =>
     setDraftCategories((p) => (p.length <= 1 ? p : p.filter((_, i) => i !== idx)));
 

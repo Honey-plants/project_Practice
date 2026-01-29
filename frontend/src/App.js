@@ -25,6 +25,9 @@ import UploadTest from "./pages/upload/UploadTest";
 
 import Register from "./pages/auth/Register";
 
+// admin 추가
+import Admin from "./pages/admin/Admin_new";
+
 export default function App() {
   return (
     <AppProviders>
@@ -38,6 +41,7 @@ export default function App() {
 
           // Routes 안에 추가
           <Route path="/register" element={<Register />} />
+          <Route path="/admin" element={<Admin />} />
 
           {/* member */}
           <Route
