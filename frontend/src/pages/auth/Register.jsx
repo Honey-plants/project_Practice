@@ -1,19 +1,82 @@
-import React, { useEffect, useState } from "react";
+import "../../styles/Register.css";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Modal from "../../components/common/Modal";
+import { COUNTRY_OPTIONS, GENDER } from "../../contents/register";
 import { MemberAPI } from "../../api/memberApi";
-import { useNavigate, Link } from "react-router-dom";
+
+/* 정규식 */
+const REGEX = {
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
+  password: /^.{8,20}$/,
+};
+
+function validate(formData) {
+  const errors = {};
+  const email = formData.email.trim();
+
+  if (!email) errors.email = "Email is required.";
+  else if (!REGEX.email.test(email)) errors.email = "Invalid email format.";
+
+  if (!formData.password) {
+    errors.password = "Password is required.";
+  } else if (!REGEX.password.test(formData.password)) {
+    errors.password = "Password must be 8~20 characters.";
+  }
+
+  if (formData.password !== formData.passwordConfirm) {
+    errors.passwordConfirm = "Password does not match.";
+  }
+
+  return errors;
+}
 
 export default function Register() {
   const nav = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [pw, setPw] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [gender, setGender] = useState("");
-  const [country, setCountry] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    passwordConfirm: "",
+    gender: "",
+    country: "",
+  });
 
-  const [categories, setCategories] = useState([]);
-  const [selectedItemIds, setSelectedItemIds] = useState(new Set());
-  const [error, setError] = useState("");
+  const [modalType, setModalType] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const submitRegister = async () => {
+    const errors = validate(formData);
+    if (Object.keys(errors).length > 0) {
+      alert(Object.values(errors).join("\n"));
+      return false;
+    }
+
+    const payload = {
+      email: formData.email.trim(),
+      password: formData.password,
+      nickname: formData.nickname,
+      gender: formData.gender || null,
+      country: formData.country || null,
+    };
+    console.log("payload :: ", payload)
+    try {
+      await MemberAPI.register(payload);
+      alert("Register complete!");
+      return true;
+    } catch (e) {
+      console.error(e);
+      alert(e?.response?.data?.message || "Register failed");
+      return false;
+    }
+  };
+  // Admin 등록 한 Category, Item 리스트 조회
+  const { stateMeta } = useContext(MetaContext);
 
   useEffect(() => {
     (async () => {
@@ -27,55 +90,118 @@ export default function Register() {
     })();
   }, []);
 
-  const toggleItem = (itemId) => {
-    setSelectedItemIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(itemId)) next.delete(itemId);
-      else next.add(itemId);
-      return next;
-    });
+  const openModal = (type) => {
+    setModalType(type);
+    setIsModalOpen(true);
   };
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  const handleConfirm = async () => {
+    if (modalType === "cancel") {
+      setIsModalOpen(false);
+      nav("/");
+      return;
+    }
 
-    try {
-      await MemberAPI.register({
-        email,
-        password: pw,
-        nickname,
-        gender: gender || null,
-        country: country || null,
-        item_ids: Array.from(selectedItemIds),
-      });
-
-      nav("/login");
-    } catch (e2) {
-      setError(e2.message || "회원가입 실패");
+    if (modalType === "Register") {
+      const ok = await submitRegister();
+      if (ok) nav("/");
+      setIsModalOpen(false);
     }
   };
 
   return (
-    <div style={{ padding: 16, maxWidth: 900 }}>
-      <h2>Register</h2>
+    <div className="Register">
+      <section>Create your account</section>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10, maxWidth: 420 }}>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" />
-        <input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="password" type="password" />
-        <input value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="nickname" />
-        <input value={gender} onChange={(e) => setGender(e.target.value)} placeholder="gender(optional)" />
-        <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="country(optional)" />
-        <button type="submit">Create Account</button>
-        <div>
-          <Link to="/login">Go Login</Link>
-        </div>
-      </form>
+      <section>
+        <label>
+          E-mail
+          <input
+            name="email"
+            type="text"
+            value={formData.email}
+            onChange={onChange}
+            placeholder="example@email.com"
+          />
+        </label>
+        <label>
+          Nickname
+          <input
+            name="nickname"
+            type="text"
+            placeholder="Please write 10 characters or less"
+            maxLength={10}
+            value={formData.nickname}
+            onChange={onChange}
+            style={{ flex: 1 }}
+          />
+        </label>
+        <label>
+          Password
+          <input
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={onChange}
+            placeholder="8~20 characters"
+          />
+        </label>
 
+        <label>
+          Password Check
+          <input
+            name="passwordConfirm"
+            type="password"
+            value={formData.passwordConfirm}
+            onChange={onChange}
+          />
+        </label>
+
+        <label>
+          Gender
+          <select name="gender" value={formData.gender} onChange={onChange}>
+            {GENDER.map((g) => (
+              <option key={g.value} value={g.value}>
+                {g.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Country
+          <select name="country" value={formData.country} onChange={onChange}>
+            {COUNTRY_OPTIONS.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
+
+      <section>
+        <button onClick={() => openModal("cancel")}>Cancel</button>
+        <button onClick={() => openModal("Register")}>Register</button>
+      </section>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleConfirm}
+        message={
+          modalType === "cancel"
+            ? "Are you sure you want to cancel?"
+            : "Do you want to proceed?"
+        }
+      />
       <hr style={{ margin: "16px 0" }} />
 
       <h3>Category / Item 선택</h3>
       {error && <div className="errorBox">{error}</div>}
+
+      {stateMeta.loading && !categories.length && <div>카테고리 불러오는 중...</div>}
+      {(stateMeta.error || error) && <div className="errorBox">{stateMeta.error || error}</div>}
 
       {categories.map((c) => (
         <div key={c.category_id ?? c.id} className="card">
