@@ -1,5 +1,4 @@
 export const COUNTRY_OPTIONS = [
-  { value:"", label: "Select Country"},
   { value: "US", label: "United States" },
   { value: "AF", label: "Afghanistan" },
   { value: "AX", label: "Aland Islands" },
@@ -238,7 +237,6 @@ export const COUNTRY_OPTIONS = [
 ];
 
 export const GENDER = [
-    { value:"", label: "Select Gender"},
     { value:"M", label: "Male"},
     { value:"W", label: "Female"},
     { value:"U", label: "Not select"}    

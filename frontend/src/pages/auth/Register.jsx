@@ -36,6 +36,7 @@ export default function Register() {
 
   const [formData, setFormData] = useState({
     email: "",
+    nickname: "",
     password: "",
     passwordConfirm: "",
     gender: "",
@@ -60,11 +61,13 @@ export default function Register() {
     const payload = {
       email: formData.email.trim(),
       password: formData.password,
-      nickname: formData.nickname,
+      nickname: formData.nickname.trim(),
       gender: formData.gender || null,
       country: formData.country || null,
     };
+
     console.log("payload :: ", payload)
+
     try {
       await MemberAPI.register(payload);
       alert("Register complete!");
@@ -146,6 +149,7 @@ export default function Register() {
         <label>
           Gender
           <select name="gender" value={formData.gender} onChange={onChange}>
+            <option value="">Select gender</option>
             {GENDER.map((g) => (
               <option key={g.value} value={g.value}>
                 {g.label}
@@ -157,6 +161,7 @@ export default function Register() {
         <label>
           Country
           <select name="country" value={formData.country} onChange={onChange}>
+            <option value="">Select Country</option>
             {COUNTRY_OPTIONS.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.label}

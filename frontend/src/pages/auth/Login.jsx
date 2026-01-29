@@ -22,7 +22,7 @@ export default function Login() {
       setError(e2.message || "로그인 실패");
     }
   };
-
+  
   return (
     <div style={{ padding: 16, maxWidth: 420 }}>
       <h2>Login</h2>
