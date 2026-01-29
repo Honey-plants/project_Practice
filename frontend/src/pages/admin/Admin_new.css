@@ -1,0 +1,154 @@
+.container-admin{
+  width: 100%;
+  font-size: 15px;
+  padding: 20px;
+  box-sizing: border-box;
+  color: white;
+  background-color: #222;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 1500px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section-top {
+  display: grid;
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto 20px;
+  box-sizing: border-box;
+}
+
+.section-left,
+.section-right {
+  min-width: 800px;
+  padding: 0 20px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background-color: #444;
+}
+
+.panel {
+  padding: 0 20px;
+  border-radius: 10px;
+  background-color: #444;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+input {
+  padding: 5px;
+  border: 2px solid #aaa;
+  border-radius: 10px;
+  color: white;
+  background-color: #555;
+}
+
+input::placeholder{
+  color: #aaa;
+}
+
+input[type="search"]{
+  padding: 10px;
+  flex: 1;
+  text-align: center;
+  border-radius: 20px;
+  background-color: #555;
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.hint {
+  font-size: 12px;
+  color: #777;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.notice {
+  text-align: center;
+  border: 1px solid #555;
+  background: #333;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+ul.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 180px 180px 140px;
+  align-items: center;
+}
+
+ul.row > li {
+  padding: 0 10px;
+  text-align: center;
+}
+
+
+
+li.categorybox {
+  border: 1px solid #777;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+li.categorybox > .row {
+  padding-bottom: 10px;
+  line-height: 2.1;
+}
+
+li.itembox {
+  background-color: #333;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.row-label li{
+  font-size: 13px;
+  color: #eee;
+}
+
+li.itembox > .row-label{
+  border-bottom: 1px solid #ddd;
+}
+
+li.itembox > .row:first-child {
+  border-radius: 10px 10px 0 0;
+}
+li.itembox > .row:last-child {
+  border-radius: 0 0 10px 10px;
+}
+
+span {
+  display: block;
+}
+
+button{
+  color: black;
+  background-color: white;
+
+}

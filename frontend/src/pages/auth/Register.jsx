@@ -3,7 +3,38 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "../../components/common/Modal";
 import { COUNTRY_OPTIONS, GENDER } from "../../contents/register";
+import "../../styles/Register.css";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Modal from "../../components/common/Modal";
+import { COUNTRY_OPTIONS, GENDER } from "../../contents/register";
 import { MemberAPI } from "../../api/memberApi";
+
+/* 정규식 */
+const REGEX = {
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
+  password: /^.{8,20}$/,
+};
+
+function validate(formData) {
+  const errors = {};
+  const email = formData.email.trim();
+
+  if (!email) errors.email = "Email is required.";
+  else if (!REGEX.email.test(email)) errors.email = "Invalid email format.";
+
+  if (!formData.password) {
+    errors.password = "Password is required.";
+  } else if (!REGEX.password.test(formData.password)) {
+    errors.password = "Password must be 8~20 characters.";
+  }
+
+  if (formData.password !== formData.passwordConfirm) {
+    errors.passwordConfirm = "Password does not match.";
+  }
+
+  return errors;
+}
 
 /* 정규식 */
 const REGEX = {

@@ -11,6 +11,9 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 # Category, Item 전체 등록
 @router.post("/restrictions/batch", dependencies=[Depends(require_admin)],)
 def create_categories_batch(payload: schemas.CategoriesBatchCreate, db: Session = Depends(get_db)):
+    print("전체 등록으로 들어왔다!")
+
+
     print("payload :: ", payload)
     return service.create_categories_batch(db, payload)
 
