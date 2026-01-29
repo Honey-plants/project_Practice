@@ -1,0 +1,76 @@
+{
+  "job_id": null,
+  "mode": "debug",
+  "images": {
+    "input_path": ".\\AI\\review\\tmp_receipt\\receipt_10.jpg",
+    "rectified_path": "AI\\review\\test\\202601291605_receipt_10_test\\step1_rectify\\20_post_for_ocr.jpg",
+    "cropped_path": "AI\\review\\test\\202601291605_receipt_10_test\\step1_rectify\\12_cropped.jpg"
+  },
+  "ocr": {
+    "items": [
+      {
+        "text": "",
+        "score": 0.0,
+        "poly": [
+          [
+            26,
+            496
+          ],
+          [
+            111,
+            496
+          ],
+          [
+            111,
+            745
+          ],
+          [
+            26,
+            745
+          ]
+        ],
+        "bbox": [
+          26,
+          496,
+          111,
+          745
+        ]
+      }
+    ],
+    "n_items": 1,
+    "overlay_path": "AI\\review\\test\\202601291605_receipt_10_test\\step2_ocr\\ocr_overlay.jpg"
+  },
+  "normalize": {
+    "lines": [],
+    "y_threshold": 15
+  },
+  "extracted": {
+    "phone": null,
+    "menu_ko": [],
+    "menu_en": []
+  },
+  "store": {
+    "store_name": null,
+    "address": null,
+    "city": null,
+    "phone": null,
+    "coords": null,
+    "naver_raw": null
+  },
+  "debug": {
+    "images": {
+      "00_original": "AI\\review\\test\\202601291605_receipt_10_test\\step1_rectify\\00_original.jpg",
+      "01_pre_for_crop": "AI\\review\\test\\202601291605_receipt_10_test\\step1_rectify\\01_pre_for_crop.jpg",
+      "10_edges": "AI\\review\\test\\202601291605_receipt_10_test\\step1_rectify\\10_edges.jpg",
+      "11_quad_overlay": "AI\\review\\test\\202601291605_receipt_10_test\\step1_rectify\\11_quad_overlay.jpg",
+      "12_cropped": "AI\\review\\test\\202601291605_receipt_10_test\\step1_rectify\\12_cropped.jpg",
+      "20_post_for_ocr": "AI\\review\\test\\202601291605_receipt_10_test\\step1_rectify\\20_post_for_ocr.jpg",
+      "ocr_overlay": "AI\\review\\test\\202601291605_receipt_10_test\\step2_ocr\\ocr_overlay.jpg"
+    },
+    "jsons": {
+      "ocr_result": "AI\\review\\test\\202601291605_receipt_10_test\\step2_ocr\\ocr_result.json"
+    },
+    "enrich": {}
+  },
+  "final": null
+}

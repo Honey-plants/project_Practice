@@ -29,7 +29,7 @@ def detect_area_code(lines):
 #전화번호 추출
 def extract_phone(lines):
     PHONE_REGEX = re.compile(
-        r'(0\d{1,2})[-\s]?(\d{3,4})[-\s]?(\d{4})'
+        r'(0\d{1,2})[\)\-\s]*?(\d{3,4})[\-\s]?(\d{4})'
     )
 
     for line in lines:

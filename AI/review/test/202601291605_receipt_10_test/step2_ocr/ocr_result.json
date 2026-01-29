@@ -1,0 +1,52 @@
+{
+  "image": "AI\\review\\test\\202601291605_receipt_10_test\\step1_rectify\\20_post_for_ocr.jpg",
+  "config": {
+    "lang": "korean",
+    "use_textline_orientation": true,
+    "use_doc_unwarping": false,
+    "enable_mkldnn": false,
+    "show_log": false,
+    "det_limit_side_len": 1280,
+    "det_limit_type": "max",
+    "det_thresh": 0.3,
+    "det_box_thresh": 0.2,
+    "det_unclip_ratio": 1.5,
+    "det_model_dir": null,
+    "rec_model_dir": null,
+    "cls_model_dir": null
+  },
+  "n_items": 1,
+  "items": [
+    {
+      "text": "",
+      "score": 0.0,
+      "poly": [
+        [
+          26,
+          496
+        ],
+        [
+          111,
+          496
+        ],
+        [
+          111,
+          745
+        ],
+        [
+          26,
+          745
+        ]
+      ],
+      "bbox": [
+        26,
+        496,
+        111,
+        745
+      ]
+    }
+  ],
+  "outputs": {
+    "overlay": "AI\\review\\test\\202601291605_receipt_10_test\\step2_ocr\\ocr_overlay.jpg"
+  }
+}

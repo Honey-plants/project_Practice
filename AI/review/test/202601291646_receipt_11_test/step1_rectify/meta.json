@@ -1,0 +1,103 @@
+{
+  "input_path": "AI\\review\\tmp_receipt\\receipt_12.jpg",
+  "cfg": {
+    "pre": {
+      "enable": true,
+      "use_clahe": true,
+      "clahe_clip": 2.0,
+      "clahe_grid": 8,
+      "denoise_strength": 5
+    },
+    "crop": {
+      "canny1": 30,
+      "canny2": 120,
+      "blur_ksize": 5,
+      "dilate_iter": 1,
+      "approx_eps_ratio": 0.02,
+      "min_area_ratio": 0.02,
+      "border": 10,
+      "max_area_ratio": 0.92,
+      "allow_minarearect_fallback": true
+    },
+    "post": {
+      "enable": true,
+      "use_clahe": true,
+      "clahe_clip": 3.0,
+      "clahe_grid": 8,
+      "sharpen": true,
+      "sharpen_strength": 0.6,
+      "denoise_strength": 3
+    }
+  },
+  "step_1": [
+    {
+      "preprocess_for_crop": {
+        "enable": true,
+        "use_clahe": true,
+        "clahe_clip": 2.0,
+        "clahe_grid": 8,
+        "denoise_strength": 5
+      },
+      "applied": true
+    },
+    {
+      "postprocess_for_ocr": {
+        "enable": true,
+        "use_clahe": true,
+        "clahe_clip": 3.0,
+        "clahe_grid": 8,
+        "sharpen": true,
+        "sharpen_strength": 0.6,
+        "denoise_strength": 3
+      },
+      "applied": true
+    }
+  ],
+  "crop": {
+    "find": {
+      "found": true,
+      "used_method": "mask",
+      "mask": {
+        "mask_found": true,
+        "mask_best_area": 202434.0,
+        "mask_quad_type": "minAreaRect"
+      },
+      "cfg": {
+        "canny1": 30,
+        "canny2": 120,
+        "blur_ksize": 5,
+        "dilate_iter": 1,
+        "approx_eps_ratio": 0.02,
+        "min_area_ratio": 0.02,
+        "border": 10,
+        "max_area_ratio": 0.92,
+        "allow_minarearect_fallback": true
+      },
+      "quad": [
+        [
+          71.64939880371094,
+          147.76895141601562
+        ],
+        [
+          493.0513000488281,
+          140.88894653320312
+        ],
+        [
+          502.6912841796875,
+          731.3397216796875
+        ],
+        [
+          81.28939819335938,
+          738.2197265625
+        ]
+      ]
+    },
+    "warp": {
+      "warp_size": [
+        610,
+        441
+      ],
+      "border": 10
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "store_name": "대원당",
+  "store_name_en": "Daewondang Bakery",
+  "address": "강원특별자치도 춘천시 퇴계로 191",
+  "city": "강원특별자치도",
+  "phone": "0332548187",
+  "coords": {
+    "x": "1277400846",
+    "y": "378573820"
+  },
+  "menu_name": [
+    "대원당맘모스구로",
+    "버터크림빵",
+    "감자법버빵",
+    "팔빙수",
+    "자몽에이드",
+    "진동별"
+  ],
+  "menu_en": [
+    "Daewondang Mammoth Cream Bread",
+    "Butter Cream Bread",
+    "Potato Cream Bread",
+    "Patbingsu (Shaved Ice with Red Bean)",
+    "Grapefruit Ade",
+    "Vibration Star",
+    "Order Quantity"
+  ]
+}

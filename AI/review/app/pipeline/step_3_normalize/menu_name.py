@@ -11,9 +11,6 @@ STOP_KEYWORDS = ["부가세", "합계", "결제", "신용", "카드", "총액", 
 BANNED_MENU = set(START_KEYWORDS + STOP_KEYWORDS)
 
 
-BANNED_MENU = set(START_KEYWORDS + STOP_KEYWORDS)
-
-
 def extract_menu_items(lines: List[str]) -> List[str]:
     menu_items: List[str] = []
     started = False  # ✅ START는 한 번만
@@ -34,6 +31,10 @@ def extract_menu_items(lines: List[str]) -> List[str]:
         # 2️⃣ STOP 나오면 즉시 종료
         if any(k in line for k in STOP_KEYWORDS):
             break
+
+        # START 키워드 줄 제거 (← 핵심 추가)
+        if any(k in line for k in START_KEYWORDS):
+            continue
 
         # 3️⃣ 가격 포함된 줄
         if PRICE_RE.search(line):

@@ -1,0 +1,109 @@
+{
+  "input_path": "AI\\review\\tmp_receipt\\receipt_10.jpg",
+  "cfg": {
+    "pre": {
+      "enable": true,
+      "use_clahe": true,
+      "clahe_clip": 2.0,
+      "clahe_grid": 8,
+      "denoise_strength": 5
+    },
+    "crop": {
+      "canny1": 30,
+      "canny2": 120,
+      "blur_ksize": 5,
+      "dilate_iter": 1,
+      "approx_eps_ratio": 0.02,
+      "min_area_ratio": 0.02,
+      "border": 10,
+      "max_area_ratio": 0.92,
+      "allow_minarearect_fallback": true
+    },
+    "post": {
+      "enable": true,
+      "use_clahe": true,
+      "clahe_clip": 3.0,
+      "clahe_grid": 8,
+      "sharpen": true,
+      "sharpen_strength": 0.6,
+      "denoise_strength": 3
+    }
+  },
+  "step_1": [
+    {
+      "preprocess_for_crop": {
+        "enable": true,
+        "use_clahe": true,
+        "clahe_clip": 2.0,
+        "clahe_grid": 8,
+        "denoise_strength": 5
+      },
+      "applied": true
+    },
+    {
+      "postprocess_for_ocr": {
+        "enable": true,
+        "use_clahe": true,
+        "clahe_clip": 3.0,
+        "clahe_grid": 8,
+        "sharpen": true,
+        "sharpen_strength": 0.6,
+        "denoise_strength": 3
+      },
+      "applied": true
+    }
+  ],
+  "crop": {
+    "find": {
+      "found": true,
+      "image_shape": [
+        732,
+        620
+      ],
+      "num_contours": 182,
+      "min_area_ratio": 0.02,
+      "max_area_ratio": 0.92,
+      "biggest_contour_area": 3884.0,
+      "best_quad_area": 0.0,
+      "used_fallback": true,
+      "cfg": {
+        "canny1": 30,
+        "canny2": 120,
+        "blur_ksize": 5,
+        "dilate_iter": 1,
+        "approx_eps_ratio": 0.02,
+        "min_area_ratio": 0.02,
+        "border": 10,
+        "max_area_ratio": 0.92,
+        "allow_minarearect_fallback": true
+      },
+      "debug_top_candidates": [],
+      "fallback_type": "minAreaRect",
+      "quad": [
+        [
+          1.3635368347167969,
+          -4.179515838623047
+        ],
+        [
+          100.38067626953125,
+          0.01617431640625
+        ],
+        [
+          69.40425109863281,
+          731.0595092773438
+        ],
+        [
+          -29.61288070678711,
+          726.8638305664062
+        ]
+      ]
+    },
+    "warp": {
+      "warp_size": [
+        751,
+        119
+      ],
+      "border": 10
+    }
+  }
+}

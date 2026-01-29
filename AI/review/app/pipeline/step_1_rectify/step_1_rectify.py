@@ -1,6 +1,7 @@
 # ai/review/app/pipeline/step_1_rectify/run.py
 from __future__ import annotations
 
+import cv2
 from pathlib import Path
 from AI.review.app.domain.schemas import PipelineContext
 from AI.review.app.pipeline.step_1_rectify.run_rectify import RectifyConfig, run_receipt_rectify

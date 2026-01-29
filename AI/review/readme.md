@@ -21,10 +21,13 @@ python -m AI.review.app.pipeline.step_3_normalize.step_3_normalize_cli AI/review
 step 4:
 python -m AI.review.app.pipeline.step_4_enrich_data.step_4_enrich_cli .\AI\review\app\pipeline\debug\step3
 _normalize_result.json --out .\debug\step4 --debug --naver-id NAVER_CLIENT_ID --naver-secret NAVER_API --gemini-key GOOGLE_API
-python -m AI.review.app.pipeline.step_4_enrich_data.step_4_enrich_cli .\AI\review\app\pipeline\debug_norm\step3_normalize_result.json --out .\AI\review\app\pipeline\debug_enrich --debug ----naver-id NAVER_CLIENT_ID --naver-secret NAVER_API --gemini-key GOOGLE_API
+
+
+python -m AI.review.app.pipeline.step_4_enrich_data.step_4_enrich_cli .\AI\review\app\pipeline\debug_norm\step3_normalize_result.json --out .\AI\review\app\pipeline\debug_enrich --debug --naver-id NAVER_CLIENT_ID --naver-secret NAVER_API --gemini-key GOOGLE_API
   --out .\debug\step4 --debug
 
 
+python -m AI.review.app.pipeline.orchestrator_cli .\AI\review\tmp_receipt\receipt_10.jpg --name receipt_10_test --mode debug
 
 
 

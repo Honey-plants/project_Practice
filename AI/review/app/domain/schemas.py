@@ -19,6 +19,7 @@ class StoreInfo(BaseModel):
     city: Optional[str] = None
     phone: Optional[str] = None
     coords: Optional[Coords] = None
+    store_name_en: Optional[str] = None
 
     # 원하면 네이버 raw도 저장 가능(디버그용)
     naver_raw: Optional[Dict[str, Any]] = None
@@ -33,13 +34,16 @@ class OCRItem(BaseModel):
 
 class ReceiptExtracted(BaseModel):
     phone: Optional[str] = None
+    phone_partial: Optional[str] = None  # 2253-6373 같은 형태
+    area_code: Optional[str] = None      # 02/031...
     menu_ko: List[str] = Field(default_factory=list)
-
+    menu_en: List[str] = Field(default_factory=list)
 
 class DebugArtifacts(BaseModel):
     # 운영 모드에서는 비워도 됨
     images: Dict[str, str] = Field(default_factory=dict)   # {"00_original": ".../00.jpg", ...}
     jsons: Dict[str, str] = Field(default_factory=dict)    # {"ocr_result": ".../ocr.json", ...}
+    enrich: Optional[Dict[str, Any]] = None
 
 
 # -------------------------
@@ -85,11 +89,11 @@ class PipelineContext(BaseModel):
 # -------------------------
 class FinalReceiptResponse(BaseModel):
     store_name: Optional[str] = None
+    store_name_en: Optional[str] = None
     address: Optional[str] = None
     city: Optional[str] = None
     phone: Optional[str] = None
     coords: Optional[Coords] = None
     menu_name: List[str] = Field(default_factory=list)
+    menu_en: List[str] = Field(default_factory=list)
 
-    # 디버그 모드면 라인 같이 줄 수도 있지만, 보통 외부 응답에서는 빼는 편
-    # debug_lines: Optional[List[str]] = None

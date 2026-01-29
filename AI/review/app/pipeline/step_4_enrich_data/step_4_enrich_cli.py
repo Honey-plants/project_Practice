@@ -32,10 +32,15 @@ def main():
     p.add_argument("--out", type=str, default="debug/step4", help="output folder")
     p.add_argument("--debug", action="store_true", help="store debug json (ctx.debug.enrich)")
     p.add_argument("--naver-id", type=str, default=os.getenv("NAVER_CLIENT_ID"))
-    p.add_argument("--naver-secret", type=str, default=os.getenv("NAVER_API"))
-    p.add_argument("--gemini-key", type=str, default=os.getenv("GOOGLE_API"))
+    p.add_argument("--naver-secret", type=str, default=os.getenv("NAVER_API_KEY"))
+    p.add_argument("--gemini-key", type=str, default=os.getenv("GEMINI_API_KEY"))
 
     args = p.parse_args()
+
+    def _mask(k: str | None) -> str:
+        if not k:
+            return "None"
+        return f"len={len(k)} {k[:4]}...{k[-4:]}"
 
     step3_path = Path(args.step3_json)
     out_dir = Path(args.out)
