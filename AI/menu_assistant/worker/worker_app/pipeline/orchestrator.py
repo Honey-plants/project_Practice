@@ -651,7 +651,7 @@ if __name__ == "__main__":
     p.add_argument("--rec-model-dir", default=None)
     p.add_argument("--cls-model-dir", default=None)
 
-    p.add_argument("--det-box-thresh", type=float, default=0.35)
+    p.add_argument("--det-box-thresh", type=float, default=0.5)
     p.add_argument("--det-thresh", type=float, default=0.30)
     p.add_argument("--det-unclip-ratio", type=float, default=2.0)
 

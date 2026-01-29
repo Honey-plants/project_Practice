@@ -7,7 +7,7 @@ from backend.app.features.debug.router import router as debug_router
 from backend.app.features.restrictions.router import router as restrictions_router
 from backend.app.features.restrictions.admin_router import router as restrictions_admin
 from backend.app.features.menu.router import router as menu_router
-from backend.app.features.journal.router import router as journal_router
+#from backend.app.features.journal.router import router as journal_router
 from backend.app.features.images.router import router as receipt_router
 
 # from backend.app.features.images.router import router as receipt_router
@@ -24,5 +24,5 @@ api_router.include_router(debug_router)
 api_router.include_router(restrictions_router)
 api_router.include_router(restrictions_admin)
 api_router.include_router(menu_router)
-api_router.include_router(journal_router)
+#api_router.include_router(journal_router)
 api_router.include_router(receipt_router)

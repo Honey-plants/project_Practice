@@ -76,32 +76,31 @@ def _extract_items(final_obj: Any) -> Tuple[List[Dict[str, Any]], Dict[str, Any]
     raise ValueError(f"[step06] Unsupported final.json type: {type(final_obj)}")
 
 
-def _merge_translation_into_final_item(
-    *,
-    item: Dict[str, Any],
-    translated: Dict[str, Any],
-) -> Dict[str, Any]:
-    """
-    item_id/match는 그대로 유지.
-    번역 필드는 final item에 merge:
-      - item.menu.menu_name_en
-      - item.menu.menu_description_en
-      - item.risk.risk_description_en
-      - item.risk.comment_en   (기존 risk.comment(ko)는 유지)
-    """
+def _merge_translation_into_final_item(*, item, translated):
     item.setdefault("menu", {})
     item.setdefault("risk", {})
+    item.setdefault("comment", {})
 
     menu_t = (translated.get("menu") or {}) if isinstance(translated, dict) else {}
     risk_t = (translated.get("risk") or {}) if isinstance(translated, dict) else {}
+    comment_t = (translated.get("comment") or {}) if isinstance(translated, dict) else {}
 
     item["menu"]["menu_name_en"] = (menu_t.get("menu_name_en") or "").strip()
     item["menu"]["menu_description_en"] = (menu_t.get("menu_description_en") or "").strip()
 
     item["risk"]["risk_description_en"] = (risk_t.get("risk_description_en") or "").strip()
-    item["risk"]["comment_en"] = (translated.get("comment_en") or "").strip()
+
+    # ✅ 올바른 경로로 comment_en 저장
+    item["comment"]["comment_en"] = (comment_t.get("comment_en") or "").strip()
+
+    # ✅ comment_ko: LLM이 준 값 우선, 없으면 원본 risk.comment 사용
+    src_ko = (comment_t.get("comment_ko") or "").strip()
+    if not src_ko:
+        src_ko = (item.get("risk", {}).get("comment") or "").strip()
+    item["comment"]["comment_ko"] = src_ko
 
     return item
+
 
 
 def _translate_with_retries(
