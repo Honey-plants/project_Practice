@@ -1,45 +1,55 @@
+/* ===== Section Container ===== */
 .section {
-  background: white;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
 }
 
+/* ===== Section Header ===== */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .title {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #fff;
 }
 
 .link {
-  color: #007bff;
+  color: #a0d4ff;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .link:hover {
+  color: #667eea;
   text-decoration: underline;
 }
 
+/* ===== Empty State ===== */
 .emptyState {
   text-align: center;
   padding: 60px 20px;
-  color: #999;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .emptyIcon {
   font-size: 48px;
   margin: 0 0 12px 0;
+  opacity: 0.6;
 }
 
 .emptyText {
@@ -47,6 +57,7 @@
   font-size: 14px;
 }
 
+/* ===== Item List ===== */
 .itemList {
   display: grid;
   gap: 16px;
@@ -54,31 +65,33 @@
 
 .item {
   display: block;
-  padding: 16px;
-  border: 1px solid #e5e5e5;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   text-decoration: none;
   color: inherit;
-  transition: all 0.2s;
-  background: #fafafa;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.04);
 }
 
 .item:hover {
-  border-color: #007bff;
-  background: #f8f9ff;
+  border-color: rgba(102, 126, 234, 0.5);
+  background-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
 }
 
 .itemTitle {
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #fff;
 }
 
 .itemContent {
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
   font-size: 14px;
-  color: #666;
+  color: #cbd5e0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -88,49 +101,77 @@
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #999;
+  color: #a0aec0;
 }
 
+/* ===== Pagination ===== */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px;
-  margin-top: 20px;
+  gap: 10px;
+  margin-top: 24px;
 }
 
 .pageButton {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  background: white;
-  color: #333;
-  border-radius: 6px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #e0e0e0;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 400;
-  transition: all 0.2s;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .pageButton:hover {
-  border-color: #007bff;
-  color: #007bff;
+  border-color: rgba(102, 126, 234, 0.5);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .pageButton.active {
-  border: none;
-  background: #007bff;
+  border: 1px solid rgba(102, 126, 234, 0.6);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .pageButton.activeCommunity {
-  border: none;
-  background: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.6);
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: white;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
 }
 
 .communityItem:hover {
-  border-color: #28a745;
-  background: #f0fff4;
+  border-color: rgba(40, 167, 69, 0.5);
+  background-color: rgba(40, 167, 69, 0.1);
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+  .section {
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .item {
+    padding: 16px;
+  }
+
+  .itemTitle {
+    font-size: 15px;
+  }
+
+  .itemContent {
+    font-size: 13px;
+  }
 }

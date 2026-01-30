@@ -1,10 +1,12 @@
 import React, { useContext, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
+import { MemberContext } from "../../context/MemberContext";
 import "../../styles/Register.css";
 
 export default function Login() {
   const { authActions } = useContext(AuthContext);
+  const { memberActions } = useContext(MemberContext);
   const nav = useNavigate();
 
   const [form, setForm] = useState({
@@ -32,7 +34,12 @@ export default function Login() {
     try {
       const ok = await authActions.login(form.email.trim(), form.password);
       if (ok) {
-        nav("/");
+        const me = await memberActions.loadMe();
+        if (me?.role === "ADMIN") {
+          nav("/admin");
+        } else {
+          nav("/");
+        }
       } else {
         setError("Login failed");
       }

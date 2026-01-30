@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { ReviewContext } from "../../context/ReviewContext";
-import { ReviewDetail } from "../../components/common/ReviewDetail"
+import { ReviewDetail } from "../../components/review/ReviewDetail"
 
 function normalizeReview(raw) {
   if (!raw) return null;

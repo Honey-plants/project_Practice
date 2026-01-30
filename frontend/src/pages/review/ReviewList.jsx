@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ReviewContext } from "../../context/ReviewContext";
-import ReviewItem from "../../components/common/ReviewCard";
+import ReviewItem from "../../components/review/ReviewCard"
 
 // 임시 목 데이터 - API 연동 전 테스트용
 const MOCK_DATA = [
