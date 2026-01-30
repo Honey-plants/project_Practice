@@ -25,6 +25,8 @@ import UploadTest from "./pages/upload/UploadTest";
 import MenuAssistant from "./pages/menu/MenuAssistant";
 import JournalGenerate from "./pages/journal/JournalGenerate";
 
+import CameraUploadPage from "./pages/menuscan/CameraUploadPage";
+
 import Register from "./pages/auth/Register";
 
 // admin 추가
@@ -133,6 +135,16 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/menu/upload"
+            element={
+              <ProtectedRoute>
+                <CameraUploadPage />
+              </ProtectedRoute>
+            }
+          />
+
+
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

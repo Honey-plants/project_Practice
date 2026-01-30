@@ -22,6 +22,7 @@ export default function Header() {
         <Link to="/menu/assistant">MenuAssistant</Link>
         <Link to="/journal/generate">Journal</Link>
         <Link to="/upload/test">UploadTest</Link>
+        <Link to="/menu/upload">menu scan</Link>
       </div>
 
       {/* 여기(auth 영역)에 Register를 추가 */}

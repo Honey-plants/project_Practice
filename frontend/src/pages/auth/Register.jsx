@@ -1,191 +1,186 @@
-// import "../../styles/Register.css";
-import { useState } from "react";
-import Modal from "../../components/common/Modal";
-import { useNavigate } from "react-router-dom";
-import { COUNTRY_OPTIONS, GENDER } from "../../contents/register";
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { MetaContext } from "../../context/MetaContext";
 import { MemberAPI } from "../../api/memberApi";
+import RestrictionsPicker from "../../components/restrictions/RestrictionsPicker";
 
-/* 정규식 */
-const REGEX = {
-  email: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
-  password: /^.{8,20}$/,
-};
-
-function validate(formData) {
-  const errors = {};
-  const email = formData.email.trim();
-
-  if (!email) errors.email = "Email is required.";
-  else if (!REGEX.email.test(email)) errors.email = "Invalid email format.";
-
-  if (!formData.password) {
-    errors.password = "Password is required.";
-  } else if (!REGEX.password.test(formData.password)) {
-    errors.password = "Password must be 8~20 characters.";
-  }
-
-  if (formData.password !== formData.passwordConfirm) {
-    errors.passwordConfirm = "Password does not match.";
-  }
-
-  return errors;
-}
-
+/**
+ * Register
+ * - MetaContext(active 캐시) 기반으로 카테고리/아이템 노출
+ * - RestrictionsPicker 공통 컴포넌트 사용
+ * - 선택 item_ids 포함하여 회원가입 payload 전송
+ */
 export default function Register() {
   const nav = useNavigate();
+  const { stateMeta, metaActions } = useContext(MetaContext);
 
-  const [formData, setFormData] = useState({
+  // ✅ active True 리스트만 (MetaContext가 active 캐시라고 가정 + 안전 필터는 Picker에서 onlyActive로 처리)
+  const categories = useMemo(() => stateMeta?.restrictions || [], [stateMeta?.restrictions]);
+
+  const [form, setForm] = useState({
     email: "",
-    nickname: "",
     password: "",
-    passwordConfirm: "",
+    nickname: "",
     gender: "",
     country: "",
   });
 
-  const [modalType, setModalType] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [itemIds, setItemIds] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  // meta 비어있으면 1회 강제 refresh
+  useEffect(() => {
+    if (!stateMeta?.loading && (categories || []).length === 0) {
+      metaActions?.refresh?.({ force: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setForm((p) => ({ ...p, [name]: value }));
   };
 
-  const submitRegister = async () => {
-    const errors = validate(formData);
-    if (Object.keys(errors).length > 0) {
-      alert(Object.values(errors).join("\n"));
-      return false;
-    }
-
-    const payload = {
-      email: formData.email.trim(),
-      password: formData.password,
-      nickname: formData.nickname.trim(),
-      gender: formData.gender || null,
-      country: formData.country || null,
-    };
-
-    console.log("payload :: ", payload)
-
-    try {
-      await MemberAPI.register(payload);
-      alert("Register complete!");
-      return true;
-    } catch (e) {
-      console.error(e);
-      alert(e?.response?.data?.message || "Register failed");
-      return false;
-    }
+  const toggleItem = (id) => {
+    setItemIds((prev) => {
+      const s = new Set(prev);
+      if (s.has(id)) s.delete(id);
+      else s.add(id);
+      return Array.from(s);
+    });
   };
 
-  const openModal = (type) => {
-    setModalType(type);
-    setIsModalOpen(true);
-  };
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setMsg("");
 
-  const handleConfirm = async () => {
-    if (modalType === "cancel") {
-      setIsModalOpen(false);
-      nav("/");
+    if (!form.email.trim() || !form.password.trim() || !form.nickname.trim()) {
+      setMsg("이메일/비밀번호/닉네임은 필수입니다.");
       return;
     }
 
-    if (modalType === "Register") {
-      const ok = await submitRegister();
-      if (ok) nav("/");
-      setIsModalOpen(false);
+    setLoading(true);
+    try {
+      const payload = {
+        email: form.email.trim(),
+        password: form.password,
+        nickname: form.nickname.trim(),
+        gender: form.gender || null,
+        country: form.country || null,
+        item_ids: itemIds, // ✅ 선택된 ids
+      };
+
+      await MemberAPI.register(payload);
+      setMsg("✅ 회원가입 완료! 로그인 페이지로 이동합니다.");
+      nav("/login");
+    } catch (err) {
+      const detail =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "회원가입 실패";
+      setMsg(`❌ ${detail}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="Register">
-      <section>Create your account</section>
+    <div className="RegisterPage">
+      <div className="RegisterHeader">
+        <h2>회원가입</h2>
+        <div className="RegisterLinks">
+          <Link to="/login">로그인</Link>
+        </div>
+      </div>
 
-      <section>
-        <label>
-          E-mail
+      {msg && <div className={`RegisterMsg ${msg.startsWith("✅") ? "ok" : "err"}`}>{msg}</div>}
+
+      <form className="card RegisterForm" onSubmit={onSubmit}>
+        <div className="row">
+          <label>이메일</label>
           <input
             name="email"
-            type="text"
-            value={formData.email}
+            value={form.email}
             onChange={onChange}
-            placeholder="example@email.com"
+            placeholder="email@example.com"
+            autoComplete="email"
           />
-        </label>
-        <label>
-          Nickname
-          <input
-            name="nickname"
-            type="text"
-            placeholder="Please write 10 characters or less"
-            maxLength={10}
-            value={formData.nickname}
-            onChange={onChange}
-            style={{ flex: 1 }}
-          />
-        </label>
-        <label>
-          Password
+        </div>
+
+        <div className="row">
+          <label>비밀번호</label>
           <input
             name="password"
-            type="password"
-            value={formData.password}
+            value={form.password}
             onChange={onChange}
-            placeholder="8~20 characters"
-          />
-        </label>
-
-        <label>
-          Password Check
-          <input
-            name="passwordConfirm"
             type="password"
-            value={formData.passwordConfirm}
-            onChange={onChange}
+            placeholder="password"
+            autoComplete="new-password"
           />
-        </label>
+        </div>
 
-        <label>
-          Gender
-          <select name="gender" value={formData.gender} onChange={onChange}>
-            <option value="">Select gender</option>
-            {GENDER.map((g) => (
-              <option key={g.value} value={g.value}>
-                {g.label}
-              </option>
-            ))}
+        <div className="row">
+          <label>닉네임</label>
+          <input name="nickname" value={form.nickname} onChange={onChange} placeholder="nickname" />
+        </div>
+
+        <div className="row">
+          <label>성별</label>
+          <select name="gender" value={form.gender} onChange={onChange}>
+            <option value="">선택안함</option>
+            <option value="M">남</option>
+            <option value="F">여</option>
           </select>
-        </label>
+        </div>
 
-        <label>
-          Country
-          <select name="country" value={formData.country} onChange={onChange}>
-            <option value="">Select Country</option>
-            {COUNTRY_OPTIONS.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </section>
+        <div className="row">
+          <label>국가</label>
+          <input name="country" value={form.country} onChange={onChange} placeholder="Korea" />
+        </div>
 
-      <section>
-        <button onClick={() => openModal("cancel")}>Cancel</button>
-        <button onClick={() => openModal("Register")}>Register</button>
-      </section>
+        <div className="RegisterDivider" />
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onConfirm={handleConfirm}
-        message={
-          modalType === "cancel"
-            ? "Are you sure you want to cancel?"
-            : "Do you want to proceed?"
-        }
-      />
+        <div className="RegisterSectionTitle">
+          <h3>알러지/제한 아이템 선택 (Active만)</h3>
+          <div className="sub">
+            선택된 아이템: <b>{itemIds.length}</b>개
+          </div>
+        </div>
+
+        {stateMeta?.loading && <div className="infoBox">카테고리 불러오는 중...</div>}
+        {stateMeta?.error && <div className="errorBox">{stateMeta.error}</div>}
+
+        {!stateMeta?.loading && (categories || []).length === 0 && (
+          <div className="infoBox">
+            활성 카테고리/아이템이 없습니다.
+            <button
+              type="button"
+              className="miniBtn"
+              onClick={() => metaActions?.refresh?.({ force: true })}
+              style={{ marginLeft: 8 }}
+            >
+              다시 불러오기
+            </button>
+          </div>
+        )}
+
+        {/* ✅ 공통 컴포넌트 사용 */}
+        <RestrictionsPicker
+          categories={categories}
+          selectedIds={itemIds}
+          onToggle={toggleItem}
+          mode="select"
+          onlyActive={true}
+        />
+
+        <div className="RegisterActions">
+          <button type="submit" disabled={loading}>
+            {loading ? "가입 중..." : "회원가입"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
