@@ -22,9 +22,9 @@ import ReviewDetail from "./pages/review/ReviewDetail";
 import ReviewCreate from "./pages/review/ReviewCreate";
 import ReviewEdit from "./pages/review/ReviewEdit";
 
-import UploadTest from "./pages/upload/UploadTest";
-
 import CameraUploadPage from "./pages/menuscan/CameraUploadPage";
+
+import UploadTest from "./pages/upload/UploadTest";
 
 import Register from "./pages/auth/Register";
 
@@ -121,6 +121,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/menu/upload"
             element={
@@ -129,8 +130,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
-
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

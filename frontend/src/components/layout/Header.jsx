@@ -20,6 +20,8 @@ export default function Header() {
         <Link to="/community">Community</Link>
         <Link to="/review">Review</Link>
         <Link to="/upload/test">UploadTest</Link>
+        <Link to="/menu/upload">menu scan</Link>
+
         {stateMember.me?.role === "ADMIN" && <Link to="/admin">Admin</Link>}
       </div>
 
