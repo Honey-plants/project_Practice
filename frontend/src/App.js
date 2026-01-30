@@ -40,8 +40,16 @@ export default function App() {
           <Route path="/login" element={<Login />} />
 
           // Routes 안에 추가
+          {/* auth */}
           <Route path="/register" element={<Register />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute roles={["ADMIN"]}>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
 
           {/* member */}
           <Route

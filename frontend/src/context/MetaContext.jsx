@@ -46,6 +46,28 @@ export function MetaProvider({ children }) {
 
       if (status === 304) {
         // 변경 없음: 캐시 유지, 로딩만 종료
+        // 단, 캐시가 비어있는데 304가 오면(예: 예전 버그로 [] 저장) 강제로 한번 더 받아온다
+        if (!Array.isArray(stateMeta.restrictions) || stateMeta.restrictions.length === 0) {
+          const forced = await MetaAPI.getRestrictions({ etag: "", onlyActive: true });
+          const forcedData = forced.data;
+          const forcedNext = Array.isArray(forcedData)
+            ? forcedData
+            : Array.isArray(forcedData?.data)
+              ? forcedData.data
+              : Array.isArray(forcedData?.categories)
+                ? forcedData.categories
+                : [];
+          persist(forcedNext, forced.etag);
+          setStateMeta((p) => ({
+            ...p,
+            restrictions: forcedNext,
+            etag: forced.etag || p.etag,
+            loading: false,
+            error: "",
+            lastFetchedAt: Date.now(),
+          }));
+          return;
+        }
         setStateMeta((p) => ({
           ...p,
           loading: false,
@@ -57,7 +79,13 @@ export function MetaProvider({ children }) {
       }
 
       // 200: 새 데이터
-      const next = Array.isArray(data) ? data : [];
+      const next = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.categories)
+            ? data.categories
+            : [];
       persist(next, etag);
 
       setStateMeta((p) => ({
@@ -88,11 +116,39 @@ export function MetaProvider({ children }) {
       });
 
       if (status === 304) {
+        // 캐시가 비어있는데 304면 강제로 한번 더
+        if (!Array.isArray(stateMeta.restrictions) || stateMeta.restrictions.length === 0) {
+          const forced = await MetaAPI.getRestrictions({ etag: "", onlyActive: true });
+          const forcedData = forced.data;
+          const forcedNext = Array.isArray(forcedData)
+            ? forcedData
+            : Array.isArray(forcedData?.data)
+              ? forcedData.data
+              : Array.isArray(forcedData?.categories)
+                ? forcedData.categories
+                : [];
+          persist(forcedNext, forced.etag);
+          setStateMeta((p) => ({
+            ...p,
+            restrictions: forcedNext,
+            etag: forced.etag || p.etag,
+            loading: false,
+            error: "",
+            lastFetchedAt: Date.now(),
+          }));
+          return;
+        }
         setStateMeta((p) => ({ ...p, loading: false, lastFetchedAt: Date.now() }));
         return;
       }
 
-      const next = Array.isArray(data) ? data : [];
+      const next = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.categories)
+            ? data.categories
+            : [];
       persist(next, etag);
 
       setStateMeta((p) => ({
