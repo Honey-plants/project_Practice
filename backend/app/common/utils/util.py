@@ -5,8 +5,8 @@ from backend.app.core import config
 # ---------------------------
 
 # 업로드 타입 화이트리스트 (프론트에서 type 받더라도 서버에서 강제)
-# 현재 front에서 form type : menu / review 구분
-ALLOWED_UPLOAD_TYPES = {"menu", "review"}
+# 현재 front에서 form type : menu / receipt 구분
+ALLOWED_UPLOAD_TYPES = {"menu", "receipt"}
 
 # 이미지 type
 ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
