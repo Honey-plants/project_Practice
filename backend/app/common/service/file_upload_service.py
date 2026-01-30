@@ -7,7 +7,7 @@ from backend.app.common.utils.util import get_storage, normalize_upload_type
 from backend.app.common.storage.types import UploadObject
 
 # 추후 S3 DIR 수정 필요!
-_WORK_DIR = Path("./_work")
+_WORK_DIR = Path(os.getenv("WORK_DIR", "/tmp/_work"))
 _WORK_DIR.mkdir(parents=True, exist_ok=True)
 
 async def upload_input_file(*, upload_type: str, member_id: int, upload: UploadFile) -> UploadObject:
