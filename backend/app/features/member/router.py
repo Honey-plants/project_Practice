@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import select
+import json
 
 from backend.app.core.database import get_db
 from . import schemas, service
@@ -7,6 +9,8 @@ from backend.app.common.schemas import responses
 
 from backend.app.models.member import Member
 from backend.app.core.security.deps import get_current_member
+from backend.app.models.restrictions.member_restriction import MemberRestrictions
+from backend.app.models.restrictions.dislike import Dislike
 
 router = APIRouter(prefix="/member", tags=["member"])
 
@@ -28,17 +32,27 @@ def get_member(current: Member = Depends(get_current_member), db: Session = Depe
 def update_member(payload: schemas.MemberUpdate, current: Member = Depends(get_current_member), db: Session = Depends(get_db)):
     m = service.update_member(db, current.member_id, payload)
 
-    # nickname / item_ids / comment만 수정!!!!!!!
+    # DB 기준으로 재조회
+    item_ids = db.execute(
+        select(MemberRestrictions.item_id).where(MemberRestrictions.member_id == m.member_id)
+    ).scalars().all()
 
-    # 응답 구성은 router에서(혹은 service에서 return dict로 넘겨도 됨)
+    dislike_raw = db.execute(
+        select(Dislike.dislike_tag).where(Dislike.member_id == m.member_id)
+    ).scalar_one_or_none()
+    dislike_tags = json.loads(dislike_raw) if dislike_raw else []
+
     return {
         "email": m.email,
         "nickname": m.nickname,
         "gender": m.gender,
         "country": m.country,
-        # "role": m.role,                       # 현재는 role 구분은 ADMIN 관리자 전용에서 요청 및 사용할 예정 // 일반 계정은 role 사용할 필요 x
-        "item_ids": payload.item_ids,         # 필요하면 실제 DB에서 다시 조회해서 내려주기
-        "dislike_tags": payload.dislike_tags,
+        "role": m.role,                       # 현재는 role 구분은 ADMIN 관리자 전용에서 요청 및 사용할 예정 // 일반 계정은 role 사용할 필요 x
+        "item_ids": list(item_ids),         # 필요하면 실제 DB에서 다시 조회해서 내려주기
+        "dislike_tags": dislike_tags,
+
+        # "item_ids": payload.item_ids,         # 필요하면 실제 DB에서 다시 조회해서 내려주기
+        # "dislike_tags": dislike_raw,
     }
 
 # MyPage 회원 탈퇴

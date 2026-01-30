@@ -16,7 +16,7 @@ class MemberCreate(BaseModel):
 
 # 수정
 class MemberUpdate(BaseModel):
-    nickname: str
+    nickname: Optional[str] = None
     item_ids: Optional[List[int]] = None
     dislike_tags: Optional[List[str]] = None
 
@@ -26,7 +26,7 @@ class MemberRead(BaseModel):
     nickname: str
     gender: str
     country: str
-    # role: str
+    role: str
     item_ids: Optional[List[int]] = None
     dislike_tags: Optional[List[str]] = None
 

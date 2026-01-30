@@ -21,10 +21,12 @@ class CategoryItemRead(BaseModel):
 class ItemCreate(BaseModel):
     item_label_ko: str
     item_label_en: str
+    item_active: bool
 
 class CategoryCreate(BaseModel):
     category_label_ko: str
     category_label_en: str
+    category_active: bool
     items: list[ItemCreate] = Field(default_factory=list)
 
 class CategoriesBatchCreate(BaseModel):
