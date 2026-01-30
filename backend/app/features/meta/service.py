@@ -25,8 +25,8 @@ def get_restrictions_etag_meta(db: Session, only_active: bool = True) -> str:
         cat_q = cat_q.where(Category.category_active.is_(True))
         item_q = item_q.where(Item.item_active.is_(True))
 
-    cat_max = db.execute(select(func.max(Category.category_update)).select_from(cat_q.subquery())).scalar_one_or_none()
-    item_max = db.execute(select(func.max(Item.item_update)).select_from(item_q.subquery())).scalar_one_or_none()
+    cat_max = db.execute(select(func.max(Category.update_at)).select_from(cat_q.subquery())).scalar_one_or_none()
+    item_max = db.execute(select(func.max(Item.update_at)).select_from(item_q.subquery())).scalar_one_or_none()
 
     cat_cnt = db.execute(select(func.count()).select_from(cat_q.subquery())).scalar_one()
     item_cnt = db.execute(select(func.count()).select_from(item_q.subquery())).scalar_one()

@@ -4,7 +4,8 @@ from dotenv import load_dotenv
 
 # 실제 프로젝트 위치 :: backend 하위에 위치 upload 폴더 생성
 ENV_PATH = Path(__file__).resolve().parents[3] / ".env"  # backend/.env
-load_dotenv(ENV_PATH)
+load_dotenv(ENV_PATH, override=True)
+
 
 def _read_secret(name: str, default: str = "") -> str:
     file_path = os.getenv(f"{name}_FILE")

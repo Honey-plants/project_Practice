@@ -1,7 +1,7 @@
-import "../../styles/Register.css";
+// import "../../styles/Register.css";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Modal from "../../components/common/Modal";
+import { useNavigate } from "react-router-dom";
 import { COUNTRY_OPTIONS, GENDER } from "../../contents/register";
 import { MemberAPI } from "../../api/memberApi";
 
@@ -36,6 +36,7 @@ export default function Register() {
 
   const [formData, setFormData] = useState({
     email: "",
+    nickname: "",
     password: "",
     passwordConfirm: "",
     gender: "",
@@ -60,11 +61,13 @@ export default function Register() {
     const payload = {
       email: formData.email.trim(),
       password: formData.password,
-      nickname: formData.nickname,
+      nickname: formData.nickname.trim(),
       gender: formData.gender || null,
       country: formData.country || null,
     };
+
     console.log("payload :: ", payload)
+
     try {
       await MemberAPI.register(payload);
       alert("Register complete!");
@@ -75,20 +78,6 @@ export default function Register() {
       return false;
     }
   };
-  // Admin 등록 한 Category, Item 리스트 조회
-  const { stateMeta } = useContext(MetaContext);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const r = await MemberAPI.getCategoriesWithItems();
-        // 기대 형태: [{category_id, category_label_ko, items:[{item_id, item_label_ko}]}]
-        setCategories(Array.isArray(r.data) ? r.data : r.data?.items ?? []);
-      } catch (e) {
-        setError(e.message || "카테고리/아이템 조회 실패");
-      }
-    })();
-  }, []);
 
   const openModal = (type) => {
     setModalType(type);
@@ -160,6 +149,7 @@ export default function Register() {
         <label>
           Gender
           <select name="gender" value={formData.gender} onChange={onChange}>
+            <option value="">Select gender</option>
             {GENDER.map((g) => (
               <option key={g.value} value={g.value}>
                 {g.label}
@@ -171,6 +161,7 @@ export default function Register() {
         <label>
           Country
           <select name="country" value={formData.country} onChange={onChange}>
+            <option value="">Select Country</option>
             {COUNTRY_OPTIONS.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.label}
@@ -195,40 +186,6 @@ export default function Register() {
             : "Do you want to proceed?"
         }
       />
-      <hr style={{ margin: "16px 0" }} />
-
-      <h3>Category / Item 선택</h3>
-      {error && <div className="errorBox">{error}</div>}
-
-      {stateMeta.loading && !categories.length && <div>카테고리 불러오는 중...</div>}
-      {(stateMeta.error || error) && <div className="errorBox">{stateMeta.error || error}</div>}
-
-      {categories.map((c) => (
-        <div key={c.category_id ?? c.id} className="card">
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>
-            {c.category_label_ko ?? c.category_label_en ?? c.label ?? "Category"}
-          </div>
-
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {(c.items || []).map((it) => {
-              const itemId = it.item_id ?? it.id;
-              const label = it.item_label_ko ?? it.item_label_en ?? it.label ?? `item#${itemId}`;
-              const checked = selectedItemIds.has(itemId);
-
-              return (
-                <label key={itemId} style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleItem(itemId)}
-                  />
-                  {label}
-                </label>
-              );
-            })}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }
