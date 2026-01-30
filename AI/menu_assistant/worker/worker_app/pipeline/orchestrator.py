@@ -245,6 +245,11 @@ class PipelineOrchestrator:
         self.data_dir = runs_root.parent
         self.ai_root = runs_root.parents[2]  # .../AI
 
+        # ✅ FastAPI 프로세스에서 menu_assistant import가 되도록 보장
+        ai_root_str = str(self.ai_root)
+        if ai_root_str not in sys.path:
+            sys.path.insert(0, ai_root_str)
+
 
     def run(
             self,
@@ -411,7 +416,8 @@ class PipelineOrchestrator:
                 str(step3.pass2_gap_ratio),
             ]
 
-        run_cmd(cmd3)
+        run_cmd(cmd3, cwd=self.ai_root)
+
         ensure_exists(normalize_json, "Step03 expected output missing (normalize json)")
 
         # ----------------------------------------------------
@@ -430,7 +436,7 @@ class PipelineOrchestrator:
             if check_keywords:
                 check_cmd += ["--keywords"] + list(check_keywords)
 
-            run_cmd(check_cmd)
+            run_cmd(check_cmd,cwd=self.ai_root)
 
         # ----------------------------------------------------
         # Step 04: RAG Match
@@ -477,7 +483,8 @@ class PipelineOrchestrator:
             if step4.include_debug:
                 cmd4 += ["--include_debug"]
 
-            run_cmd(cmd4, env=step4_env)
+            run_cmd(cmd4, env=step4_env, cwd=self.ai_root)
+
             ensure_exists(rag_match_json, "Step04 expected output missing (rag_match json)")
 
         # ----------------------------------------------------
