@@ -1,4 +1,3 @@
-# backend/app/features/meta/service.py
 from __future__ import annotations
 
 from typing import Dict, List

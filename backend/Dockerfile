@@ -1,59 +1,47 @@
-# syntax=docker/dockerfile:1.7
+# backend/Dockerfile
+# requirements.txt 없이: pyproject.toml 기반으로 설치 (PEP 517/518)
 
-########################
-# 1) builder: wheels
-########################
 FROM python:3.11-slim AS builder
-WORKDIR /build
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY backend/requirements.txt /tmp/requirements.txt
-RUN pip install --upgrade pip \
-    && pip wheel --no-cache-dir --wheel-dir /wheels -r /tmp/requirements.txt
-
-
-########################
-# 2) runtime: run deps
-########################
-FROM python:3.11-slim AS runtime
-WORKDIR /app
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-# 핵심: libgomp1 (Paddle / OpenMP runtime) - API에서는 필요 없을 수 있으나 공통 기반 유지를 위해 남김
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
+    ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip
 
-COPY --from=builder /wheels /wheels
-RUN pip install --no-cache-dir /wheels/* \
-    && rm -rf /wheels
+# 의존성 메타데이터만 먼저 복사 (캐시 최적화)
+COPY pyproject.toml ./
 
-# 소스 복사 (API는 AI 제외)
-COPY backend /app/backend
-COPY README.md /app/README.md
+# (중요) lock 파일은 없어도 되므로 여기서는 복사하지 않습니다.
+# lock이 있다면 나중에 캐시 최적화를 위해 별도로 추가할 수 있습니다.
 
-# backend 패키지 인식용 파일 생성 (이미 backend 폴더 카피로 해결되지만 안전장치)
-RUN set -eu; \
-    touch /app/backend/__init__.py
+# 의존성 wheel 생성 (pyproject의 의존성을 읽어 wheel로 만듦)
+RUN pip wheel --no-cache-dir --wheel-dir /wheels .
 
-########################
-# 3) api-final: non-root
-########################
-FROM runtime AS api-final
+# 앱 소스 복사
+COPY . /app
+
+FROM python:3.11-slim AS runtime
+WORKDIR /app
 
 RUN useradd -m -u 10001 appuser
-USER 10001
 
-# 실행 커맨드는 k8s deployment.yaml나 docker-compose 등에서 정의
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+
+COPY --from=builder /app /app
+
+# --- backend.* import 호환 레이어 (symlink) ---
+RUN mkdir -p /app/backend && \
+    ln -s /app/app /app/backend/app && \
+    touch /app/backend/__init__.py
+ENV PYTHONPATH=/app
+# --------------------------------------------
+
 EXPOSE 8000
-CMD ["python3", "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+USER appuser
+
+# 이제 코드가 기대하는 네임스페이스로 실행(가장 일관됨)
+CMD ["python", "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]

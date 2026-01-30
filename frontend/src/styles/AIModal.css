@@ -1,0 +1,27 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  background-color: rgba(255,255,255,0.7);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px); /* Safari */
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 9999;
+}
+
+.modal {
+  background: rgba(255,255,255,0.7);
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  min-width: 280px;
+  max-width: 90%;
+}

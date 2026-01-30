@@ -15,6 +15,7 @@ import CommunityList from "./pages/community/CommunityList";
 import CommunityDetail from "./pages/community/CommunityDetail";
 import CommunityCreate from "./pages/community/CommunityCreate";
 import CommunityEdit from "./pages/community/CommunityEdit";
+import Community from "./pages/community/Community";
 
 import ReviewList from "./pages/review/ReviewList";
 import ReviewDetail from "./pages/review/ReviewDetail";
@@ -22,8 +23,6 @@ import ReviewCreate from "./pages/review/ReviewCreate";
 import ReviewEdit from "./pages/review/ReviewEdit";
 
 import UploadTest from "./pages/upload/UploadTest";
-import MenuAssistant from "./pages/menu/MenuAssistant";
-import JournalGenerate from "./pages/journal/JournalGenerate";
 
 import CameraUploadPage from "./pages/menuscan/CameraUploadPage";
 
@@ -44,8 +43,16 @@ export default function App() {
           <Route path="/login" element={<Login />} />
 
           // Routes 안에 추가
+          {/* auth */}
           <Route path="/register" element={<Register />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute roles={["ADMIN"]}>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
 
           {/* member */}
           <Route
@@ -66,7 +73,7 @@ export default function App() {
           />
 
           {/* community */}
-          <Route path="/community" element={<CommunityList />} />
+          <Route path="/community" element={<Community />} />
           <Route path="/community/:id" element={<CommunityDetail />} />
           <Route
             path="/community/new"
@@ -101,27 +108,6 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ReviewEdit />
-              </ProtectedRoute>
-            }
-          />
-
-
-          {/* menu */}
-          <Route
-            path="/menu/assistant"
-            element={
-              <ProtectedRoute>
-                <MenuAssistant />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* journal */}
-          <Route
-            path="/journal/generate"
-            element={
-              <ProtectedRoute>
-                <JournalGenerate />
               </ProtectedRoute>
             }
           />
