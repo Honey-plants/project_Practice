@@ -1,4 +1,4 @@
-import base64
+ï»¿import base64
 import json
 
 from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException
@@ -33,10 +33,10 @@ async def menu_upload(type: str = Form("menu"), image: UploadFile = File(...), c
     cleanup_download = lambda: None
 
     try:
-        # local/s3 °ü°è¾øÀÌ ·ÎÁ÷¿¡¼­ 'ÆÄÀÏ °æ·Î' Á¤º¸
+        # local/s3 ê´€ê³„ì—†ì´ ë¡œì§ì—ì„œ 'íŒŒì¼ ê²½ë¡œ' ì •ë³´
         local_path, cleanup_download = ensure_local_path(obj)
 
-        # ¿©±â¼­ menu ·ÎÁ÷ ½ÇÇà (local_path·Î Ã³¸®)
+        # ì—¬ê¸°ì„œ menu ë¡œì§ ì‹¤í–‰ (local_pathë¡œ ì²˜ë¦¬)
         # result = recipe_service.analyze(local_path)
 
         return UploadInputResponse(
@@ -53,10 +53,10 @@ async def menu_upload(type: str = Form("menu"), image: UploadFile = File(...), c
         raise HTTPException(status_code=500, detail=str(e))
 
     finally:
-        print("¸¶Áö¸· ÁøÂ¥ ¸¶Áö¸· finally")
-        # s3 ´Ù¿î·Îµå ÀÓ½Ã ÆÄÀÏ Á¤¸®
+        print("ë§ˆì§€ë§‰ ì§„ì§œ ë§ˆì§€ë§‰ finally")
+        # s3 ë‹¤ìš´ë¡œë“œ ì„ì‹œ íŒŒì¼ ì •ë¦¬
         cleanup_download()
-        # ¾÷·Îµå ÀÔ·ÂÆÄÀÏ Á¤¸® (local: ÆÄÀÏ »èÁ¦ / s3: object »èÁ¦)
+        # ì—…ë¡œë“œ ì…ë ¥íŒŒì¼ ì •ë¦¬ (local: íŒŒì¼ ì‚­ì œ / s3: object ì‚­ì œ)
         delete_input_file(file_key=obj.file_key)
 
 
