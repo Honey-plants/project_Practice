@@ -58,7 +58,7 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
     # 0) create per-run folder
     run_dir = make_run_dir(base=cfg.test_base_dir, name=cfg.run_name)
 
-    # step output dirs (✅ timestamp 폴더 안으로)
+    # step output dirs (timestamp 폴더 안으로)
     step1_dir = run_dir / "step1_rectify"
     step2_dir = run_dir / "step2_ocr"
     step3_dir = run_dir / "step3_normalize"
@@ -78,7 +78,7 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
 
     # 3) normalize (너 step3가 out_dir 받는 구조면 넣고, 아니면 ctx.debug.jsons에 저장하도록)
     ctx = run_step3_normalize(ctx, cfg=cfg.normalize_cfg)
-    # ✅ step3 결과를 파일로도 남기고 싶으면 (추천)
+    # step3 결과를 파일로도 남기고 싶으면 (추천)
     (step3_dir).mkdir(parents=True, exist_ok=True)
     (step3_dir / "step3_result.json").write_text(
         json.dumps(ctx.model_dump() if hasattr(ctx, "model_dump") else ctx.dict(), ensure_ascii=False, indent=2),
@@ -92,7 +92,7 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
     naver_cfg = cfg.naver_cfg or {}
     ctx = run_step4_enrich(ctx, naver_cfg=naver_cfg, gemini_api_key=cfg.gemini_api_key)
 
-    # ✅ 추가 (폴더 없으면 만들기)
+    # 추가 (폴더 없으면 만들기)
     step4_dir.mkdir(parents=True, exist_ok=True)
 
     (step4_dir / "ctx_after_step4.json").write_text(

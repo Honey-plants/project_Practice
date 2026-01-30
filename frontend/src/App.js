@@ -22,6 +22,8 @@ import ReviewDetail from "./pages/review/ReviewDetail";
 import ReviewCreate from "./pages/review/ReviewCreate";
 import ReviewEdit from "./pages/review/ReviewEdit";
 
+import CameraUploadPage from "./pages/menuscan/CameraUploadPage";
+
 import UploadTest from "./pages/upload/UploadTest";
 
 import Register from "./pages/auth/Register";
@@ -116,6 +118,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <UploadTest />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/menu/upload"
+            element={
+              <ProtectedRoute>
+                <CameraUploadPage />
               </ProtectedRoute>
             }
           />

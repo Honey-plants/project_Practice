@@ -29,7 +29,8 @@ python -m AI.review.app.pipeline.step_4_enrich_data.step_4_enrich_cli .\AI\revie
 
 python -m AI.review.app.pipeline.orchestrator_cli .\AI\review\tmp_receipt\receipt_10.jpg --name receipt_10_test --mode debug
 
-
+get_map from kakao
+ python .\AI\journal_assistant\pipeline\location_pin.py
 
 
 
