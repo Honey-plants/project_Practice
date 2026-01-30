@@ -1,5 +1,5 @@
 # 0) 통합 실행코드
-python menu_assistant/worker/worker_app/pipeline/orchestrator.py --image Upload_Images/image10.jpg
+python -m menu_assistant.worker.worker_app.pipeline.orchestrator --image C:\Users\201\Desktop\PGHfolder\haenet\upload\image7.jpg --user-profile-json C:\Users\201\Desktop\PGHfolder\haenet\upload\user_profile_mock.json
 
 
 # 1) 보정만 수행 (photometric-only)

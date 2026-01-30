@@ -1,36 +1,34 @@
-import React, { useContext, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useEffect, useState, useMemo } from "react";
 import { MemberContext } from "../../context/MemberContext";
-import { MetaContext } from "../../context/MetaContext";
-import RestrictionsPicker from "../../components/restrictions/RestrictionsPicker";
+import { ReviewContext } from "../../context/ReviewContext";
+import { CommunityContext } from "../../context/CommunityContext";
+import ProfileSidebar from "../../components/profile/ProfileSidebar";
+import RestrictionsSection from "../../components/profile/RestrictionsSection";
+import ReviewSection from "../../components/profile/ReviewSection";
+import CommunitySection from "../../components/profile/CommunitySection";
+import styles from "./Profile.module.css";
 
 /**
  * Profile
- * 1) 본인 정보 노출
+ * 1) 본인 정보 노출 (왼쪽 사이드바)
  * 2) 본인이 선택한 item_ids만 "읽기 전용"으로 표시
- * 3) Edit 클릭 시 /member/edit 로 이동하여 수정
+ * 3) 내가 작성한 리뷰 목록
+ * 4) 내가 작성한 커뮤니티 글 목록
  */
 export default function Profile() {
   const { stateMember, memberActions } = useContext(MemberContext);
-  const { stateMeta, metaActions } = useContext(MetaContext);
+  const { stateReview, reviewActions } = useContext(ReviewContext);
+  const { stateCommunity, communityActions } = useContext(CommunityContext);
+
+  const [reviewPage, setReviewPage] = useState(0);
+  const [communityPage, setCommunityPage] = useState(0);
 
   const me = stateMember.me;
 
-  // ✅ 내가 선택한 item_ids만
+  // 내가 선택한 item_ids
   const selectedIds = useMemo(() => (me?.item_ids ? me.item_ids : []), [me]);
 
-  // ✅ active True 카테고리/아이템(공용 meta 캐시)
-  const categories = useMemo(() => stateMeta?.restrictions || [], [stateMeta?.restrictions]);
-
-  // ✅ 새로고침 직후 meta가 비어있으면 1회 로드 (active만)
-  useEffect(() => {
-    if (!stateMeta?.loading && (categories || []).length === 0) {
-      metaActions?.refresh?.({ force: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ✅ 새로고침 직후 me가 없으면 로드
+  // 새로고침 직후 me가 없으면 로드
   useEffect(() => {
     if (!me && !stateMember?.loading) {
       memberActions?.loadMe?.();
@@ -38,59 +36,65 @@ export default function Profile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 리뷰와 커뮤니티 데이터 로드
+  useEffect(() => {
+    reviewActions.fetchList();
+    communityActions.fetchList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 내가 작성한 리뷰만 필터링
+  const myReviews = useMemo(
+    () => stateReview.list.filter((review) => review.member_id === me?.member_id),
+    [stateReview.list, me?.member_id]
+  );
+
+  // 내가 작성한 커뮤니티 글만 필터링
+  const myCommunities = useMemo(
+    () => stateCommunity.list.filter((community) => community.member_id === me?.member_id),
+    [stateCommunity.list, me?.member_id]
+  );
+
+  if (!me) {
+    return (
+      <div className={styles.loading}>
+        <p>로딩 중...</p>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: 16, maxWidth: 980, margin: "0 auto" }}>
+    <div className={styles.container}>
+      <div className={styles.grid}>
+        {/* 왼쪽: 회원 정보 사이드바 */}
+        <ProfileSidebar member={me} />
 
-      {stateMember?.error && (
-        <div style={{ margin: "10px 0", padding: 10, border: "1px solid #ffbcbc", background: "#ffecec" }}>
-          {stateMember.error}
+        {/* 오른쪽: 메인 콘텐츠 */}
+        <div>
+          {/* 에러 메시지 */}
+          {stateMember?.error && (
+            <div className={styles.error}>
+              {stateMember.error}
+            </div>
+          )}
+
+          {/* 내가 선택한 제한 아이템 섹션 */}
+          <RestrictionsSection selectedIds={selectedIds} />
+
+          {/* 내가 작성한 리뷰 섹션 */}
+          <ReviewSection
+            reviews={myReviews}
+            currentPage={reviewPage}
+            onPageChange={setReviewPage}
+          />
+
+          {/* 내가 작성한 커뮤니티 글 섹션 */}
+          <CommunitySection
+            communities={myCommunities}
+            currentPage={communityPage}
+            onPageChange={setCommunityPage}
+          />
         </div>
-      )}
-
-      {!me ? (
-        <div style={{ padding: "12px 0" }}>Loading me...</div>
-      ) : (
-        <div className="card" style={{ padding: 12, marginBottom: 12 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", rowGap: 8 }}>
-            <div style={{ fontWeight: 700 }}>Email</div>
-            <div>{me.email}</div>
-
-            <div style={{ fontWeight: 700 }}>Nickname</div>
-            <div>{me.nickname}</div>
-
-            <div style={{ fontWeight: 700 }}>Gender</div>
-            <div>{me.gender || "-"}</div>
-
-            <div style={{ fontWeight: 700 }}>Country</div>
-            <div>{me.country || "-"}</div>
-
-            <div style={{ fontWeight: 700 }}>Selected</div>
-            <div>{selectedIds.length}개</div>
-          </div>
-        </div>
-      )}
-
-      <h3 style={{ marginTop: 18 }}>내가 선택한 제한 아이템 (읽기 전용 / Active만)</h3>
-
-      {stateMeta?.loading && <div style={{ margin: "10px 0" }}>카테고리 불러오는 중...</div>}
-      {stateMeta?.error && (
-        <div style={{ margin: "10px 0", padding: 10, border: "1px solid #ffbcbc", background: "#ffecec" }}>
-          {stateMeta.error}
-        </div>
-      )}
-
-      {/* ✅ 선택된 것만 보여주기 */}
-      <RestrictionsPicker
-        categories={categories}
-        selectedIds={selectedIds}
-        mode="view"       // ✅ 읽기 전용(선택된 것만)
-        onlyActive={true} // ✅ active True만
-      />
-
-      <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
-        <Link to="/member/edit" style={{ padding: "10px 14px", borderRadius: 6, border: "1px solid #333", background: "#333", color: "#fff", textDecoration: "none" }}>
-          Edit
-        </Link>
       </div>
     </div>
   );

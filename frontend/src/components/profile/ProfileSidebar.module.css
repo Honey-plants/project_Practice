@@ -1,0 +1,203 @@
+/* ===== Profile Sidebar ===== */
+.sidebar {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 20px;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    position: static;
+    padding: 24px 20px;
+  }
+}
+
+.loading {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ===== Profile Section ===== */
+.profileSection {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: white;
+  margin: 0 auto 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+}
+
+@media (max-width: 1024px) {
+  .avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+}
+
+.nickname {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+}
+
+@media (max-width: 1024px) {
+  .nickname {
+    font-size: 20px;
+  }
+}
+
+.email {
+  margin: 0;
+  color: #a0aec0;
+  font-size: 14px;
+}
+
+@media (max-width: 1024px) {
+  .email {
+    font-size: 13px;
+  }
+}
+
+/* ===== Info Section ===== */
+.infoSection {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 20px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1024px) {
+  .infoSection {
+    padding-top: 16px;
+    margin-bottom: 16px;
+  }
+}
+
+.infoItem {
+  margin-bottom: 12px;
+}
+
+.infoItem:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 1024px) {
+  .infoItem {
+    margin-bottom: 10px;
+  }
+}
+
+.infoLabel {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  color: #a0aec0;
+}
+
+.infoValue {
+  margin: 0;
+  font-size: 14px;
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+  .infoLabel {
+    font-size: 11px;
+  }
+
+  .infoValue {
+    font-size: 13px;
+  }
+}
+
+/* ===== Actions ===== */
+.actions {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 1024px) {
+  .actions {
+    padding-top: 16px;
+    gap: 8px;
+  }
+}
+
+.editButton {
+  display: block;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.editButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+@media (max-width: 1024px) {
+  .editButton {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+
+.deleteButton {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffbcbc;
+  border: 1px solid rgba(245, 87, 108, 0.4);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.deleteButton:hover {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-color: transparent;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+}
+
+@media (max-width: 1024px) {
+  .deleteButton {
+    padding: 10px;
+    font-size: 13px;
+  }
+}

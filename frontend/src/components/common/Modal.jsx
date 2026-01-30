@@ -1,50 +1,45 @@
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+import styles from "../../styles/Modal.module.css";
+
 export default function Modal({
-  isOpen = true,
+  isOpen = false,
   onClose,
   onConfirm,
   message,
   title,
   children
 }) {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const overlayStyle = {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 9999,
-  };
-
-  const modalStyle = {
-    background: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    minWidth: 320,
-    maxWidth: 720,
-    width: "90%",
-  };
-
-  return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-        {(title || !children) && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontWeight: 700 }}>{title || "Confirm"}</div>
-            <button type="button" onClick={onClose}>✕</button>
+  return createPortal(
+    <div className={styles.modalBackdrop} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        {title && (
+          <div className={styles.modalHeader}>
+            <div className={styles.modalTitle}>{title}</div>
+            <button type="button" className={styles.modalCloseBtn} onClick={onClose}>✕</button>
           </div>
         )}
 
-        <div style={{ marginTop: 12 }}>
-          {/* ✅ ProfilePage: children(폼) 렌더 */}
+        <div className={styles.modalContent}>
           {children ? (
             children
           ) : (
             <>
               <p>{message}</p>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
+              <div className={styles.modalActions}>
                 <button type="button" onClick={onClose}>Cancel</button>
                 <button type="button" onClick={onConfirm}>Confirm</button>
               </div>
@@ -52,6 +47,7 @@ export default function Modal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

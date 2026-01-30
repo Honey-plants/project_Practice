@@ -51,3 +51,11 @@ S3_BUCKET = os.getenv("S3_BUCKET", "")
 S3_REGION = os.getenv("S3_REGION", "")
 S3_PREFIX = os.getenv("S3_PREFIX", "uploads")
 # upload :: upload/menu 폴더명 구조 잡기 좋음
+
+# ... 기존 내용 그대로 두고 아래 추가
+
+# receipt OCR 세션 TTL (초)
+RECEIPT_SESSION_TTL_SECONDS = int(os.getenv("RECEIPT_SESSION_TTL_SECONDS", "1800"))  # 30분
+
+# 영구 저장 루트(리뷰 이미지 0~3 저장)
+LOCAL_PERM_DIR = os.getenv("LOCAL_PERM_DIR", str(PROJECT_ROOT / "uploads"))

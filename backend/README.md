@@ -82,3 +82,7 @@ key 확인 : docker exec -it app_redis redis-cli keys "*"
 
 # docker refresh 확인
 - SCAN 0 MATCH bl:* COUNT 100
+
+# MENU / RECEIPT 로직 순서
+- MENU: 업로드 → AI 분석 → 결과 JSON 반환 → 임시파일 삭제
+- RECEIPT: 업로드 → OCR/검증 AI → Redis에 세션 저장(upload_id) → 프론트 추가입력 + 이미지(0~3) → Review 생성 + ImgFile 영구저장 → 임시파일 삭제 + Redis 세션 삭제

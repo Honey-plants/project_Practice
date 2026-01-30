@@ -5,11 +5,11 @@ from backend.app.common.service.file_upload_service import (
 )
 from backend.app.common.schemas.file_upload_schema import UploadInputResponse
 
-router = APIRouter(prefix="/review", tags=["review"])
+router = APIRouter(prefix="/receipt", tags=["receipt"])
 
 # 영수증 검증 및 리뷰 생성
 @router.post("/upload", response_model=UploadInputResponse)
-async def review_upload(type: str = Form("receipt"), image: UploadFile = File(...), current=Depends(get_current_member), ):
+async def review_upload(type: str = Form("receipt"), file: UploadFile = File(...), current=Depends(get_current_member), ):
     obj = await upload_input_file(upload_type=type, member_id=current.member_id, upload=image)
 
     cleanup_download = lambda: None

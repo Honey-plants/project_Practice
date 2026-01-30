@@ -7,6 +7,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
+import json
+import time
+
 
 # ============================================================
 # Path routing (Docker-friendly)
@@ -183,7 +186,6 @@ class Step3Options:
     pass2_gap_ratio: float = 0.45
 
 
-
 @dataclass
 class Step4Options:
     # RAG match options (match step_04_rag_match.py)
@@ -204,6 +206,38 @@ class Step4Options:
     collection: str = "menu_index"
 
 
+# orchestrator.py
+
+@dataclass
+class Step5Options:
+    # Step05 (LLM) options
+    user_profile_json: Optional[str] = None
+    include_debug: bool = False
+    max_retries: int = 2
+    require_poly: bool = True
+
+    # ✅ NEW: orchestrator-level retry backoff (seconds)
+    sleep_base: float = 2.0
+
+
+
+# ✅ NEW: Step6 options (Translate)
+@dataclass
+class Step6Options:
+    model: str = "gemini-2.5-flash"
+    api_key_env: str = "GEMINI_API_KEY"
+
+    temperature: float = 0.2
+    top_p: float = 0.95
+    top_k: int = 40
+
+    max_retries: int = 2
+    sleep_base: float = 0.7
+
+    # .env 로딩(선택) - client.py가 상위 탐색하지만 필요하면 강제 지정
+    dotenv_path: Optional[str] = None
+    max_dotenv_up: int = 8
+
 
 class PipelineOrchestrator:
     def __init__(self, runs_root: Path):
@@ -213,18 +247,24 @@ class PipelineOrchestrator:
 
 
     def run(
-        self,
-        image_path: Path,
-        run_id: Optional[str] = None,
-        *,
-        step1: Optional[Step1Options] = None,
-        step2: Optional[Step2Options] = None,
-        step3: Optional[Step3Options] = None,
-        step4: Optional[Step4Options] = None,
-        do_check: bool = True,
-        check_keywords: Optional[List[str]] = None,
-        show_structured: bool = True,
-        run_step4: bool = True,
+            self,
+            image_path: Path,
+            run_id: Optional[str] = None,
+            *,
+            step1: Optional[Step1Options] = None,
+            step2: Optional[Step2Options] = None,
+            step3: Optional[Step3Options] = None,
+            step4: Optional[Step4Options] = None,
+            step5: Optional[Step5Options] = None,
+            step6: Optional[Step6Options] = None,
+
+            run_step5: bool = True,
+            run_step6: bool = True,
+
+            do_check: bool = True,
+            check_keywords: Optional[List[str]] = None,
+            show_structured: bool = True,
+            run_step4: bool = True,
     ) -> Path:
         if not image_path.exists():
             raise FileNotFoundError(f"Input image not found: {image_path}")
@@ -233,6 +273,8 @@ class PipelineOrchestrator:
         step2 = step2 or Step2Options()
         step3 = step3 or Step3Options()
         step4 = step4 or Step4Options()
+        step5 = step5 or Step5Options()
+        step6 = step6 or Step6Options()
 
         run_id = run_id or make_run_id()
         run_dir = self.runs_root / run_id
@@ -438,13 +480,143 @@ class PipelineOrchestrator:
             run_cmd(cmd4, env=step4_env)
             ensure_exists(rag_match_json, "Step04 expected output missing (rag_match json)")
 
-        print("\n=== PIPELINE DONE (01~04) ===")
+        # ----------------------------------------------------
+        # Step 05: LLM Risk Score + Build final.json
+        # ----------------------------------------------------
+        final_json = run_dir / "final" / "final.json"
+
+        if run_step5:
+            cmd5 = [
+                sys.executable, "-m",
+                "menu_assistant.worker.worker_app.pipeline.steps.step_05_risk_score",
+                "--run_id", run_id,
+                "--data_dir", str(self.data_dir),
+                "--max_retries", str(step5.max_retries),
+            ]
+            if step5.user_profile_json:
+                cmd5 += ["--user_profile_json", step5.user_profile_json]
+            if step5.require_poly:
+                cmd5 += ["--require_poly"]
+            else:
+                cmd5 += ["--no_require_poly"]
+            if step5.include_debug:
+                cmd5 += ["--include_debug"]
+
+            # ✅ NEW: retry wrapper (keeps pipeline alive on transient 503/overload)
+            last_err: Optional[Exception] = None
+            for attempt in range(int(step5.max_retries) + 1):
+                try:
+                    if attempt > 0:
+                        wait = float(step5.sleep_base) * (2 ** (attempt - 1))
+                        print(
+                            f"[STEP05] previous attempt failed. retrying in {wait:.1f}s... (attempt {attempt}/{step5.max_retries})")
+                        time.sleep(wait)
+
+                    run_cmd(cmd5, cwd=self.ai_root)
+                    last_err = None
+                    break
+
+                except Exception as e:
+                    last_err = e
+                    # 다음 루프로 재시도. 마지막이면 raise.
+                    if attempt >= int(step5.max_retries):
+                        raise
+
+            # 이후 llm_input/llm_output 읽는 로직은 그대로
+
+            llm_input_path = run_dir / "llm" / "llm_input.json"
+            llm_output_path = run_dir / "llm" / "llm_output.json"
+
+            # llm_input.json 은 Step05가 항상 저장
+            ensure_exists(llm_input_path, "Step05 expected output missing (llm_input.json)")
+
+            llm_input_obj = json.loads(llm_input_path.read_text(encoding="utf-8"))
+            user_profile = llm_input_obj.get("user_profile") or {
+                "allergy_tags": [],
+                "avoid_foods": [],
+                "religion": None,
+            }
+            llm_input_items = llm_input_obj.get("items") or []
+
+            # ✅ 핵심: items가 0개면 Step05가 llm_output.json을 만들지 않을 수 있음
+            if llm_output_path.exists():
+                llm_output_obj = json.loads(llm_output_path.read_text(encoding="utf-8"))
+                llm_output_items = llm_output_obj.get("items") or []
+            else:
+                # Step05 로그: "No items to send to LLM." 케이스
+                print("[STEP05] llm_output.json not found -> treating as empty output (no items).")
+                llm_output_items = []
+
+            from menu_assistant.worker.worker_app.llm.services.finalizer import merge_llm_output_to_final
+
+            final_obj = merge_llm_output_to_final(
+                run_id=run_id,
+                user_profile=user_profile,
+                llm_input_items=llm_input_items,
+                llm_output_items=llm_output_items,
+            )
+
+            final_json.parent.mkdir(parents=True, exist_ok=True)
+            final_json.write_text(json.dumps(final_obj, ensure_ascii=False, indent=2), encoding="utf-8")
+            ensure_exists(final_json, "Step05 final output missing (final.json)")
+
+        # ----------------------------------------------------
+        # ✅ Step 06: Translate (final.json -> final_translated.json)
+        # ----------------------------------------------------
+        final_translated_json = run_dir / "final" / "final_translated.json"
+        translate_json = run_dir / "translate" / "translate.json"
+
+        if run_step6:
+            ensure_exists(final_json, "Step06 requires Step05 output (final.json)")
+
+            cmd6 = [
+                sys.executable,
+                "-m",
+                "menu_assistant.worker.worker_app.pipeline.steps.step_06_translate",
+                "--run_id",
+                run_id,
+                "--data_dir",
+                str(self.data_dir),
+
+                "--model",
+                step6.model,
+                "--api_key_env",
+                step6.api_key_env,
+                "--temperature",
+                str(step6.temperature),
+                "--top_p",
+                str(step6.top_p),
+                "--top_k",
+                str(step6.top_k),
+
+                "--max_retries",
+                str(step6.max_retries),
+                "--sleep_base",
+                str(step6.sleep_base),
+                "--max_dotenv_up",
+                str(step6.max_dotenv_up),
+            ]
+
+            if step6.dotenv_path:
+                cmd6 += ["--dotenv_path", step6.dotenv_path]
+
+            run_cmd(cmd6, cwd=self.ai_root)
+
+            ensure_exists(translate_json, "Step06 expected output missing (translate.json)")
+            ensure_exists(final_translated_json, "Step06 expected output missing (final_translated.json)")
+
+        print("=== PIPELINE DONE (01~06) ===")
         print(f"run_dir        : {run_dir}")
         print(f"rectified.jpg  : {rectify_img}")
         print(f"ocr.json       : {ocr_json_check}")
         print(f"normalize.json : {normalize_json}")
         if run_step4:
             print(f"rag_match.json : {rag_match_json}")
+        if run_step5:
+            print(f"final.json     : {final_json}")
+        if run_step6:
+            print(f"translate.json : {translate_json}")
+            print(f"final_translated.json : {final_translated_json}")
 
         return run_dir
 
@@ -479,7 +651,7 @@ if __name__ == "__main__":
     p.add_argument("--rec-model-dir", default=None)
     p.add_argument("--cls-model-dir", default=None)
 
-    p.add_argument("--det-box-thresh", type=float, default=0.35)
+    p.add_argument("--det-box-thresh", type=float, default=0.5)
     p.add_argument("--det-thresh", type=float, default=0.30)
     p.add_argument("--det-unclip-ratio", type=float, default=2.0)
 
@@ -513,6 +685,14 @@ if __name__ == "__main__":
     p.add_argument("--no-rerank", action="store_true")
     p.add_argument("--rag-debug", action="store_true")
 
+    # ---------------- Step5 passthrough ----------------
+    p.add_argument("--run-step5", action="store_true", help="Run step5 (default: on)")
+    p.add_argument("--no-step5", action="store_true", help="Skip step5")
+    p.add_argument("--user-profile-json", default=None, help="Path to user profile JSON for step5")
+    p.add_argument("--step5-debug", action="store_true", help="Enable step5 debug outputs")
+    p.add_argument("--step5-max-retries", type=int, default=2)
+    p.add_argument("--step5-no-require-poly", action="store_true", help="Do not require poly (debug only)")
+
     # ✅ hard-fix routing (stability)
     p.add_argument(
         "--chroma-dir",
@@ -520,6 +700,20 @@ if __name__ == "__main__":
         help="Chroma persist directory. If omitted, uses <data_dir>/chroma or Windows fallback.",
     )
     p.add_argument("--collection", default="menu_index", help="Chroma collection name (default: menu_index)")
+
+    # ---------------- ✅ Step6 passthrough ----------------
+    p.add_argument("--run-step6", action="store_true", help="Run step6 (default: on)")
+    p.add_argument("--no-step6", action="store_true", help="Skip step6")
+
+    p.add_argument("--step6-model", default="gemini-2.5-flash")
+    p.add_argument("--step6-api-key-env", default="GEMINI_API_KEY")
+    p.add_argument("--step6-temperature", type=float, default=0.2)
+    p.add_argument("--step6-top-p", type=float, default=0.95)
+    p.add_argument("--step6-top-k", type=int, default=40)
+    p.add_argument("--step6-max-retries", type=int, default=2)
+    p.add_argument("--step6-sleep-base", type=float, default=0.7)
+    p.add_argument("--step6-dotenv-path", default=None, help="Explicit .env path (optional)")
+    p.add_argument("--step6-max-dotenv-up", type=int, default=8)
 
     # ---------------- Check options ----------------
     p.add_argument("--no-check", action="store_true", help="Skip step_03 result check")
@@ -565,7 +759,6 @@ if __name__ == "__main__":
         det_box_thresh=args.det_box_thresh,
         det_thresh=args.det_thresh,
         det_unclip_ratio=args.det_unclip_ratio,
-
     )
 
     step3 = Step3Options(
@@ -608,6 +801,38 @@ if __name__ == "__main__":
     if args.run_step4:
         run_step4 = True
 
+    step5 = Step5Options(
+        user_profile_json=args.user_profile_json,
+        include_debug=args.step5_debug,
+        max_retries=args.step5_max_retries,
+        require_poly=(not args.step5_no_require_poly),
+    )
+
+    run_step5 = True
+    if args.no_step5:
+        run_step5 = False
+    if args.run_step5:
+        run_step5 = True
+
+    # ✅ Step6 wiring
+    step6 = Step6Options(
+        model=args.step6_model,
+        api_key_env=args.step6_api_key_env,
+        temperature=args.step6_temperature,
+        top_p=args.step6_top_p,
+        top_k=args.step6_top_k,
+        max_retries=args.step6_max_retries,
+        sleep_base=args.step6_sleep_base,
+        dotenv_path=args.step6_dotenv_path,
+        max_dotenv_up=args.step6_max_dotenv_up,
+    )
+
+    run_step6 = True
+    if args.no_step6:
+        run_step6 = False
+    if args.run_step6:
+        run_step6 = True
+
     orch.run(
         image_path=Path(args.image),
         run_id=args.run_id,
@@ -615,8 +840,12 @@ if __name__ == "__main__":
         step2=step2,
         step3=step3,
         step4=step4,
+        step5=step5,
+        step6=step6,
         do_check=(not args.no_check),
         check_keywords=args.check_keywords,
         show_structured=(not args.no_structured),
         run_step4=run_step4,
+        run_step5=run_step5,
+        run_step6=run_step6,
     )

@@ -135,8 +135,8 @@ export default function RestrictionsAdminContainer() {
   }, [data, q]);
 
   return (
-    <div style={{ padding: 12, border: "1px solid #ddd" }}>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+    <div className="restrictions-admin-wrapper">
+      <div className="restrictions-toolbar">
         <button onClick={loadAll} disabled={loading}>
           {loading ? "로딩..." : "새로고침"}
         </button>
@@ -144,11 +144,10 @@ export default function RestrictionsAdminContainer() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="검색 (카테고리/아이템)"
-          style={{ flex: 1, padding: 8 }}
         />
       </div>
 
-      {msg && <div style={{ marginBottom: 12 }}>{msg}</div>}
+      {msg && <div className="admin-message">{msg}</div>}
 
       {/* ✅ 여기서 바로 판별 가능: 파싱이 0인지/렌더링 문제인지 */}
 {/*       <div style={{ marginBottom: 12, padding: 10, background: "#fafafa", border: "1px solid #eee" }}> */}
@@ -159,7 +158,7 @@ export default function RestrictionsAdminContainer() {
 {/*         </details> */}
 {/*       </div> */}
 
-      <div style={{ display: "grid", gridTemplateColumns: "420px 1fr", gap: 12 }}>
+      <div className="admin-grid-layout">
         <RestrictionsBatchCreate
           onSaved={async () => {
             if (metaActions?.refresh) await metaActions.refresh({ force: true });
