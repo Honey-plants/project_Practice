@@ -72,12 +72,12 @@ export default function RestrictionsBatchCreate({ onSaved }) {
   };
 
   return (
-    <div style={{ padding: 12, border: "1px solid #ddd" }}>
-      <h3 style={{ marginTop: 0 }}>기본 등록 (Batch)</h3>
+    <div className="batch-create-panel">
+      <h3>기본 등록 (Batch)</h3>
 
       {draft.map((c, cIdx) => (
-        <div key={cIdx} style={{ border: "1px solid #eee", padding: 12, marginBottom: 12 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <div key={cIdx} className="batch-category-box">
+          <div className="batch-category-inputs">
             <input
               value={c.category_label_ko}
               onChange={(e) => updateCategory(cIdx, { category_label_ko: e.target.value })}
@@ -91,9 +91,9 @@ export default function RestrictionsBatchCreate({ onSaved }) {
             <button onClick={() => addItem(cIdx)}>+ item</button>
           </div>
 
-          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="batch-items-list">
             {(c.items || []).map((it, itIdx) => (
-              <div key={itIdx} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <div key={itIdx} className="batch-item-row">
                 <input
                   value={it.item_label_ko}
                   onChange={(e) => updateItem(cIdx, itIdx, { item_label_ko: e.target.value })}
@@ -110,14 +110,14 @@ export default function RestrictionsBatchCreate({ onSaved }) {
         </div>
       ))}
 
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <div className="batch-actions">
         <button onClick={addCategory}>+ category</button>
         <button onClick={submit} disabled={saving}>
           {saving ? "저장중..." : "일괄 등록"}
         </button>
       </div>
 
-      {msg && <div style={{ marginTop: 10 }}>{msg}</div>}
+      {msg && <div className="batch-message">{msg}</div>}
     </div>
   );
 }
