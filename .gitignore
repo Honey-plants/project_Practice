@@ -56,3 +56,9 @@ yarn-error.log*
 
 # iamgefile
 .upload/
+
+#test file
+test/
+tmp_receipt/
+AI/review/test/
+AI/review/tmp_receipt/
