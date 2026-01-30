@@ -93,7 +93,6 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
     ctx = run_step4_enrich(ctx, naver_cfg=naver_cfg, gemini_api_key=cfg.gemini_api_key)
 
     # ✅ 추가 (폴더 없으면 만들기)
-    # 폴더 생성 추가 위치
     step4_dir.mkdir(parents=True, exist_ok=True)
 
     (step4_dir / "ctx_after_step4.json").write_text(
@@ -107,7 +106,6 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
     final_payload = ctx.final.model_dump() if hasattr(ctx.final, "model_dump") else ctx.final.dict()
     (step5_dir).mkdir(parents=True, exist_ok=True)
 
-    # json 생성 위치
     (step5_dir / "final.json").write_text(
         json.dumps(final_payload, ensure_ascii=False, indent=2),
         encoding="utf-8",
