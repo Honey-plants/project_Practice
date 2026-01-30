@@ -1,0 +1,143 @@
+.container {
+  padding: 16px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.title {
+  margin-bottom: 20px;
+}
+
+.message {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.messageSuccess {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.messageError {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.card {
+  padding: 12px;
+  margin-bottom: 12px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #333;
+}
+
+.input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  width: 100%;
+  font-size: 14px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  margin: 0;
+}
+
+.selectedCount {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+}
+
+.selectedCountNumber {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.loading {
+  margin: 10px 0;
+  color: #666;
+}
+
+.errorBox {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+}
+
+.buttonWrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  gap: 8px;
+}
+
+.button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.buttonPrimary {
+  background-color: #007bff;
+  color: white;
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.buttonPrimary:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.buttonSecondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.buttonSecondary:hover:not(:disabled) {
+  background-color: #545b62;
+}

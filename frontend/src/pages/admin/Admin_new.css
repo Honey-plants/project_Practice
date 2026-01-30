@@ -51,7 +51,8 @@ main {
   gap: 20px;
 }
 
-input {
+.section-left input,
+.section-right input {
   padding: 5px;
   border: 2px solid #aaa;
   border-radius: 10px;
@@ -59,11 +60,13 @@ input {
   background-color: #555;
 }
 
-input::placeholder{
+.section-left input,
+.section-right input::placeholder{
   color: #aaa;
 }
 
-input[type="search"]{
+.section-left, input
+.section-right input[type="search"]{
   padding: 10px;
   flex: 1;
   text-align: center;

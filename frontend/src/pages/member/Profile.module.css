@@ -1,0 +1,26 @@
+.container {
+  padding: 40px 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+}
+
+.error {
+  margin: 0 0 20px 0;
+  padding: 10px;
+  border: 1px solid #ffbcbc;
+  background: #ffecec;
+  border-radius: 8px;
+}

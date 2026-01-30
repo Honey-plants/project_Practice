@@ -1,0 +1,117 @@
+.sidebar {
+  background: white;
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 20px;
+}
+
+.loading {
+  background: white;
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.profileSection {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: white;
+  margin: 0 auto 16px;
+  font-weight: 600;
+}
+
+.nickname {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.email {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.infoSection {
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  margin-bottom: 20px;
+}
+
+.infoItem {
+  margin-bottom: 12px;
+}
+
+.infoItem:last-child {
+  margin-bottom: 0;
+}
+
+.infoLabel {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  color: #999;
+}
+
+.infoValue {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.actions {
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.editButton {
+  display: block;
+  padding: 12px;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.editButton:hover {
+  background: #0056b3;
+}
+
+.deleteButton {
+  padding: 12px;
+  background: white;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deleteButton:hover {
+  background: #dc3545;
+  color: white;
+}
