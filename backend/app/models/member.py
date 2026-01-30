@@ -13,9 +13,9 @@ class Member(Base):
     email: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
     nickname: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
-    gender: Mapped[Optional[str]] = mapped_column(String(10), nullable=False)
-    country: Mapped[Optional[str]] = mapped_column(String(20), nullable=False)
-    role: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("USER"))
+    gender: Mapped[str] = mapped_column(String(10), nullable=False)
+    country: Mapped[str] = mapped_column(String(20), nullable=False)
+    role: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, server_default=text("USER"))
 
     create_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     update_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"), server_onupdate=text("CURRENT_TIMESTAMP"))

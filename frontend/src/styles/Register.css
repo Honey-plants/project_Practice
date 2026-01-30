@@ -1,0 +1,273 @@
+.RegisterPage {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.RegisterHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.RegisterHeader h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.RegisterLinks a {
+  color: #0066cc;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.RegisterLinks a:hover {
+  color: #0052a3;
+  text-decoration: underline;
+}
+
+.RegisterMsg {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.RegisterMsg.ok {
+  background: #e6ffed;
+  color: #1a7f37;
+  border: 1px solid #2ea44f;
+}
+
+.RegisterMsg.err {
+  background: #fff0f0;
+  color: #d1242f;
+  border: 1px solid #d1242f;
+}
+
+.RegisterForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.RegisterForm .row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.RegisterForm .row label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.RegisterForm .row input,
+.RegisterForm .row select {
+  padding: 10px 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.RegisterForm .row input:focus,
+.RegisterForm .row select:focus {
+  outline: none;
+  border-color: #0969da;
+  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
+}
+
+.RegisterForm .row input:disabled {
+  background: #f6f8fa;
+  cursor: not-allowed;
+}
+
+.errorText {
+  color: #d1242f;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.successText {
+  color: #1a7f37;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.checkBtn {
+  padding: 10px 16px;
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.checkBtn:hover:not(:disabled) {
+  background: #e6eaef;
+  border-color: #8c959f;
+}
+
+.checkBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.RegisterDivider {
+  height: 1px;
+  background: #d0d7de;
+  margin: 16px 0;
+}
+
+.RegisterSectionTitle {
+  margin-bottom: 12px;
+}
+
+.RegisterSectionTitle h3 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.RegisterSectionTitle .sub {
+  font-size: 13px;
+  color: #656d76;
+}
+
+.dislikesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dislikeTagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  min-height: 48px;
+}
+
+.dislikeTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  border-radius: 16px;
+  font-size: 14px;
+  color: #24292f;
+  font-weight: 500;
+}
+
+.dislikeTag span {
+  line-height: 1;
+}
+
+.dislikeRemoveBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: #d1242f;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dislikeRemoveBtn:hover {
+  background: #a40e26;
+}
+
+.dislikeCounter {
+  font-size: 13px;
+  color: #656d76;
+  text-align: right;
+  font-weight: 500;
+}
+
+.RegisterActions {
+  margin-top: 8px;
+}
+
+.RegisterActions button[type="submit"] {
+  width: 100%;
+  padding: 12px 20px;
+  background: #2da44e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.RegisterActions button[type="submit"]:hover:not(:disabled) {
+  background: #2c974b;
+}
+
+.RegisterActions button[type="submit"]:disabled {
+  background: #94d3a2;
+  cursor: not-allowed;
+}
+
+.infoBox,
+.errorBox {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 12px 0;
+}
+
+.infoBox {
+  background: #ddf4ff;
+  border: 1px solid #54aeff;
+  color: #0969da;
+}
+
+.errorBox {
+  background: #fff0f0;
+  border: 1px solid #d1242f;
+  color: #d1242f;
+}
+
+.miniBtn {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.miniBtn:hover {
+  background: #f6f8fa;
+  border-color: #8c959f;
+}
+
+.card {
+  background: white;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}

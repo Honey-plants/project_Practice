@@ -1,9 +1,12 @@
-// import "../../styles/Register.css";
-import { useState } from "react";
+import "../../styles/Register.css";
 import Modal from "../../components/common/Modal";
-import { useNavigate } from "react-router-dom";
 import { COUNTRY_OPTIONS, GENDER } from "../../contents/register";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { MetaContext } from "../../context/MetaContext";
 import { MemberAPI } from "../../api/memberApi";
+import api from "../../api/axiosInstance";
+import RestrictionsPicker from "../../components/restrictions/RestrictionsPicker";
 
 /* 정규식 */
 const REGEX = {
@@ -31,10 +34,20 @@ function validate(formData) {
   return errors;
 }
 
+/**
+ * Register
+ * - MetaContext(active 캐시) 기반으로 카테고리/아이템 노출
+ * - RestrictionsPicker 공통 컴포넌트 사용
+ * - 선택 item_ids 포함하여 회원가입 payload 전송
+ */
 export default function Register() {
   const nav = useNavigate();
+  const { stateMeta, metaActions } = useContext(MetaContext);
 
-  const [formData, setFormData] = useState({
+  // ✅ active True 리스트만 (MetaContext가 active 캐시라고 가정 + 안전 필터는 Picker에서 onlyActive로 처리)
+  const categories = useMemo(() => stateMeta?.restrictions || [], [stateMeta?.restrictions]);
+
+  const [form, setForm] = useState({
     email: "",
     nickname: "",
     password: "",
@@ -43,149 +56,343 @@ export default function Register() {
     country: "",
   });
 
-  const [modalType, setModalType] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [itemIds, setItemIds] = useState([]);
+  const [dislikes, setDislikes] = useState([]);
+  const [dislikeInput, setDislikeInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [errors, setErrors] = useState({});
+  const [checkStatus, setCheckStatus] = useState({
+    nickname: null,
+  });
+
+  // meta 비어있으면 1회 강제 refresh
+  useEffect(() => {
+    if (!stateMeta?.loading && (categories || []).length === 0) {
+      metaActions?.refresh?.({ force: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    setForm((p) => ({ ...p, [name]: value }));
 
-  const submitRegister = async () => {
-    const errors = validate(formData);
-    if (Object.keys(errors).length > 0) {
-      alert(Object.values(errors).join("\n"));
-      return false;
+    // 닉네임 입력시 중복 확인 상태 초기화
+    if (name === "nickname") {
+      setCheckStatus({ nickname: null });
     }
 
-    const payload = {
-      email: formData.email.trim(),
-      password: formData.password,
-      nickname: formData.nickname.trim(),
-      gender: formData.gender || null,
-      country: formData.country || null,
-    };
-
-    console.log("payload :: ", payload)
-
-    try {
-      await MemberAPI.register(payload);
-      alert("Register complete!");
-      return true;
-    } catch (e) {
-      console.error(e);
-      alert(e?.response?.data?.message || "Register failed");
-      return false;
+    // 실시간 유효성 검사 (password 관련만)
+    if (name === "password" || name === "passwordConfirm") {
+      setErrors((p) => {
+        const newErrors = { ...p };
+        delete newErrors.password;
+        delete newErrors.passwordConfirm;
+        return newErrors;
+      });
     }
   };
 
-  const openModal = (type) => {
-    setModalType(type);
-    setIsModalOpen(true);
+  const toggleItem = (id) => {
+    setItemIds((prev) => {
+      const s = new Set(prev);
+      if (s.has(id)) s.delete(id);
+      else s.add(id);
+      return Array.from(s);
+    });
   };
 
-  const handleConfirm = async () => {
-    if (modalType === "cancel") {
-      setIsModalOpen(false);
-      nav("/");
+  const addDislike = () => {
+    const trimmed = dislikeInput.trim();
+    if (!trimmed) return;
+    if (dislikes.length >= 3) return;
+    if (dislikes.includes(trimmed)) {
+      setMsg("❌ Already added ingredient.");
+      return;
+    }
+    setDislikes([...dislikes, trimmed]);
+    setDislikeInput("");
+    setMsg("");
+  };
+
+  const removeDislike = (index) => {
+    setDislikes(dislikes.filter((_, i) => i !== index));
+  };
+
+  const handleDislikeKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addDislike();
+    }
+  };
+
+  // 닉네임 중복 확인 - 직접 API 호출
+  const checkNickname = async () => {
+    const nickname = form.nickname.trim();
+    if (!nickname) {
+      setCheckStatus({ nickname: null });
       return;
     }
 
-    if (modalType === "Register") {
-      const ok = await submitRegister();
-      if (ok) nav("/");
-      setIsModalOpen(false);
+    try {
+      setLoading(true);
+      // 직접 axios로 API 호출
+      const response = await api.get(`/member/nickname/check?nickname=${encodeURIComponent(nickname)}`);
+
+      // available이 true면 사용 가능, false면 중복
+      if (response?.data?.available === true) {
+        setCheckStatus({ nickname: true });
+      } else {
+        setCheckStatus({ nickname: false });
+      }
+    } catch (err) {
+      console.error("Nickname check error:", err);
+      setMsg("❌ Failed to check nickname");
+      setCheckStatus({ nickname: null });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setMsg("");
+
+    // 유효성 검사
+    const validationErrors = validate(form);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setMsg("❌ Please check the input information.");
+      return;
+    }
+
+    // 닉네임 중복 확인 여부 체크
+    if (checkStatus.nickname !== true) {
+      setMsg("❌ Please check nickname duplication");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        email: form.email.trim(),
+        password: form.password,
+        nickname: form.nickname.trim(),
+        gender: form.gender || null,
+        country: form.country || null,
+        item_ids: itemIds,
+        dislike_tags: dislikes.length > 0 ? dislikes : null,
+      };
+
+      console.log("SEND PAYLOAD:", payload);
+
+      await MemberAPI.register(payload);
+      console.log("Sign up success");
+      setMsg("✅ Sign up success");
+      setTimeout(() => nav("/login"), 1000);
+    } catch (err) {
+      const detail =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to sign up";
+      setMsg(`❌ ${detail}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="Register">
-      <section>Create your account</section>
+    <div className="RegisterPage">
+      <div className="RegisterHeader">
+        <h2>Sign Up</h2>
+      </div>
 
-      <section>
-        <label>
-          E-mail
+      {msg && <div className={`RegisterMsg ${msg.startsWith("✅") ? "ok" : "err"}`}>{msg}</div>}
+
+      <form className="card RegisterForm" onSubmit={onSubmit}>
+        <div className="row">
+          <label>E-mail</label>
           <input
             name="email"
-            type="text"
-            value={formData.email}
+            value={form.email}
             onChange={onChange}
-            placeholder="example@email.com"
+            placeholder="email@example.com"
+            autoComplete="email"
           />
-        </label>
-        <label>
-          Nickname
-          <input
-            name="nickname"
-            type="text"
-            placeholder="Please write 10 characters or less"
-            maxLength={10}
-            value={formData.nickname}
-            onChange={onChange}
-            style={{ flex: 1 }}
-          />
-        </label>
-        <label>
-          Password
+          {errors.email && <div className="errorText">{errors.email}</div>}
+        </div>
+
+        <div className="row">
+          <label>Password (8~20 characters)</label>
           <input
             name="password"
-            type="password"
-            value={formData.password}
+            value={form.password}
             onChange={onChange}
-            placeholder="8~20 characters"
+            type="password"
+            placeholder="Not more than 8 to 20 letters"
+            autoComplete="new-password"
           />
-        </label>
+          {errors.password && <div className="errorText">{errors.password}</div>}
+        </div>
 
-        <label>
-          Password Check
+        <div className="row">
+          <label>Password Confirm</label>
           <input
             name="passwordConfirm"
-            type="password"
-            value={formData.passwordConfirm}
+            value={form.passwordConfirm}
             onChange={onChange}
+            type="password"
+            placeholder="Re-enter password"
+            autoComplete="new-password"
           />
-        </label>
+          {errors.passwordConfirm && <div className="errorText">{errors.passwordConfirm}</div>}
+        </div>
 
-        <label>
-          Gender
-          <select name="gender" value={formData.gender} onChange={onChange}>
-            <option value="">Select gender</option>
-            {GENDER.map((g) => (
-              <option key={g.value} value={g.value}>
-                {g.label}
+        <div className="row">
+          <label>Nickname</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              name="nickname"
+              value={form.nickname}
+              onChange={onChange}
+              placeholder="Please write 10 characters or less"
+              style={{ flex: 1 }}
+            />
+            <button
+              type="button"
+              className="checkBtn"
+              onClick={checkNickname}
+              disabled={loading || !form.nickname.trim()}
+            >
+              Check
+            </button>
+          </div>
+          {checkStatus.nickname === true && <div className="successText">✅ Available nickname</div>}
+          {checkStatus.nickname === false && <div className="errorText">❌ Nickname already in use</div>}
+        </div>
+
+        <div className="row">
+          <label>Gender</label>
+          <select name="gender" value={form.gender} onChange={onChange}>
+            <option value="" disabled>
+              Select Gender
+            </option>
+
+            {GENDER.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
-        <label>
-          Country
-          <select name="country" value={formData.country} onChange={onChange}>
-            <option value="">Select Country</option>
-            {COUNTRY_OPTIONS.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
+        <div className="row">
+          <label>Country</label>
+          <select name="country" value={form.country} onChange={onChange}>
+            <option value="" disabled>
+              Select Country
+            </option>
+
+            {COUNTRY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
-        </label>
-      </section>
+        </div>
 
-      <section>
-        <button onClick={() => openModal("cancel")}>Cancel</button>
-        <button onClick={() => openModal("Register")}>Register</button>
-      </section>
+        {stateMeta?.loading && <div className="infoBox">Category Loading...</div>}
+        {stateMeta?.error && <div className="errorBox">{stateMeta.error}</div>}
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onConfirm={handleConfirm}
-        message={
-          modalType === "cancel"
-            ? "Are you sure you want to cancel?"
-            : "Do you want to proceed?"
-        }
-      />
+        {!stateMeta?.loading && (categories || []).length === 0 && (
+          <div className="infoBox">
+            There are no active categories/items.
+            <button
+              type="button"
+              className="miniBtn"
+              onClick={() => metaActions?.refresh?.({ force: true })}
+              style={{ marginLeft: 8 }}
+            >
+              Calling back
+            </button>
+          </div>
+        )}
+
+        {/* ✅ 공통 컴포넌트 사용 */}
+        <RestrictionsPicker
+          categories={categories}
+          selectedIds={itemIds}
+          onToggle={toggleItem}
+          mode="select"
+          onlyActive={true}
+        />
+
+        <div className="RegisterDivider" />
+
+        <div className="RegisterSectionTitle">
+          <h3>Dislike Ingredients (Up to 3)</h3>
+          <div className="sub">Enter ingredients you don't eat or dislike</div>
+        </div>
+
+        <div className="dislikesSection">
+          <div className="row">
+            <label>Add Ingredient</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="text"
+                value={dislikeInput}
+                onChange={(e) => setDislikeInput(e.target.value)}
+                onKeyDown={handleDislikeKeyDown}
+                placeholder="e.g ) coriander (press Enter or click Add)"
+                maxLength={50}
+                disabled={dislikes.length >= 3}
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="checkBtn"
+                onClick={addDislike}
+                disabled={!dislikeInput.trim() || dislikes.length >= 3}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {dislikes.length > 0 && (
+            <div className="dislikeTagsContainer">
+              {dislikes.map((dislike, index) => (
+                <div className="dislikeTag" key={index}>
+                  <span>{dislike}</span>
+                  <button
+                    type="button"
+                    className="dislikeRemoveBtn"
+                    onClick={() => removeDislike(index)}
+                    aria-label="Remove"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="dislikeCounter">
+            {dislikes.length} / 3 ingredients added
+          </div>
+        </div>
+
+        <div className="RegisterActions">
+          <button
+            type="submit"
+            disabled={loading || checkStatus.nickname !== true}
+          >
+            {loading ? "Signing up..." : "Sign Up"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
