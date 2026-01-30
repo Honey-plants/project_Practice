@@ -26,15 +26,24 @@ export function UploadProvider({ children }) {
   const [stateUpload, dispatch] = useReducer(reducer, initial);
 
   const uploadActions = {
-    upload: async ({ file, type, owner_id }) => {
+    upload: async ({ file, type }) => {
       dispatch({ type: "UPLOADING" });
       try {
         const fd = new FormData();
         fd.append("file", file);
-        fd.append("type", type); // review/community/member
-        if (owner_id != null) fd.append("owner_id", String(owner_id));
+        fd.append("type", type); // menu / receipt
+
+        console.log("fd file :: ", file)
+        console.log("fd type:: ", type)
+
+        console.log("fd data :: ", fd.data)
+
+        console.log("upload fd file :: ", fd.file)
+        console.log("upload fd type :: ", fd.type)
 
         const r = await UploadAPI.upload(fd);
+        console.log("실제 넘어가는 값 :: ", r.data)
+
         dispatch({ type: "DONE", payload: r.data });
         return r.data;
       } catch (e) {
