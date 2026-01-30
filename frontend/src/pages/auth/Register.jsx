@@ -1,108 +1,191 @@
-import React, { useEffect, useState } from "react";
+// import "../../styles/Register.css";
+import { useState } from "react";
+import Modal from "../../components/common/Modal";
+import { useNavigate } from "react-router-dom";
+import { COUNTRY_OPTIONS, GENDER } from "../../contents/register";
 import { MemberAPI } from "../../api/memberApi";
-import { useNavigate, Link } from "react-router-dom";
+
+/* 정규식 */
+const REGEX = {
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
+  password: /^.{8,20}$/,
+};
+
+function validate(formData) {
+  const errors = {};
+  const email = formData.email.trim();
+
+  if (!email) errors.email = "Email is required.";
+  else if (!REGEX.email.test(email)) errors.email = "Invalid email format.";
+
+  if (!formData.password) {
+    errors.password = "Password is required.";
+  } else if (!REGEX.password.test(formData.password)) {
+    errors.password = "Password must be 8~20 characters.";
+  }
+
+  if (formData.password !== formData.passwordConfirm) {
+    errors.passwordConfirm = "Password does not match.";
+  }
+
+  return errors;
+}
 
 export default function Register() {
   const nav = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [pw, setPw] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [gender, setGender] = useState("");
-  const [country, setCountry] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    nickname: "",
+    password: "",
+    passwordConfirm: "",
+    gender: "",
+    country: "",
+  });
 
-  const [categories, setCategories] = useState([]);
-  const [selectedItemIds, setSelectedItemIds] = useState(new Set());
-  const [error, setError] = useState("");
+  const [modalType, setModalType] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const r = await MemberAPI.getCategoriesWithItems();
-        // 기대 형태: [{category_id, category_label_ko, items:[{item_id, item_label_ko}]}]
-        setCategories(Array.isArray(r.data) ? r.data : r.data?.items ?? []);
-      } catch (e) {
-        setError(e.message || "카테고리/아이템 조회 실패");
-      }
-    })();
-  }, []);
-
-  const toggleItem = (itemId) => {
-    setSelectedItemIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(itemId)) next.delete(itemId);
-      else next.add(itemId);
-      return next;
-    });
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  const submitRegister = async () => {
+    const errors = validate(formData);
+    if (Object.keys(errors).length > 0) {
+      alert(Object.values(errors).join("\n"));
+      return false;
+    }
+
+    const payload = {
+      email: formData.email.trim(),
+      password: formData.password,
+      nickname: formData.nickname.trim(),
+      gender: formData.gender || null,
+      country: formData.country || null,
+    };
+
+    console.log("payload :: ", payload)
 
     try {
-      await MemberAPI.register({
-        email,
-        password: pw,
-        nickname,
-        gender: gender || null,
-        country: country || null,
-        item_ids: Array.from(selectedItemIds),
-      });
+      await MemberAPI.register(payload);
+      alert("Register complete!");
+      return true;
+    } catch (e) {
+      console.error(e);
+      alert(e?.response?.data?.message || "Register failed");
+      return false;
+    }
+  };
 
-      nav("/login");
-    } catch (e2) {
-      setError(e2.message || "회원가입 실패");
+  const openModal = (type) => {
+    setModalType(type);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirm = async () => {
+    if (modalType === "cancel") {
+      setIsModalOpen(false);
+      nav("/");
+      return;
+    }
+
+    if (modalType === "Register") {
+      const ok = await submitRegister();
+      if (ok) nav("/");
+      setIsModalOpen(false);
     }
   };
 
   return (
-    <div style={{ padding: 16, maxWidth: 900 }}>
-      <h2>Register</h2>
+    <div className="Register">
+      <section>Create your account</section>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10, maxWidth: 420 }}>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" />
-        <input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="password" type="password" />
-        <input value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="nickname" />
-        <input value={gender} onChange={(e) => setGender(e.target.value)} placeholder="gender(optional)" />
-        <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="country(optional)" />
-        <button type="submit">Create Account</button>
-        <div>
-          <Link to="/login">Go Login</Link>
-        </div>
-      </form>
+      <section>
+        <label>
+          E-mail
+          <input
+            name="email"
+            type="text"
+            value={formData.email}
+            onChange={onChange}
+            placeholder="example@email.com"
+          />
+        </label>
+        <label>
+          Nickname
+          <input
+            name="nickname"
+            type="text"
+            placeholder="Please write 10 characters or less"
+            maxLength={10}
+            value={formData.nickname}
+            onChange={onChange}
+            style={{ flex: 1 }}
+          />
+        </label>
+        <label>
+          Password
+          <input
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={onChange}
+            placeholder="8~20 characters"
+          />
+        </label>
 
-      <hr style={{ margin: "16px 0" }} />
+        <label>
+          Password Check
+          <input
+            name="passwordConfirm"
+            type="password"
+            value={formData.passwordConfirm}
+            onChange={onChange}
+          />
+        </label>
 
-      <h3>Category / Item 선택</h3>
-      {error && <div className="errorBox">{error}</div>}
+        <label>
+          Gender
+          <select name="gender" value={formData.gender} onChange={onChange}>
+            <option value="">Select gender</option>
+            {GENDER.map((g) => (
+              <option key={g.value} value={g.value}>
+                {g.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
-      {categories.map((c) => (
-        <div key={c.category_id ?? c.id} className="card">
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>
-            {c.category_label_ko ?? c.category_label_en ?? c.label ?? "Category"}
-          </div>
+        <label>
+          Country
+          <select name="country" value={formData.country} onChange={onChange}>
+            <option value="">Select Country</option>
+            {COUNTRY_OPTIONS.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {(c.items || []).map((it) => {
-              const itemId = it.item_id ?? it.id;
-              const label = it.item_label_ko ?? it.item_label_en ?? it.label ?? `item#${itemId}`;
-              const checked = selectedItemIds.has(itemId);
+      <section>
+        <button onClick={() => openModal("cancel")}>Cancel</button>
+        <button onClick={() => openModal("Register")}>Register</button>
+      </section>
 
-              return (
-                <label key={itemId} style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleItem(itemId)}
-                  />
-                  {label}
-                </label>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleConfirm}
+        message={
+          modalType === "cancel"
+            ? "Are you sure you want to cancel?"
+            : "Do you want to proceed?"
+        }
+      />
     </div>
   );
 }

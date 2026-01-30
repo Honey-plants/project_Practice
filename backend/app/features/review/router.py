@@ -9,7 +9,7 @@ router = APIRouter(prefix="/review", tags=["review"])
 
 # 영수증 검증 및 리뷰 생성
 @router.post("/upload", response_model=UploadInputResponse)
-async def review_upload(type: str = Form("review"), image: UploadFile = File(...), current=Depends(get_current_member), ):
+async def review_upload(type: str = Form("receipt"), image: UploadFile = File(...), current=Depends(get_current_member), ):
     obj = await upload_input_file(upload_type=type, member_id=current.member_id, upload=image)
 
     cleanup_download = lambda: None
@@ -20,6 +20,7 @@ async def review_upload(type: str = Form("review"), image: UploadFile = File(...
         # review AI 로직 실행
         # result = review_service.process(local_path)
 
+        # return 사용 목적에 맞춰 수정 하시길 바랍니다. 이상.
         return UploadInputResponse(
             upload_type=obj.upload_type,
             member_id=obj.member_id,

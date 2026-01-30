@@ -1,0 +1,12 @@
+image:
+    repository: 624280434939.dkr.ecr.ap-northeast-2.amazonaws.com/projecta-frontend
+    tag: dev-001
+    pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+ingress:
+    enabled: true
+    className: nginx
+    host: app.local
+    path: /

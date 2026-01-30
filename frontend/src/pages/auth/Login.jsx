@@ -14,7 +14,8 @@ export default function Login() {
     e.preventDefault();
     setError("");
     try {
-      await authActions.login(email, pw);
+      const ok = await authActions.login(email, pw);
+      if (ok) nav("/");
       nav("/"); // 현재는 메인페이지로 이동
 //       nav("/member/profile");
     } catch (e2) {

@@ -3,9 +3,18 @@ __pycache__/
 *.pyc
 
 # venv
-.venv/
-venv/
-env/
+/.venv/
+/venv/
+/env/
+
+
+# allow GitOps values
+!k8s/env/**
+
+# (선택) 로컬에서만 쓰는 민감 파일은 따로 무시
+k8s/env/**/secrets*.yaml
+k8s/env/**/.env
+
 
 # env files
 .env
@@ -44,3 +53,6 @@ env/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# iamgefile
+.upload/
