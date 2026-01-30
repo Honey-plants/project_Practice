@@ -53,7 +53,7 @@ config:
 
 # 비밀 값(Secret로 생성 + /run/app-secrets 로 마운트)
 secrets:
-    enabled: true
+    enabled: false
     # 아래는 "문자열"로 넣지 말고, 실제로는 env values에서 넣거나
     # (운영) External Secrets로 대체하는 것을 권장
     OPENAI_API_KEY: ""
@@ -66,6 +66,11 @@ secretMount:
     openaiApiKeyKey: OPENAI_API_KEY
     dbPasswordKey: DB_PASSWORD
     jwtSecretKeyKey: JWT_SECRET_KEY
+
+# NOTE:
+# - worker fullname is fixed to "worker" (see templates/_helpers.tpl)
+# - this means worker Secret name is always "worker-secrets" per namespace
+# - if you need per-release Secrets, set fullnameOverride per app
 
 resources: {}
 nodeSelector: {}

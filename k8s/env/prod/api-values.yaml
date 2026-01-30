@@ -21,7 +21,7 @@ secretsMount:
     jwtSecretKeyKey: jwt_secret_key
 
 secret:
-    enabled: true
+    enabled: false
     dbPassword: PROD_DB_PASSWORD_CHANGE_ME
     jwtSecretKey: PROD_JWT_CHANGE_ME
 

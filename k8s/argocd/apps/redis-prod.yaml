@@ -15,7 +15,7 @@ spec:
       chart: redis
       targetRevision: 24.1.0
       helm:
-        releaseName: redis
+        releaseName: redis-prod
         valueFiles:
           - $values/k8s/env/prod/redis-values.yaml
 

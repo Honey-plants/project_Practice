@@ -26,9 +26,18 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "14"))
 
 # Redis
-REDIS_HOST=os.getenv("REDIS_HOST", "127.0.0.1")
-REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
-REDIS_DB = int(os.getenv("REDIS_DB", "0"))
+from urllib.parse import urlparse
+
+_redis_host = os.getenv("REDIS_HOST", "127.0.0.1")
+_redis_port = os.getenv("REDIS_PORT", "6379")
+_redis_db = os.getenv("REDIS_DB", "0")
+
+REDIS_URL = os.getenv("REDIS_URL", f"redis://{_redis_host}:{_redis_port}/{_redis_db}")
+_u = urlparse(REDIS_URL)
+
+REDIS_HOST = _u.hostname or _redis_host
+REDIS_PORT = _u.port or int(_redis_port)
+REDIS_DB = int((_u.path or f"/{_redis_db}").lstrip("/") or _redis_db)
 
 
 print("ENV_PATH =", ENV_PATH)
