@@ -1,6 +1,13 @@
-from pydantic import BaseModel
 from typing import Any, Dict
+from pydantic import BaseModel
 
-class MenuAnalyzeResponse(BaseModel):
-    ok: bool = True
+
+class MenuUploadResponse(BaseModel):
+    job_id: str
+    upload_type: str = "menu"
+    result: Dict[str, Any]
+
+
+class MenuResultResponse(BaseModel):
+    job_id: str
     result: Dict[str, Any]

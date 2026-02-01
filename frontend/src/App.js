@@ -21,6 +21,9 @@ import ReviewDetail from "./pages/review/ReviewDetail";
 import ReviewCreate from "./pages/review/ReviewCreate";
 import ReviewEdit from "./pages/review/ReviewEdit";
 
+// test
+import ReviewTestCreate from "./pages/review/ReviewTestCreate";
+
 import UploadTest from "./pages/upload/UploadTest";
 
 import Register from "./pages/auth/Register";
@@ -135,6 +138,16 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/review/test"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <ReviewTestCreate />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/review/:id/edit"
             element={

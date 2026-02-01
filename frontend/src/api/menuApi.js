@@ -1,7 +1,13 @@
 import api from "./axiosInstance";
 
-export const UploadAPI = {
+export const MenuAPI = {
+  uploadMenu: (file) => {
+    const fd = new FormData();
+    fd.append("type", "menu");
+    fd.append("file", file);
 
-  upload: (formData) => api.post("/menu/upload", formData),
-
+    return api.post("/menu/upload", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
 };

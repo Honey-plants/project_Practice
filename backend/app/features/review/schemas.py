@@ -1,3 +1,28 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, Field
+
+
+class ReceiptVerifyResponse(BaseModel):
+    receipt_id: str
+    extracted: Dict[str, Any]
+
+
+class ReviewCreateResponse(BaseModel):
+    review_id: int
+    image_urls: List[str] = Field(default_factory=list)
+
+
+class ReviewCreatePayload(BaseModel):
+    receipt_id: str
+    title: str
+    content: str
+    rating: int
+    location: Optional[str] = None
+    menu_name: Optional[str] = None
+
+
 # from datetime import datetime
 # from typing import Optional
 # from pydantic import BaseModel, Field
