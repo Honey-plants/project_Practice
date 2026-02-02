@@ -35,20 +35,20 @@ export default function App() {
         <Header />
 
         <Routes>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-
+          {/* 공개 페이지 (로그인 불필요) */}
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-
-          {/* Routes 안에 추가 */}
-          {/* auth */}
           <Route path="/register" element={<Register />} />
+
+          {/* 커뮤니티 - 목록/상세 공개 */}
+          <Route path="/community" element={<CommunityList />} />
+          <Route path="/community/:id" element={<CommunityDetail />} />
+
+          {/* 리뷰 - 목록/상세 공개 */}
+          <Route path="/review" element={<ReviewList />} />
+          <Route path="/review/:id" element={<ReviewDetail />} />
+
+          {/* 관리자 페이지 */}
           <Route
             path="/admin"
             element={
@@ -58,6 +58,7 @@ export default function App() {
             }
           />
 
+          {/* 비공개 페이지 (로그인 필수) */}
           {/* member */}
           <Route
             path="/member/profile"
@@ -76,23 +77,7 @@ export default function App() {
             }
           />
 
-          {/* community */}
-          <Route
-            path="/community"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <CommunityList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/community/:id"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <CommunityDetail />
-              </ProtectedRoute>
-            }
-          />
+          {/* community - 작성/수정은 로그인 필수 */}
           <Route
             path="/community/new"
             element={
@@ -110,23 +95,7 @@ export default function App() {
             }
           />
 
-          {/* review */}
-          <Route
-            path="/review"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <ReviewList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/review/:id"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <ReviewDetail />
-              </ProtectedRoute>
-            }
-          />
+          {/* review - 작성/수정은 로그인 필수 */}
           <Route
             path="/review/new"
             element={
