@@ -8,6 +8,7 @@ from sqlalchemy import select
 
 from backend.app.core import config
 from backend.app.common.utils.debug import log_exception
+from backend.app.common.utils.util import ensure_list, dumps_json, parse_ids
 from backend.app.common.service.file_upload_service import (
     build_temp_prefix,
     ensure_local_path,
@@ -18,6 +19,8 @@ from backend.app.common.service.receipt_session_service import ReceiptSessionSer
 from backend.app.features.review.schemas import ReviewContentUpdate
 from backend.app.models.img_file import ImgFile
 from backend.app.models.review import Review
+from backend.app.models.restrictions.item import Item
+from backend.app.models.restrictions.category import Category
 from backend.app.models.restrictions import MemberRestrictions
 
 def run_receipt_ai_step5(*, image_path: str, receipt_id: str, base_dir: Path) -> Dict[str, Any]:
@@ -107,18 +110,6 @@ async def verify_receipt(*, member_id: int, file: UploadFile, receipt_id: str) -
         # delete_prefix(prefix_key=tmp_prefix)  # ❌ 하면 안됨
 
 
-def _pick_location(final_payload: Dict[str, Any]) -> str:
-    # final payload 구조에 맞춰서 필요 값 뽑기
-    return final_payload.get("store_name") or final_payload.get("address") or "unknown"
-
-
-def _pick_menu_name(final_payload: Dict[str, Any]) -> str:
-    names = final_payload.get("menu_name") or []
-    if isinstance(names, list) and names:
-        return str(names[0])
-    return final_payload.get("menu") or "unknown"
-
-
 async def create_review_from_receipt(
     *,
     db: Session,
@@ -137,40 +128,45 @@ async def create_review_from_receipt(
 
     final_payload = session.get("payload") or {}
 
+    # x, y list 작업
+    location_list = []
+    x = final_payload.get('coords')['x']
+    y = final_payload.get('coords')['y']
 
-    # location  위, 경도 값
-    location = _pick_location(final_payload)
-    # menu_name , 형태로 저장 // 출력은 list형태로
-    menu_name = _pick_menu_name(final_payload)
+    location_list.append(x)
+    location_list.append(y)
+
+    # menu_en list 작업
+    menu_en_list = ensure_list(final_payload.get('menu_name'))
+
+    # review Items
+    member_item_ids = db.execute(
+        select(MemberRestrictions.item_id)
+        .join(Item, Item.item_id == MemberRestrictions.item_id)
+        .join(Category, Category.category_id == Item.category_id)
+        .where(MemberRestrictions.member_id == member_id)
+        .where(Item.item_active == 1)
+        .where(Category.category_active == 1)
+    ).scalars().all()
 
     if rating < 1 or rating > 5:
         raise HTTPException(status_code=400, detail="rating must be 1~5")
     if len(images) > 3:
         raise HTTPException(status_code=400, detail="images max 3")
 
-    member_item_ids = db.execute(
-        select(MemberRestrictions.item_id)
-        .where(MemberRestrictions.member_id == member_id)
-    ).scalars().all()
-
-    # 중복 제거 + 정렬(선택)
-    unique_ids = sorted(set(int(x) for x in member_item_ids))
-
-    # CSV 문자열로 만들기: "10,11,25" (없으면 None 또는 "" 정책 선택)
-    review_items_csv = ",".join(map(str, unique_ids)) if unique_ids else None
-
     review = Review(
         review_title=title,
         review_content=content,
         rating=rating,
-        location=location,
-        menu_name=menu_name,
+        location=dumps_json(location_list),
+        menu_name=dumps_json(menu_en_list),
         member_id=member_id,
         available=True,
-        review_items=review_items_csv,
+        review_items=dumps_json(member_item_ids),
     )
     db.add(review)
     db.flush()
+
 
     image_urls: List[str] = []
 
@@ -211,7 +207,7 @@ def list_reviews(db: Session, limit: int = 50) -> List[Dict[str, Any]]:
     # 최신순
     reviews = db.execute(
         select(Review)
-        .where(Review.available == True)  # available만 노출
+        # .where(Review.available == True)  # available만 노출
         .order_by(Review.review_id.desc())
         .limit(limit)
     ).scalars().all()
@@ -235,6 +231,8 @@ def list_reviews(db: Session, limit: int = 50) -> List[Dict[str, Any]]:
 
     out: List[Dict[str, Any]] = []
     for r in reviews:
+        print("r :: ", r.review_items)
+
         out.append({
             "review_id": r.review_id,
             "member_id": r.member_id,
@@ -242,10 +240,10 @@ def list_reviews(db: Session, limit: int = 50) -> List[Dict[str, Any]]:
             "review_content": r.review_content,
             "rating": r.rating,
             "location": r.location,
-            # "menu_name": r.menu_name,
+            "available": r.available,
             "menu_name": [r.menu_name] if r.menu_name else [],
             # "menu_name": _parse_csv_ids(r.menu_name),
-            "review_items": _parse_csv_ids(r.review_items),
+            "review_items": parse_ids(r.review_items),
             # 프론트가 created_at/updated_at 키를 기대해서 맞춰줌
             "created_at": r.create_at.isoformat() if getattr(r, "create_at", None) else None,
             "updated_at": r.update_at.isoformat() if getattr(r, "update_at", None) else None,
@@ -276,11 +274,12 @@ def get_review_detail(db: Session, review_id: int) -> Dict[str, Any]:
         "review_content": r.review_content,
         "rating": r.rating,
         "location": r.location,
+        "available": r.available,
         # "menu_name": r.menu_name,
         "menu_name": [r.menu_name] if r.menu_name else [],
         # "menu_name": _parse_csv_ids(r.menu_name),
         # "menu_names": [r.menu_name] if r.menu_name else [],
-        "review_items": _parse_csv_ids(r.review_items),
+        "review_items": parse_ids(r.review_items),
         "created_at": r.create_at.isoformat() if getattr(r, "create_at", None) else None,
         "updated_at": r.update_at.isoformat() if getattr(r, "update_at", None) else None,
         "image_urls": [img.storage_path for img in imgs],
@@ -316,10 +315,42 @@ def update_review_content_only(
     }
 
 # Review_items str -> list 변환 출력
-def _parse_csv_ids(raw) -> list[int]:
-    if not raw:
-        return []
-    if isinstance(raw, list):
-        return [int(x) for x in raw]
-    # raw == "3,7,12"
-    return [int(x) for x in str(raw).split(",") if str(x).strip().isdigit()]
+# def _parse_csv_ids(raw) -> list[int]:
+#     if not raw:
+#         return []
+#     if isinstance(raw, list):
+#         return [int(x) for x in raw]
+#     # raw == "3,7,12"
+#     return [int(x) for x in str(raw).split(",") if str(x).strip().isdigit()]
+#
+#
+# def parse_ids(raw: Any) -> list[int]:
+#     if raw is None:
+#         return []
+#     if isinstance(raw, list):
+#         return [int(x) for x in raw]
+#
+#     s = str(raw).strip()
+#     if not s:
+#         return []
+#
+#     # JSON 문자열이면 JSON으로 먼저 파싱
+#     if s.startswith("[") and s.endswith("]"):
+#         try:
+#             arr = json.loads(s)
+#             if isinstance(arr, list):
+#                 return [int(x) for x in arr]
+#         except Exception:
+#             pass
+#
+#     # fallback: "1,2,3" 같은 CSV
+#     out = []
+#     for p in s.split(","):
+#         p = p.strip()
+#         if not p:
+#             continue
+#         try:
+#             out.append(int(p))
+#         except ValueError:
+#             continue
+#     return out

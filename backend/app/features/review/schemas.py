@@ -20,11 +20,10 @@ class ReviewCreatePayload(BaseModel):
     title: str
     content: str
     rating: int
-    location: Optional[str] = None
-    menu_name: Optional[str] = None
+    location: List[str] = Field(default_factory=list)
     # 추후 ocr 작업 끝나면 list로 변경 예정
-    # menu_names: List[str] = Field(default_factory=list)
-    review_items: List[int] = Field(default_factory=list)
+    menu_name: List[str] = Field(default_factory=list)
+    review_items: List[str] = Field(default_factory=list)
 
 
 class ReviewRead(BaseModel):
@@ -33,6 +32,7 @@ class ReviewRead(BaseModel):
     review_content: str
     rating: int
     location: Optional[str] = None
+    available: bool
     # menu_name: Optional[str] = None
     menu_name: List[str] = Field(default_factory=list)
     image_urls: List[str] = Field(default_factory=list)
