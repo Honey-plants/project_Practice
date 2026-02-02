@@ -1,1 +1,0 @@
-# Infer menu prompt

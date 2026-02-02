@@ -1,0 +1,21 @@
+{
+  "store_name": "남도연프리미엄",
+  "store_name_en": "Namdo Yeon Premium",
+  "address": "경기도 화성시 동탄대로5길 9 5층(호수 가까운 곳)",
+  "city": "경기도",
+  "phone": "0313767137",
+  "coords": {
+    "x": "1271058395",
+    "y": "371676014"
+  },
+  "menu_name": [
+    "간장꼬막정식",
+    "콜라",
+    "서비스"
+  ],
+  "menu_en": [
+    "Soy Sauce Cockle Set Meal",
+    "Coke",
+    "Complimentary"
+  ]
+}

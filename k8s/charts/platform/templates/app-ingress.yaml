@@ -8,20 +8,20 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: app.local
+    - host: {{ default "app.local" .Values.host }}
       http:
         paths:
           - path: /api(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: api
+                name: {{ default "api" .Values.apiServiceName }}
                 port:
                   number: 8000
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: frontend
+                name: {{ default "frontend" .Values.frontendServiceName }}
                 port:
                   number: 80

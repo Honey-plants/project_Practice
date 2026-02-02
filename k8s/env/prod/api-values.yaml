@@ -1,0 +1,32 @@
+image:
+    repository: 624280434939.dkr.ecr.ap-northeast-2.amazonaws.com/projecta-api
+    tag: dev-001
+    pullPolicy: IfNotPresent
+
+env:
+    APP_ENV: prod
+    DB_HOST: database-1.c7oeqq6c6a58.ap-northeast-2.rds.amazonaws.com
+    DB_PORT: "3306"
+    DB_NAME: app_db
+    DB_USER: app_user
+    REDIS_URL: "redis://redis-master.app-prod.svc.cluster.local:6379/0"
+    QUEUE_NAME_MENU_ASSISTANT: "cicdex:jobs:menu_assistant"
+    QUEUE_NAME_JOURNAL: "cicdex:jobs:journal"
+    QUEUE_NAME_REVIEW: "cicdex:jobs:review"
+
+secretsMount:
+    enabled: true
+    mountPath: /run/app-secrets
+    dbPasswordKey: db_password
+    jwtSecretKeyKey: jwt_secret_key
+
+secret:
+    enabled: true
+    dbPassword: PROD_DB_PASSWORD_CHANGE_ME
+    jwtSecretKey: PROD_JWT_CHANGE_ME
+
+ingress:
+    enabled: true
+    className: nginx
+    host: app.example.com
+    path: /api

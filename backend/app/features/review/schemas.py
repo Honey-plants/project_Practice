@@ -41,6 +41,8 @@ class ReviewRead(BaseModel):
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
+    available: bool
+
 class ReviewContentUpdate(BaseModel):
     review_content: str = Field(..., min_length=1, max_length=5000)
 

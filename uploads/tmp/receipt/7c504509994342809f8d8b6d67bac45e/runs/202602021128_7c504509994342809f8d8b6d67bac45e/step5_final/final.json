@@ -1,0 +1,18 @@
+{
+  "store_name": null,
+  "store_name_en": null,
+  "address": null,
+  "city": null,
+  "phone": "025654593",
+  "coords": null,
+  "menu_name": [
+    "뼈없는찜닭대",
+    "당면추가",
+    "공깃밥"
+  ],
+  "menu_en": [
+    "Boneless Braised Chicken (Large)",
+    "Add Glass Noodles",
+    "Steamed Rice"
+  ]
+}

@@ -15,6 +15,7 @@ import CommunityList from "./pages/community/CommunityList";
 import CommunityDetail from "./pages/community/CommunityDetail";
 import CommunityCreate from "./pages/community/CommunityCreate";
 import CommunityEdit from "./pages/community/CommunityEdit";
+import Community from "./pages/community/Community";
 
 import ReviewList from "./pages/review/ReviewList";
 import ReviewDetail from "./pages/review/ReviewDetail";
@@ -86,7 +87,7 @@ export default function App() {
             path="/community"
             element={
               <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <CommunityList />
+                <Community />
               </ProtectedRoute>
             }
           />
@@ -140,7 +141,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
+{/* 
           <Route
             path="/review/test"
             element={
@@ -148,7 +149,7 @@ export default function App() {
                 <ReviewTestCreate />
               </ProtectedRoute>
             }
-          />
+          /> */}
 
           <Route
             path="/review/:id/edit"
@@ -165,6 +166,15 @@ export default function App() {
             element={
               <ProtectedRoute excludeRoles={["ADMIN"]}>
                 <UploadTest />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/menu/upload"
+            element={
+              <ProtectedRoute>
+                {/* <CameraUploadPage /> */}
               </ProtectedRoute>
             }
           />
