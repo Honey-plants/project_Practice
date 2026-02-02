@@ -15,6 +15,7 @@ from backend.app.common.service.file_upload_service import (
     upload_input_file,
     save_permanent_asset,
 )
+
 from backend.app.common.service.receipt_session_service import ReceiptSessionService
 from backend.app.features.review.schemas import ReviewContentUpdate
 from backend.app.models.img_file import ImgFile
@@ -107,7 +108,7 @@ async def verify_receipt(*, member_id: int, file: UploadFile, receipt_id: str) -
     finally:
         cleanup()
         #  정책: receipt는 결과를 temp에 담아둘 것이므로 prefix 삭제하지 않는다.
-        # delete_prefix(prefix_key=tmp_prefix)  # ❌ 하면 안됨
+        # delete_prefix(prefix_key=tmp_prefix)  # ❌ 하면 안됨`
 
 
 async def create_review_from_receipt(

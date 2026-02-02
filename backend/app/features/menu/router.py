@@ -59,4 +59,4 @@ async def upload_menu(
     finally:
         cleanup()
         #  menu 정책: 작업 끝나면 temp 삭제
-        delete_prefix(prefix_key=tmp_prefix)
+        # delete_prefix(prefix_key=tmp_prefix)

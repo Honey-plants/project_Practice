@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT_DIR))
 
+import asyncio
 from fastapi import FastAPI, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -11,6 +12,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api_router import api_router
 from backend.app.core import config
+
+
+from backend.app.common.utils.tmp_cleanup import cleanup_receipt_tmp
+from backend.app.common.utils.redis_lock import acquire_lock
+
+from backend.app.core.cache.redis import redis_client
 
 app = FastAPI()
 
@@ -49,3 +56,28 @@ def favicon():
     return Response(status_code=204)
 
 app.include_router(api_router)
+
+
+# clear
+async def _tmp_cleanup_loop():
+    """
+    uploads/tmp/receipt 하위 TTL 지난 폴더 주기 삭제
+    - redis lock으로 멀티 워커 중복 실행 방지
+    """
+    lock_key = "lock:cleanup:receipt_tmp"
+    lock_ttl = max(30, config.TMP_CLEAN_INTERVAL_SECONDS - 1)
+
+    while True:
+        try:
+            if acquire_lock(redis_client, lock_key, lock_ttl):
+                deleted = cleanup_receipt_tmp(config.LOCAL_TMP_ROOT, config.TMP_TTL_SECONDS)
+                # print(f"[tmp_cleanup] deleted receipt dirs: {deleted}")
+        except Exception:
+            pass
+
+        await asyncio.sleep(config.TMP_CLEAN_INTERVAL_SECONDS)
+
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(_tmp_cleanup_loop())
