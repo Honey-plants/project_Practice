@@ -14,7 +14,7 @@ def summary(data: Dict[str, Any]) -> None:
 
     total = len(items_norm)
 
-    # ✅ Step_03 개편 반영: "normalized"가 아니라 menu_name_norm 기준
+    #  Step_03 개편 반영: "normalized"가 아니라 menu_name_norm 기준
     kept = sum(1 for x in items_norm if x.get("menu_name_norm"))
     dropped = total - kept
 
@@ -47,7 +47,7 @@ def _match_keywords(texts: List[str], keywords: Optional[List[str]]) -> bool:
 
 def show_merged(items: List[Dict[str, Any]], keywords: Optional[List[str]] = None) -> None:
     """
-    ✅ Step_03 개편 반영:
+     Step_03 개편 반영:
     - items_merged에는 text(대표), menu_variants_norm, detail_parts_norm 이 들어갈 수 있음
     """
     print("\n=== MERGED MENU CANDIDATES ===")
@@ -74,7 +74,7 @@ def show_menu_and_details(items: List[Dict[str, Any]], keywords: Optional[List[s
     """
     Step_03 구조화 결과 확인용 (items_normalized)
     - menu_name_norm
-    - menu_name_variants_norm  ✅ 추가
+    - menu_name_variants_norm   추가
     - detail_parts_norm
     """
     print("\n=== STRUCTURED (items_normalized): menu_name_norm / variants / detail_parts_norm ===")

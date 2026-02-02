@@ -4,11 +4,10 @@ import json
 import re
 
 def translate_to_en(
-    texts: List[str],
-    *,
-    api_key: str,
+        texts: List[str],
+        *,
+        api_key: str,
 ) -> Dict[str, str]:
-
     client = genai.Client(api_key=api_key)
 
     prompt = f"""

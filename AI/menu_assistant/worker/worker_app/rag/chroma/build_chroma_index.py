@@ -14,7 +14,7 @@ BATCH_SIZE = 2000  # max batch size 이하로 안전하게
 EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 # ==============================
-# PATHS (✅ menu_assistant 기준 고정)
+# PATHS ( menu_assistant 기준 고정)
 # ==============================
 BASE_DIR = Path(__file__).resolve().parents[4]  # menu_assistant/
 DATA_PATH = BASE_DIR / "data" /"datasets"/"raw"/ "menu_seed_with_alg_tags_variants_v3.json"
@@ -76,17 +76,17 @@ def main():
     documents: List[str] = []
     metadatas: List[Dict[str, Any]] = []
 
-    # ✅ 문서는 메뉴명 중심으로 단순화 (매칭 품질 ↑)
+    #  문서는 메뉴명 중심으로 단순화 (매칭 품질 ↑)
     for idx, item in enumerate(data):
         menu = str(item.get("menu", "")).strip()
         if not menu:
             continue
 
         ingredients = safe_str_list(item.get("ingredients_ko"))
-        alg_tags = safe_str_list(item.get("alg_tags") or item.get("ALG_TAG"))  # ✅ 호환
-        variants = safe_str_list(item.get("variants"))  # ✅ 400 데이터셋 기준
+        alg_tags = safe_str_list(item.get("alg_tags") or item.get("ALG_TAG"))  #  호환
+        variants = safe_str_list(item.get("variants"))  #  400 데이터셋 기준
 
-        ids.append(str(item.get("id") or f"menu_{idx}"))  # ✅ id가 있으면 사용
+        ids.append(str(item.get("id") or f"menu_{idx}"))  #  id가 있으면 사용
         documents.append(menu)
 
         metadatas.append(
@@ -113,7 +113,7 @@ def main():
         )
         print(f"[INFO] Inserted {e}/{total}")
 
-    # ✅ 삽입 검증
+    #  삽입 검증
     try:
         cnt = collection.count()
     except Exception:

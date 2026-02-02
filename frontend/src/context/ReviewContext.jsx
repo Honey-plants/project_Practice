@@ -55,8 +55,12 @@ export function ReviewProvider({ children }) {
     },
 
     create: async (payload) => (await ReviewAPI.create(payload)).data,
-    update: async (id, payload) => (await ReviewAPI.update(id, payload)).data,
-    remove: async (id) => (await ReviewAPI.remove(id)).data,
+
+    //  content-only
+    updateContent: async (id, review_content) => {
+      const r = await ReviewAPI.updateContent(id, review_content);
+      return r.data;
+    },
   };
 
   return (

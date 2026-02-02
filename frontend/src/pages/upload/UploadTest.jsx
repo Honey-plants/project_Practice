@@ -6,14 +6,12 @@ export default function UploadTest() {
 
   const [type, setType] = useState("review");
   const [file, setFile] = useState(null);
-  const [ownerId, setOwnerId] = useState("");
 
   const onUpload = async () => {
     if (!file) return;
     await uploadActions.upload({
       file,
       type,
-      owner_id: ownerId ? Number(ownerId) : undefined,
     });
   };
 
@@ -23,16 +21,9 @@ export default function UploadTest() {
 
       <div style={{ display: "grid", gap: 10 }}>
         <select value={type} onChange={(e) => setType(e.target.value)}>
-          <option value="review">review</option>
-          <option value="community">community</option>
-          <option value="member">member</option>
+          <option value="menu">menu</option>
+          <option value="receipt">receipt</option>
         </select>
-
-        <input
-          value={ownerId}
-          onChange={(e) => setOwnerId(e.target.value)}
-          placeholder="owner_id (optional)"
-        />
 
         <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
 
