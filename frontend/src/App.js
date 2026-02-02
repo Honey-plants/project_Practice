@@ -85,7 +85,7 @@ export default function App() {
             path="/community"
             element={
               <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <CommunityList />
+                <Community />
               </ProtectedRoute>
             }
           />
@@ -139,7 +139,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
+{/* 
           <Route
             path="/review/test"
             element={
@@ -147,7 +147,7 @@ export default function App() {
                 <ReviewTestCreate />
               </ProtectedRoute>
             }
-          />
+          /> */}
 
           <Route
             path="/review/:id/edit"
@@ -172,7 +172,7 @@ export default function App() {
             path="/menu/upload"
             element={
               <ProtectedRoute>
-                <CameraUploadPage />
+                {/* <CameraUploadPage /> */}
               </ProtectedRoute>
             }
           />

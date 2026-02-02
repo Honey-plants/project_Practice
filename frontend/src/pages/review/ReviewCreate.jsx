@@ -84,41 +84,61 @@ export default function ReviewCreateInline({ onCreated }) {
   };
 
   const create = async () => {
-    setErr("");
-    setMsg("");
+  setErr("");
+  setMsg("");
 
-    if (!receiptId) return setErr("먼저 영수증 인증을 해줘");
-    if (!title.trim()) return setErr("title 입력해줘");
-    if (!content.trim()) return setErr("content 입력해줘");
-    if (images.length > 3) return setErr("이미지는 최대 3장");
+  if (!receiptId) return setErr("먼저 영수증 인증을 해줘");
+  if (!title.trim()) return setErr("title 입력해줘");
+  if (!content.trim()) return setErr("content 입력해줘");
+  if (images.length > 3) return setErr("이미지는 최대 3장");
 
-    setLoadingCreate(true);
-    try {
-      const r = await ReviewAPI.createFromReceipt({
-        receipt_id: receiptId,
-        title,
-        content,
-        rating,
-        images, //  File[] 그대로
-      });
+  const x = extracted?.coords?.x;
+  const y = extracted?.coords?.y;
+  const location = x && y ? `${x},${y}` : undefined;
 
-      setMsg(" 리뷰 생성 완료");
-      onCreated?.(r.data);
+  const menu_name =
+    extracted?.menu_en?.[0] ||
+    extracted?.menu_name?.[0] ||
+    undefined;
 
-      // 초기화
-      setReceiptFile(null);
-      setReceiptId(null);
-      setExtracted(null);
-      setTitle("");
-      setContent("");
-      setRating(5);
-      setImages([]);
-    } catch (e) {
-      setErr(e?.response?.data?.detail || e?.message || "리뷰 생성 실패");
-    } finally {
-      setLoadingCreate(false);
-    }
+  const payload = {
+    receipt_id: receiptId,
+    title,
+    content,
+    rating,
+    location,
+    menu_name,
+    images,
   };
+
+  console.log("[ReviewCreateInline] payload to send:", {
+    ...payload,
+    images: (images || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
+  });
+
+  setLoadingCreate(true);
+  try {
+    const r = await ReviewAPI.createFromReceipt(payload);
+
+    setMsg("리뷰 생성 완료");
+    onCreated?.(r.data);
+
+    setReceiptFile(null);
+    setReceiptId(null);
+    setExtracted(null);
+    setTitle("");
+    setContent("");
+    setRating(5);
+    setImages([]);
+  } catch (e) {
+    console.error("[ReviewCreateInline] create failed:", e);
+    console.error("[ReviewCreateInline] status:", e?.response?.status);
+    console.error("[ReviewCreateInline] response:", e?.response?.data);
+    setErr(e?.response?.data?.detail || e?.message || "리뷰 생성 실패");
+  } finally {
+    setLoadingCreate(false);
+  }
+};
 
   return (
     <div style={{ border: "1px solid #ddd", padding: 12, borderRadius: 8 }}>

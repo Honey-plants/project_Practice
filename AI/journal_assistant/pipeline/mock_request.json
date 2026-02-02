@@ -1,14 +1,8 @@
 {
   "request_id": "jrnl_20260123_0001",
   "template": {
-    "template_id": 2,
-    "template_type": "funny_journal",
-    "language": "en",
-    "style": {
-      "tone": "warm",
-      "humor": "max",
-      "length": "short"
-    }
+    "template_type": 2,
+    "template_id": 2
   },
   "member": {
     "member_id": 17,
@@ -28,8 +22,8 @@
       "rating": 5,
       "city": "충청북도",
       "coords": {
-        "x": "1268597439",
-        "y": "375266925"
+        "x": "1277400846",
+        "y": "378573820"
       }
     },
     {
@@ -39,8 +33,8 @@
       "rating": 4,
       "city": "대구",
       "coords": {
-        "x": "1265493297",
-        "y": "362644108"
+        "x": "1273548632",
+        "y": "376256774"
       }
     },
     {
@@ -50,8 +44,19 @@
       "rating": 5,
       "city": "경기도",
       "coords": {
-        "x": "1274042717",
-        "y": "368267496"
+        "x": "1271129462",
+        "y": "373218802"
+      }
+    },
+    {
+      "review_id": 104,
+      "review_title": "Menu was confusing but app helped",
+      "review_content": "The menu was only in Korean. Using the app translation + allergy note made it easy to order safely.",
+      "rating": 1,
+      "city": "대구",
+      "coords": {
+        "x": "1284216484",
+        "y": "348857549"
       }
     }
   ]

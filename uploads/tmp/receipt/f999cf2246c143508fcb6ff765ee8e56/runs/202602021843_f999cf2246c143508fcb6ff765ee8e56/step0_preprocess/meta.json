@@ -1,0 +1,19 @@
+{
+  "step0_preprocess": {
+    "enable": true,
+    "upscale": 1.6,
+    "use_clahe": true,
+    "clahe_clip": 2.5,
+    "clahe_grid": 8,
+    "denoise_strength": 3,
+    "sharpen": true,
+    "sharpen_amount": 0.7,
+    "output_gray": false
+  },
+  "applied": true,
+  "out_shape": [
+    1273,
+    992,
+    3
+  ]
+}

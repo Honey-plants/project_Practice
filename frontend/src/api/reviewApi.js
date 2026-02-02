@@ -15,12 +15,15 @@ export const ReviewAPI = {
   },
 
   //  리뷰 생성(영수증 receipt_id 기반)
-  createFromReceipt: ({ receipt_id, title, content, rating, images }) => {
+  createFromReceipt: ({ receipt_id, title, content, rating, location, menu_name, images }) => {
     const fd = new FormData();
     fd.append("receipt_id", receipt_id);
     fd.append("title", title);
     fd.append("content", content);
     fd.append("rating", String(rating));
+  
+    if (location) fd.append("location", location);
+    if (menu_name) fd.append("menu_name", menu_name);
 
     (images || []).forEach((img) => fd.append("images", img));
 

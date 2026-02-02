@@ -250,6 +250,7 @@ def list_reviews(db: Session, limit: int = 50) -> List[Dict[str, Any]]:
             "created_at": r.create_at.isoformat() if getattr(r, "create_at", None) else None,
             "updated_at": r.update_at.isoformat() if getattr(r, "update_at", None) else None,
             "image_urls": img_map.get(r.review_id, []),
+            "available": r.available
         })
     return out
 
