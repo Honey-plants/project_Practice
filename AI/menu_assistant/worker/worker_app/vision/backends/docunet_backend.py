@@ -293,9 +293,9 @@ class DocUNetBackend(RectifyBackend):
           - confidence thresholding
           - SAFE fallback: never rotate if all candidates fail to produce a valid document quad
           - candidate testing (prefer 0-degree first for safety)
-          - ✅ tie-break: if 0 vs doctr_inverse are nearly equal, prefer doctr_inverse
-          - ✅ NEW: predictor unavailable -> still run SAFE fallback over (0/90/180/270)
-          - ✅ NEW: if scores tie, prefer 0-degree (do-nothing)
+          -  tie-break: if 0 vs doctr_inverse are nearly equal, prefer doctr_inverse
+          -  NEW: predictor unavailable -> still run SAFE fallback over (0/90/180/270)
+          -  NEW: if scores tie, prefer 0-degree (do-nothing)
         """
         meta: Dict[str, Any] = {
             "enabled": bool(self.config.enable_orientation),
@@ -349,7 +349,7 @@ class DocUNetBackend(RectifyBackend):
 
             best_area = float(find_meta.get("best_area", 0.0))
 
-            # ✅ NEW: 타이브레이커 점수(가로 글줄 구조)
+            #  NEW: 타이브레이커 점수(가로 글줄 구조)
             tls = float(_textline_score(img))
 
             # 가중치는 'best_area 차이'보다 훨씬 작게(동점일 때만 영향) 주는 게 안전
@@ -449,14 +449,14 @@ class DocUNetBackend(RectifyBackend):
                     }
                 )
 
-                # ✅ NEW: 점수가 같으면 0도(무회전) 우선
+                #  NEW: 점수가 같으면 0도(무회전) 우선
                 if (s > best_score) or (s == best_score and int(ang) == 0 and best_ang != 0):
                     best_score = float(s)
                     best_ang = int(ang)
                     best_tag = tag
                     best_detail = detail
 
-            # ✅ SAFETY RULE: if all candidates fail to find quad -> DO NOT ROTATE
+            #  SAFETY RULE: if all candidates fail to find quad -> DO NOT ROTATE
             if all_failed or best_score <= 0.0:
                 meta["fallback"] = {
                     "applied": False,
@@ -475,7 +475,7 @@ class DocUNetBackend(RectifyBackend):
                 )
                 return image_bgr, meta
 
-            # ✅ TIE-BREAK(기존 유지): 0deg vs doctr_inverse 거의 비슷하면 doctr_inverse 우선 (옵션 켰을 때만)
+            #  TIE-BREAK(기존 유지): 0deg vs doctr_inverse 거의 비슷하면 doctr_inverse 우선 (옵션 켰을 때만)
             if (
                     bool(self.config.prefer_doctr_when_tie)
                     and (doctr_correction is not None)
@@ -536,7 +536,7 @@ class DocUNetBackend(RectifyBackend):
             }
             return rotated, fallback
 
-        # ✅ candidates: always test all 4 angles (policy: 정상은 0도 유지)
+        #  candidates: always test all 4 angles (policy: 정상은 0도 유지)
         base_candidates: List[Tuple[int, str]] = [
             (0, "no_rotation"),
             (90, "cand_90"),
@@ -642,7 +642,7 @@ class DocUNetBackend(RectifyBackend):
                     best_tag = tag
                     best_detail = detail
 
-            # ✅ SAFETY RULE: if all candidates fail to find quad -> DO NOT ROTATE
+            #  SAFETY RULE: if all candidates fail to find quad -> DO NOT ROTATE
             if all_failed or best_score <= 0.0:
                 meta["fallback"] = {
                     "applied": False,
@@ -656,7 +656,7 @@ class DocUNetBackend(RectifyBackend):
                 meta["reason"] = "fallback_disabled_all_candidates_failed"
                 return image_bgr, meta
 
-            # ✅ TIE-BREAK: if 0deg and doctr_inverse are both found and areas are nearly equal, prefer doctr_inverse
+            #  TIE-BREAK: if 0deg and doctr_inverse are both found and areas are nearly equal, prefer doctr_inverse
             if (
                     bool(self.config.prefer_doctr_when_tie)
                     and (doctr_correction is not None)

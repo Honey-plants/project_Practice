@@ -1,18 +1,20 @@
-import json
 import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
+from backend.app.core import config
+from backend.app.core.security.deps import get_current_member
+from backend.app.common.utils.debug import log_exception
 from backend.app.common.service.file_upload_service import (
     build_temp_prefix,
     delete_prefix,
     ensure_local_path,
     upload_input_file,
 )
-from backend.app.core.security.deps import get_current_member
-from backend.app.features.menu.schemas import MenuResultResponse, MenuUploadResponse
-from backend.app.features.menu.service import MenuJobStore, run_menu_ai
+from backend.app.features.menu.schemas import MenuUploadResponse
+
+from backend.app.features.menu.service import run_menu_ai
 
 router = APIRouter(prefix="/menu", tags=["menu"])
 
@@ -23,12 +25,11 @@ async def upload_menu(
     file: UploadFile = File(...),
     current=Depends(get_current_member),
 ):
-    print("menu 진입")
-
-    if (type or "").lower() not in ("menu",):
+    if (type or "").lower().strip() != "menu":
         raise HTTPException(status_code=400, detail="type must be 'menu'")
 
     job_id = uuid.uuid4().hex
+    tmp_prefix = build_temp_prefix(upload_type="menu", scope_id=job_id)
 
     try:
         obj = await upload_input_file(
@@ -39,38 +40,23 @@ async def upload_menu(
             is_temp=True,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log_exception("menu.upload_input", e)
+        raise HTTPException(status_code=400, detail=f"upload failed: {e}")
 
     local_path, cleanup = ensure_local_path(obj)
-    tmp_prefix = build_temp_prefix(upload_type="menu", scope_id=job_id)
 
     try:
+        #  runs_root는 temp 아래로 두어도 됨(디버그 목적)
         runs_root = Path(tmp_prefix) / "ai_runs"
+
         result = run_menu_ai(image_path=local_path, runs_root=runs_root, run_id=job_id)
+        return MenuUploadResponse(job_id=job_id, upload_type="menu", result=result)
 
-        MenuJobStore.put(job_id=job_id, member_id=current.member_id, result=result)
-
-        # (디버그) result.json 한번 생성 후 바로 삭제(폴더 삭제로 같이 정리)
-        try:
-            p = Path(tmp_prefix) / "result.json"
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-        except Exception:
-            pass
-
-        return MenuUploadResponse(job_id=job_id, result=result)
     except Exception as e:
+        log_exception("menu.ai_failed", e)
         raise HTTPException(status_code=500, detail=f"menu ai failed: {type(e).__name__}: {e}")
+
     finally:
         cleanup()
+        #  menu 정책: 작업 끝나면 temp 삭제
         delete_prefix(prefix_key=tmp_prefix)
-
-
-@router.get("/result/{job_id}", response_model=MenuResultResponse)
-def get_menu_result(job_id: str, current=Depends(get_current_member)):
-    data = MenuJobStore.get(job_id=job_id)
-    if not data:
-        raise HTTPException(status_code=404, detail="menu result expired")
-    if int(data.get("member_id") or 0) != int(current.member_id):
-        raise HTTPException(status_code=403, detail="forbidden")
-    return MenuResultResponse(job_id=job_id, result=data.get("result") or {})

@@ -14,7 +14,7 @@ def _ext(filename: str) -> str:
 
 class LocalUploadStorage:
     """
-    ✅ config 기준으로 통일:
+     config 기준으로 통일:
     - upload_root: <PROJECT_ROOT>/uploads
     - tmp_root: upload_root/tmp
     - perm_root: upload_root/perm
@@ -51,7 +51,7 @@ class LocalUploadStorage:
 
         base = self.tmp_root if is_temp else self.perm_root
 
-        # ✅ 임시/영구 모두 scope_id 단위 폴더로 격리
+        #  임시/영구 모두 scope_id 단위 폴더로 격리
         scoped_dir = base / upload_type / scope_id
         scoped_dir.mkdir(parents=True, exist_ok=True)
 
@@ -125,7 +125,7 @@ class LocalUploadStorage:
         path = scoped_dir / stored_name
         path.write_bytes(data)
 
-        # ✅ upload_root 기준 상대경로 → /static URL (Windows/Linux 안전)
+        #  upload_root 기준 상대경로 → /static URL (Windows/Linux 안전)
         rel_posix = path.relative_to(self.upload_root).as_posix()
         storage_path = f"/static/{rel_posix}"
 

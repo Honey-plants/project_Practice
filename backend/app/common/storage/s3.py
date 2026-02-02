@@ -18,7 +18,7 @@ def _ext(filename: str) -> str:
 
 class S3UploadStorage:
     """
-    ✅ config 기준으로 통일:
+     config 기준으로 통일:
     - base_prefix: 보통 "upload" (고정)
     - tmp:  upload/<S3_PREFIX_TMP>/...
     - perm: upload/<S3_PREFIX_PERM>/...
@@ -78,7 +78,7 @@ class S3UploadStorage:
             stored_file_name=stored_name,
             mime_type=mime,
             size_bytes=size,
-            prefix_key=prefix_key,  # ✅ 폴더(prefix) 단위 삭제 가능
+            prefix_key=prefix_key,  #  폴더(prefix) 단위 삭제 가능
         )
 
     def delete_input(self, *, file_key: str) -> None:
@@ -128,7 +128,7 @@ class S3UploadStorage:
 
         self.client.put_object(Bucket=self.bucket, Key=key, Body=data, ContentType=mime)
 
-        # ✅ 지금은 key를 storage_path로 저장
+        #  지금은 key를 storage_path로 저장
         # 나중에 CloudFront 붙이면 여기만 URL로 바꿔주면 됨
         storage_path = key
 

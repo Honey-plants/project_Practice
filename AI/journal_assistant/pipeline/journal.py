@@ -313,8 +313,8 @@ if __name__ == "__main__":
         print("이미지 생성 실패")
         raise SystemExit(1)
 
-    # ✅ PNG로 저장
+    #  PNG로 저장
     img = Image.open(BytesIO(image_bytes))
     out_path = "food_journal_cult_10.png"
     img.save(out_path)
-    print(f"✅ saved: {out_path}")
+    print(f" saved: {out_path}")

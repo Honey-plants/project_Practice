@@ -132,4 +132,4 @@
 #     with open(output_filename, "wb") as f:
 #         f.write(image_bytes)
 #
-#     print(f"✅ Food journal image saved as: {output_filename}")
+#     print(f" Food journal image saved as: {output_filename}")

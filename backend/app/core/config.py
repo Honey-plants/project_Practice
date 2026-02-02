@@ -48,3 +48,11 @@ TMP_TTL_SECONDS = int(os.getenv("TMP_TTL_SECONDS", "1800"))  # 30분
 S3_BUCKET = os.getenv("S3_BUCKET", "")
 S3_PREFIX_TMP = os.getenv("S3_PREFIX_TMP", "tmp").strip("/")
 S3_PREFIX_PERM = os.getenv("S3_PREFIX_PERM", "perm").strip("/")
+
+# gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID", "")
+NAVER_API_KEY = os.getenv("NAVER_API_KEY", "")
+
+#  둘 다 지원: NAVER_CLIENT_SECRET 우선, 없으면 NAVER_API_KEY 사용
+NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET") or os.getenv("NAVER_API_KEY", "")

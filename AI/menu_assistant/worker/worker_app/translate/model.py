@@ -136,9 +136,9 @@ class GeminiTranslateClient:
                 "risk_description_en": (risk_out.get("risk_description_en") or "").strip(),
             },
             "comment": {
-                # ✅ schema에 맞는 경로
+                #  schema에 맞는 경로
                 "comment_en": (comment_out.get("comment_en") or "").strip(),
-                # ✅ LLM이 주면 그거 쓰고, 없으면 원본(=risk.comment) fallback
+                #  LLM이 주면 그거 쓰고, 없으면 원본(=risk.comment) fallback
                 "comment_ko": (
                         (comment_out.get("comment_ko") or "").strip()
                         or (src.get("comment_ko") or "").strip()

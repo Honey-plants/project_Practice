@@ -32,10 +32,10 @@ def main():
     # 필요하면 run_step2_ocr_to_ctx에 save_overlay 옵션을 추가해도 됨.
     ctx = run_step2_ocr(ctx, out_dir=Path(args.out), cfg=cfg)
 
-    print("✅ n_items:", ctx.ocr.n_items)
-    print("✅ overlay:", ctx.ocr.overlay_path)
+    print("n_items:", ctx.ocr.n_items)
+    print("overlay:", ctx.ocr.overlay_path)
     if args.debug:
-        print("✅ json:", ctx.debug.jsons.get("ocr_result"))
+        print("json:", ctx.debug.jsons.get("ocr_result"))
 
 
 if __name__ == "__main__":

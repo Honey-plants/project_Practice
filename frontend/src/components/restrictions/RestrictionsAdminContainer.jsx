@@ -4,7 +4,7 @@ import { MetaContext } from "../../context/MetaContext";
 import RestrictionsBatchCreate from "./RestrictionsBatchCreate";
 import RestrictionsAdminList from "./RestrictionsAdminList";
 
-// ✅ 어떤 형태로 와도 "배열"만 뽑아내는 정규화
+//  어떤 형태로 와도 "배열"만 뽑아내는 정규화
 function normalizeRestrictions(resOrPayload) {
   // axios response면 resOrPayload.data가 payload
   const payload = resOrPayload?.data ?? resOrPayload;
@@ -32,7 +32,7 @@ export default function RestrictionsAdminContainer() {
   const [data, setData] = useState([]);
   const [q, setQ] = useState("");
 
-  // ✅ 디버그용 raw 저장
+  //  디버그용 raw 저장
   const [raw, setRaw] = useState(null);
 
   const loadAll = async () => {
@@ -41,14 +41,14 @@ export default function RestrictionsAdminContainer() {
     try {
       const res = await RestrictionsAdminAPI.list({ onlyActive: false });
 
-      // ✅ 디버그: 원본 payload 저장
+      //  디버그: 원본 payload 저장
       setRaw(res?.data ?? res);
 
       const list = normalizeRestrictions(res);
       setData(list);
-      setMsg(`✅ 조회 완료 (${list.length})`);
+      setMsg(` 조회 완료 (${list.length})`);
 
-      // ✅ 콘솔로도 확인
+      //  콘솔로도 확인
       console.log("[ADMIN] raw payload =", res?.data ?? res);
       console.log("[ADMIN] parsed list length =", list.length);
     } catch (e) {
@@ -95,7 +95,7 @@ export default function RestrictionsAdminContainer() {
       if (metaActions?.refresh) await metaActions.refresh({ force: true });
 
       await loadAll();
-      setMsg(`✅ 카테고리 저장 완료 (${c.category_id})`);
+      setMsg(` 카테고리 저장 완료 (${c.category_id})`);
     } catch (e) {
       setMsg(`❌ ${e?.response?.data?.detail || e?.message || "카테고리 저장 실패"}`);
     }
@@ -113,7 +113,7 @@ export default function RestrictionsAdminContainer() {
       if (metaActions?.refresh) await metaActions.refresh({ force: true });
 
       await loadAll();
-      setMsg(`✅ 아이템 저장 완료 (${it.item_id})`);
+      setMsg(` 아이템 저장 완료 (${it.item_id})`);
     } catch (e) {
       setMsg(`❌ ${e?.response?.data?.detail || e?.message || "아이템 저장 실패"}`);
     }
@@ -149,7 +149,7 @@ export default function RestrictionsAdminContainer() {
 
       {msg && <div className="admin-message">{msg}</div>}
 
-      {/* ✅ 여기서 바로 판별 가능: 파싱이 0인지/렌더링 문제인지 */}
+      {/*  여기서 바로 판별 가능: 파싱이 0인지/렌더링 문제인지 */}
 {/*       <div style={{ marginBottom: 12, padding: 10, background: "#fafafa", border: "1px solid #eee" }}> */}
 {/*         <div><b>DEBUG</b> parsed length: {filtered.length}</div> */}
 {/*         <details style={{ marginTop: 6 }}> */}

@@ -44,7 +44,7 @@ export default function Register() {
   const nav = useNavigate();
   const { stateMeta, metaActions } = useContext(MetaContext);
 
-  // ✅ active True 리스트만 (MetaContext가 active 캐시라고 가정 + 안전 필터는 Picker에서 onlyActive로 처리)
+  //  active True 리스트만 (MetaContext가 active 캐시라고 가정 + 안전 필터는 Picker에서 onlyActive로 처리)
   const categories = useMemo(() => stateMeta?.restrictions || [], [stateMeta?.restrictions]);
 
   const [form, setForm] = useState({
@@ -189,7 +189,7 @@ export default function Register() {
 
       await MemberAPI.register(payload);
       console.log("Sign up success");
-      setMsg("✅ Sign up success");
+      setMsg(" Sign up success");
       return true;
     } catch (err) {
       const detail =
@@ -244,7 +244,7 @@ export default function Register() {
         <h2>Sign Up</h2>
       </div>
 
-      {msg && <div className={`RegisterMsg ${msg.startsWith("✅") ? "ok" : "err"}`}>{msg}</div>}
+      {msg && <div className={`RegisterMsg ${msg.startsWith("") ? "ok" : "err"}`}>{msg}</div>}
 
       <form className="card RegisterForm" onSubmit={onSubmit}>
         <div className="row">
@@ -304,7 +304,7 @@ export default function Register() {
               Check
             </button>
           </div>
-          {checkStatus.nickname === true && <div className="successText">✅ Available nickname</div>}
+          {checkStatus.nickname === true && <div className="successText"> Available nickname</div>}
           {checkStatus.nickname === false && <div className="errorText">❌ Nickname already in use</div>}
         </div>
 
@@ -355,7 +355,7 @@ export default function Register() {
           </div>
         )}
 
-        {/* ✅ 공통 컴포넌트 사용 */}
+        {/*  공통 컴포넌트 사용 */}
         <RestrictionsPicker
           categories={categories}
           selectedIds={itemIds}

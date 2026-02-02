@@ -1,4 +1,4 @@
-import React, { createContext, useMemo, useReducer } from "react";
+import React, { createContext, useEffect, useMemo, useReducer } from "react";
 import { MetaAPI } from "../api/metaApi";
 
 export const MetaContext = createContext(null);
@@ -30,28 +30,34 @@ export function MetaProvider({ children }) {
 
   const metaActions = useMemo(() => {
     return {
-      // ✅ active-only 캐시 로드
       loadRestrictions: async ({ force = false } = {}) => {
         if (!force && stateMeta.loaded) return;
         dispatch({ type: "LOAD_START" });
         try {
           const res = await MetaAPI.getActiveRestrictions();
-          // 서버가 {meta,data:[...]}면 res.data.data
           const list = Array.isArray(res?.data?.data) ? res.data.data : (res?.data || []);
+
           dispatch({ type: "LOAD_OK", payload: list });
+
+          // ✅ localStorage 캐시 (ReviewDetail에서 읽을 수 있게)
+          try {
+            localStorage.setItem("meta_categories", JSON.stringify(list));
+          } catch {}
         } catch (e) {
           dispatch({ type: "LOAD_ERR", error: e?.response?.data?.detail || e?.message });
         }
-      },
-      refresh: async ({ force = true } = {}) => {
-        return metaActions.loadRestrictions({ force });
       },
       reset: () => dispatch({ type: "RESET" }),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stateMeta.loaded]);
 
-  const value = useMemo(() => ({ stateMeta, metaActions }), [stateMeta, metaActions]);
+  // ✅ 앱 시작 시 1번 로드 (어느 페이지로 들어가도 meta 준비되게)
+  useEffect(() => {
+    metaActions.loadRestrictions({ force: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  const value = useMemo(() => ({ stateMeta, metaActions }), [stateMeta, metaActions]);
   return <MetaContext.Provider value={value}>{children}</MetaContext.Provider>;
 }

@@ -1,4 +1,3 @@
-# ai/review/app/pipeline/step_1_rectify/run.py
 from __future__ import annotations
 
 import cv2
@@ -20,7 +19,7 @@ def run_step1_rectify(ctx: PipelineContext, *, out_dir: Path, cfg: RectifyConfig
         cfg=cfg,
     )
 
-    # ✅ step1 contract: rectified 결과 경로 저장
+    #  step1 contract: rectified 결과 경로 저장
     # 네가 저장하던 파일명 기준으로 매핑
     rectified_path = out_dir / "20_post_for_ocr.jpg"
     cropped_path = out_dir / "12_cropped.jpg"

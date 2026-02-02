@@ -28,7 +28,7 @@ export default function ReviewCreateInline({ onCreated }) {
       const r = await ReviewAPI.verifyReceipt(receiptFile);
       setReceiptId(r.data?.receipt_id);
       setExtracted(r.data?.extracted || null);
-      setMsg("✅ 영수증 인증 완료. 리뷰 정보를 입력해줘.");
+      setMsg(" 영수증 인증 완료. 리뷰 정보를 입력해줘.");
     } catch (e) {
       setErr(e?.response?.data?.detail || e?.message || "영수증 인증 실패");
     } finally {
@@ -54,7 +54,7 @@ export default function ReviewCreateInline({ onCreated }) {
         images,
       });
 
-      setMsg("✅ 리뷰 생성 완료");
+      setMsg(" 리뷰 생성 완료");
       onCreated?.(r.data); // 부모에서 list reload 같은거 가능
 
       // 초기화(원하면 유지해도 됨)

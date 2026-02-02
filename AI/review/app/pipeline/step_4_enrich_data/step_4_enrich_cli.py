@@ -85,16 +85,16 @@ def main():
 
     out_json = out_dir / "step4_enrich_result.json"
     out_json.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-    print("✅ saved:", out_json)
+    print(" saved:", out_json)
 
     if args.debug:
         dbg = getattr(ctx.debug, "enrich", None)
         dbg_json = out_dir / "step4_debug_enrich_raw.json"
         dbg_json.write_text(json.dumps(dbg, ensure_ascii=False, indent=2), encoding="utf-8")
-        print("✅ saved debug:", dbg_json)
+        print(" saved debug:", dbg_json)
 
-    print("✅ store_name_ko:", result["store"]["store_name_ko"])
-    print("✅ menu_en:", result["menu"]["menu_en"])
+    print(" store_name_ko:", result["store"]["store_name_ko"])
+    print(" menu_en:", result["menu"]["menu_en"])
 
 
 if __name__ == "__main__":

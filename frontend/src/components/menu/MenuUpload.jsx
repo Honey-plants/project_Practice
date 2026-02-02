@@ -16,7 +16,7 @@ export default function MenuUploadInline() {
     try {
       const r = await MenuAPI.uploadMenu(file);
       setResult(r.data?.result ?? r.data);
-      setMsg("✅ 메뉴 분석 완료");
+      setMsg(" 메뉴 분석 완료");
     } catch (e) {
       setMsg(`❌ ${e?.response?.data?.detail || e?.message || "업로드 실패"}`);
     } finally {

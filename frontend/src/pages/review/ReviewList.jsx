@@ -39,7 +39,9 @@ const MOCK_DATA = [
 
 export default function ReviewList() {
   const { stateReview, reviewActions } = useContext(ReviewContext);
-  const [useMockData, setUseMockData] = useState(true); // Mock 데이터 사용 여부
+
+  const [useMockData, setUseMockData] = useState(false);
+//   const [useMockData, setUseMockData] = useState(true); // Mock 데이터 사용 여부
 
   useEffect(() => {
     // API 연동 모드일 때만 리스트 fetch

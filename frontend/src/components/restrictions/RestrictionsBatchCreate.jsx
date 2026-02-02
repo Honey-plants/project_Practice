@@ -60,7 +60,7 @@ export default function RestrictionsBatchCreate({ onSaved }) {
       }
 
       await RestrictionsAdminAPI.batchCreate(payload);
-      setMsg("✅ 일괄 등록 완료");
+      setMsg(" 일괄 등록 완료");
       setDraft([{ category_label_ko: "", category_label_en: "", items: [{ item_label_ko: "", item_label_en: "" }] }]);
       onSaved && (await onSaved());
     } catch (e) {
