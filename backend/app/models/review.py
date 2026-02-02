@@ -15,6 +15,7 @@ class Review(Base):
 
     rating: Mapped[int] = mapped_column(Integer, nullable=False)
     location: Mapped[str] = mapped_column(String(100), nullable=False)
+    menu_name: Mapped[str] = mapped_column(Text, nullable=False)
 
     create_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     update_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"), server_onupdate=text("CURRENT_TIMESTAMP"))
@@ -22,7 +23,6 @@ class Review(Base):
     # 커뮤니티 등록 여부 :: T 미사용 / F 사용
     available: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("TRUE"))
 
-    menu_name: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # 해당 유저의 식성 정보
     review_items: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)

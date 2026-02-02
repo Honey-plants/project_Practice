@@ -1,6 +1,7 @@
 import os
 from backend.app.core import config
-
+import json
+from typing import Any
 # ---------------------------
 # Validators
 # ---------------------------
@@ -48,3 +49,50 @@ def get_storage():
         tmp_root=config.LOCAL_TMP_ROOT,
         perm_root=config.LOCAL_PERM_ROOT,
     )
+
+def ensure_list(v):
+    if v is None:
+        return []
+    if isinstance(v, list):
+        return v
+    return [v]
+
+
+def dumps_json(v):
+    if v is None:
+        return None
+    if v == [] or v == {}:
+        return None
+    return json.dumps(v, ensure_ascii=False)
+
+
+def parse_ids(raw: Any) -> list[int]:
+    if raw is None:
+        return []
+    if isinstance(raw, list):
+        return [int(x) for x in raw]
+
+    s = str(raw).strip()
+    if not s:
+        return []
+
+    # JSON 문자열이면 JSON으로 먼저 파싱
+    if s.startswith("[") and s.endswith("]"):
+        try:
+            arr = json.loads(s)
+            if isinstance(arr, list):
+                return [int(x) for x in arr]
+        except Exception:
+            pass
+
+    # fallback: "1,2,3" 같은 CSV
+    out = []
+    for p in s.split(","):
+        p = p.strip()
+        if not p:
+            continue
+        try:
+            out.append(int(p))
+        except ValueError:
+            continue
+    return out
