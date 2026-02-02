@@ -25,6 +25,23 @@ function normalizeReview(raw) {
       ? raw.images.map((x) => (typeof x === "string" ? x : x?.url)).filter(Boolean)
       : [];
 
+  // ✅ menu_name
+  const menuName = raw.menu_name ?? raw.menuName ?? raw.menu ?? "";
+
+  // ✅ review_items: "3,7,12" | [3,7,12] | null  -> number[]
+  const itemIds = (() => {
+    const v = raw.review_items ?? raw.reviewItems ?? raw.item_ids ?? raw.itemIds;
+    if (!v) return [];
+    if (Array.isArray(v)) return v.map((x) => Number(x)).filter(Number.isFinite);
+    if (typeof v === "string") {
+      return v
+        .split(",")
+        .map((s) => Number(String(s).trim()))
+        .filter(Number.isFinite);
+    }
+    return [];
+  })();
+
   return {
     id: raw.id ?? raw.review_id ?? raw.reviewId ?? null,
     title,
@@ -32,6 +49,8 @@ function normalizeReview(raw) {
     rating,
     createdAt,
     images,
+    itemIds,
+    menuName,
     raw, // 필요하면 디버깅용
   };
 }

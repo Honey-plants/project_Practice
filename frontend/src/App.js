@@ -21,6 +21,9 @@ import ReviewDetail from "./pages/review/ReviewDetail";
 import ReviewCreate from "./pages/review/ReviewCreate";
 import ReviewEdit from "./pages/review/ReviewEdit";
 
+// test
+import ReviewTestCreate from "./pages/review/ReviewTestCreate";
+
 import UploadTest from "./pages/upload/UploadTest";
 
 import Register from "./pages/auth/Register";
@@ -78,6 +81,23 @@ export default function App() {
           />
 
           {/* community - 작성/수정은 로그인 필수 */}
+          {/* community */}
+          <Route
+            path="/community"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <CommunityList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/community/:id"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <CommunityDetail />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/community/new"
             element={
@@ -95,7 +115,23 @@ export default function App() {
             }
           />
 
-          {/* review - 작성/수정은 로그인 필수 */}
+          {/* review */}
+          <Route
+            path="/review"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <ReviewList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/review/:id"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <ReviewDetail />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/review/new"
             element={
@@ -104,6 +140,16 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/review/test"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <ReviewTestCreate />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/review/:id/edit"
             element={

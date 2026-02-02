@@ -25,7 +25,7 @@ class Review(Base):
     menu_name: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # 해당 유저의 식성 정보
-    review_items: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    review_items: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     member_id: Mapped[int] = mapped_column(ForeignKey("member.member_id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 

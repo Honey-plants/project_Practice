@@ -4,17 +4,42 @@ from pathlib import Path
 from fastapi import UploadFile
 
 from backend.app.common.utils.util import validate_image
-from backend.app.common.storage.types import UploadObject
+from backend.app.common.storage.types import UploadObject, StoredAsset
+
 
 def _ext(filename: str) -> str:
-    return os.path.splitext(filename)[1].lower()
+    ext = os.path.splitext(filename or "")[1].lower()
+    return ext if ext else ".jpg"
+
 
 class LocalUploadStorage:
-    def __init__(self, upload_root: Path):
-        self.upload_root = Path(upload_root)
-        self.upload_root.mkdir(parents=True, exist_ok=True)
+    """
+     config 기준으로 통일:
+    - upload_root: <PROJECT_ROOT>/uploads
+    - tmp_root: upload_root/tmp
+    - perm_root: upload_root/perm
 
-    async def save_input(self, *, upload_type: str, member_id: int, upload: UploadFile) -> UploadObject:
+    임시는 scope_id 기준으로 폴더 생성해서 "폴더 단위" 삭제
+    """
+
+    def __init__(self, upload_root: Path, tmp_root: Path, perm_root: Path):
+        self.upload_root = Path(upload_root).resolve()
+        self.tmp_root = Path(tmp_root).resolve()
+        self.perm_root = Path(perm_root).resolve()
+
+        self.upload_root.mkdir(parents=True, exist_ok=True)
+        self.tmp_root.mkdir(parents=True, exist_ok=True)
+        self.perm_root.mkdir(parents=True, exist_ok=True)
+
+    async def save_input(
+        self,
+        *,
+        upload_type: str,
+        member_id: int,
+        upload: UploadFile,
+        scope_id: str,
+        is_temp: bool = True,
+    ) -> UploadObject:
         org_name = upload.filename or "unknown"
         mime = upload.content_type or "application/octet-stream"
 
@@ -24,17 +49,20 @@ class LocalUploadStorage:
 
         ext = _ext(org_name)
 
-        # scoped_dir = self.upload_root / upload_type
-        scoped_dir = self.upload_root / upload_type / str(member_id)
+        base = self.tmp_root if is_temp else self.perm_root
+
+        #  임시/영구 모두 scope_id 단위 폴더로 격리
+        scoped_dir = base / upload_type / scope_id
         scoped_dir.mkdir(parents=True, exist_ok=True)
 
         stored_name = f"input_{upload_type}_{uuid.uuid4().hex}{ext}"
         path = scoped_dir / stored_name
 
-        with open(path, "wb") as f:
-            f.write(data)
+        path.write_bytes(data)
 
-        # local: 공통 식별자 file_key = path
+        # prefix_key는 "폴더 단위 삭제"를 위한 값
+        prefix_key = str(scoped_dir)
+
         return UploadObject(
             upload_type=upload_type,
             member_id=member_id,
@@ -44,34 +72,75 @@ class LocalUploadStorage:
             stored_file_name=stored_name,
             mime_type=mime,
             size_bytes=size,
+            prefix_key=prefix_key,
         )
 
     def delete_input(self, *, file_key: str) -> None:
-        """
-        file_key == 로컬 파일 경로
-        1) 파일 삭제
-        2) parent(member_id 폴더) 비었으면 삭제
-        3) (옵션) 상위 type 폴더도 비었으면 삭제
-        """
         p = Path(file_key)
-
-        # 1) 파일 삭제
         if p.exists() and p.is_file():
             try:
                 p.unlink()
             except Exception:
                 return
 
-        # 2) member_id 폴더 정리 (upload/{type}/{member_id})
-        member_dir = p.parent
-        if member_dir.exists() and member_dir.is_dir():
-            try:
-                # 비었으면 삭제
-                if not any(member_dir.iterdir()):
-                    member_dir.rmdir()
-            except Exception:
-                pass
-    
-    # local 체크
+    def delete_prefix(self, *, prefix_key: str) -> None:
+        """
+        local: prefix_key는 디렉터리 경로
+        - scope 폴더를 통째로 삭제
+        """
+        d = Path(prefix_key)
+        if not d.exists() or not d.is_dir():
+            return
+
+        # 안전한 rmtree
+        import shutil
+        shutil.rmtree(d, ignore_errors=True)
+
+    async def save_permanent(
+        self,
+        *,
+        owner_type: str,
+        owner_id: int,
+        member_id: int,
+        upload: UploadFile,
+        sort_order: int,
+    ) -> StoredAsset:
+        """
+        영구 저장:
+        upload/perm/{owner_type}/{owner_id}/...
+        """
+        org_name = upload.filename or "unknown"
+        mime = upload.content_type or "application/octet-stream"
+
+        data = await upload.read()
+        size = len(data)
+        validate_image(mime, size)
+
+        ext = _ext(org_name)
+
+        scoped_dir = self.perm_root / owner_type / str(owner_id)
+        scoped_dir.mkdir(parents=True, exist_ok=True)
+
+        stored_name = f"{owner_type}_{owner_id}_{sort_order}_{uuid.uuid4().hex}{ext}"
+        path = scoped_dir / stored_name
+        path.write_bytes(data)
+
+        #  upload_root 기준 상대경로 → /static URL (Windows/Linux 안전)
+        rel_posix = path.relative_to(self.upload_root).as_posix()
+        storage_path = f"/static/{rel_posix}"
+
+        return StoredAsset(
+            owner_type=owner_type,
+            owner_id=owner_id,
+            member_id=member_id,
+            file_key=str(path),
+            storage_path=storage_path,
+            stored_file_name=stored_name,
+            org_file_name=org_name,
+            mime_type=mime,
+            size_bytes=size,
+            sort_order=sort_order,
+        )
+
     def is_local(self) -> bool:
         return True

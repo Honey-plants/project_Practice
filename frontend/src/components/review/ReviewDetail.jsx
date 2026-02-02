@@ -13,9 +13,12 @@ function renderStars(rating) {
 }
 
 export function ReviewDetail({ review }) {
+
+  console.log("review :: ", review)
+
   if (!review) return null;
 
-  const { title, content, rating, createdAt, images, menuNames, location } = review;
+  const { title, content, rating, createdAt, images, menuNames, location, itemIds, menuName } = review;
 
   return (
     <div
@@ -46,9 +49,9 @@ export function ReviewDetail({ review }) {
       {/* 메뉴명(영수증 디텍트 결과) */}
       <div>
         <strong>영수증 메뉴</strong>
-        {menuNames?.length ? (
+        {menuName?.length ? (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-            {menuNames.map((m, idx) => (
+            {menuName.map((m, idx) => (
               <span
                 key={`${m}-${idx}`}
                 style={{
@@ -113,6 +116,34 @@ export function ReviewDetail({ review }) {
           {content || "-"}
         </div>
       </div>
+
+      {/* review_items (알러지/제한 아이템) */}
+      <div>
+        <strong>알러지/제한 아이템</strong>
+
+        {itemIds?.length ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+            {itemIds.map((id, idx) => (
+              <span
+                key={`${id}-${idx}`}
+                style={{
+                  padding: "6px 10px",
+                  border: "1px solid #ddd",
+                  borderRadius: 999,
+                  fontSize: 13,
+                  background: "#fafafa",
+                }}
+                title={`item_id: ${id}`}
+              >
+                #{id}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div style={{ marginTop: 8, opacity: 0.7 }}>-</div>
+        )}
+      </div>
+
     </div>
   );
 }

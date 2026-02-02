@@ -1,5 +1,5 @@
 import React, { createContext, useReducer } from "react";
-import { UploadAPI } from "../api/uploadApi";
+import { MenuAPI } from "../api/menuApi";
 
 export const UploadContext = createContext(null);
 
@@ -41,7 +41,7 @@ export function UploadProvider({ children }) {
         console.log("upload fd file :: ", fd.file)
         console.log("upload fd type :: ", fd.type)
 
-        const r = await UploadAPI.upload(fd);
+        const r = await MenuAPI.upload(fd);
         console.log("실제 넘어가는 값 :: ", r.data)
 
         dispatch({ type: "DONE", payload: r.data });

@@ -11,11 +11,13 @@ function ReviewItem({ review }) {
   const rating = review.rating || 0;
   const location = review.location || "";
   const imageUrl = review.image_urls?.[0] || review.image_url || null;
-  const tags = review.allergy_tags || review.tags || [];
+  const menu = review.menu_name || [];
+  const tags = review.review_items || [];
   const createdAt = review.created_at || "";
 
   const handleClick = () => {
-    nav(`/review/${reviewId}`);
+      console.log("클릭 reviewId :: ", {reviewId})
+      nav(`/review/${reviewId}`);
   };
 
   // 별점 렌더링 함수
@@ -79,7 +81,8 @@ function ReviewItem({ review }) {
       )}
 
       <div style={{ padding: "16px" }}>
-        {/* 제목 */}
+        {/* 제목 */} {menu}
+
         <h3 style={{
           margin: "0 0 8px 0",
           fontSize: "18px",

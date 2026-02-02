@@ -11,7 +11,9 @@ RAG 결과(rag_match.json)를 사람이 빠르게 점검할 수 있게 요약 �
 
 실행 예시:
   python inspect_rag_result.py --path rag_match.json
+
   python menu_assistant/worker/worker_app/utils/inspect_rag_result.py --run-id 20260121_171028
+
   python inspect_rag_result.py --run-id 20260120_130810 --show-cands --top-n 5
 
 주의:

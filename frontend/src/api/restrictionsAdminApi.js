@@ -1,7 +1,7 @@
 import api from "./axiosInstance";
 
 export const RestrictionsAdminAPI = {
-  // ✅ 항상 "배열"만 리턴하도록 정규화
+  //  항상 "배열"만 리턴하도록 정규화
   list: async ({ onlyActive = false } = {}) => {
     const res = await api.get("/restrictions", {
       params: { only_active: onlyActive ? 1 : 0 },
