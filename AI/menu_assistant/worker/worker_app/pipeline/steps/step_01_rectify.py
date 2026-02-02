@@ -4,6 +4,11 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
+from menu_assistant.worker.worker_app.pipeline.steps.config import (
+    default_run_id,
+    build_run_paths,
+    default_data_dir_from_steps_file,
+)
 
 from menu_assistant.worker.worker_app.vision.rectify import (
     RectifyConfig,
@@ -12,9 +17,7 @@ from menu_assistant.worker.worker_app.vision.rectify import (
     write_image_bgr,
 )
 
-# 실행한 시간을 id값으로 반환
-def _default_run_id() -> str:
-    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
 
 
 def main():
@@ -31,6 +34,11 @@ def main():
     #가중치 값을 사용하거나 cuda 이용할시에 주는 옵션
     parser.add_argument("--device", default="cpu", help="cpu|cuda (depends on backend impl)")
     parser.add_argument("--model_dir", default=None, help="Optional model directory for backend weights")
+    parser.add_argument(
+        "--run_dir",
+        default=None,
+        help="Optional run directory override (e.g. tmp/.../ai_runs/<run_id>)",
+    )
 
     # Simple photometric knobs (optional) 실행코드에서 쉽게 조정할수있도록 구성
     #--gamma: 감마 보정 값 (밝기/중간톤 조정)--clahe_clip: CLAHE(국소 대비 향상) 강도--shadow_strength: 그림자/조명 보정 강도
@@ -40,11 +48,23 @@ def main():
     #사용자가 입력한 --input, --gamma 등이 args 객체에 들어갑니다.예: args.input, args.gamma처럼 접근합니다.
     args = parser.parse_args()
     #run_id 값을 cli때 지정한값을 쓰거나 위에 구성해놓은 타임스탭형식으로쓸수있게 표현
-    run_id = args.run_id or _default_run_id()
-    # 주소값에 대한설정: <data_dir>/runs/<run_id>
-    base = Path(args.data_dir) / "runs" / run_id
-    input_dir = base / "input"
-    rectify_dir = base / "rectify"
+    # run_id 결정 (기존 동작과 동일)
+    run_id = args.run_id or default_run_id()
+
+    # data_dir 보정 (기존 default 문자열 유지 + repo 기준 fallback)
+    data_dir = Path(args.data_dir) if args.data_dir else default_data_dir_from_steps_file(__file__)
+
+    # run_dir override (없으면 기존 규약: <data_dir>/runs/<run_id>)
+    run_dir = Path(args.run_dir) if args.run_dir else None
+
+    paths = build_run_paths(
+    data_dir = data_dir,
+    run_id = run_id,
+    run_dir = run_dir,
+       )
+
+    input_dir = paths.input_dir
+    rectify_dir = paths.rectify_dir
     #parents는 중간 폴더가 없어도 생성할것인지 ,exist_ok는 이미 있어도 오류를 발생할지안할지
     input_dir.mkdir(parents=True, exist_ok=True)
     rectify_dir.mkdir(parents=True, exist_ok=True)
