@@ -3,6 +3,7 @@ from google import genai
 import json
 import re
 
+
 def translate_to_en(
         texts: List[str],
         *,
@@ -27,7 +28,7 @@ Terms: {json.dumps(texts, ensure_ascii=False)}
         model="models/gemini-2.0-flash-lite",
         contents=prompt,
     )
-    
+
     raw = (res.text or "").strip()
 
     # Remove ```json fences if present

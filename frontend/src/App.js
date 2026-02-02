@@ -15,7 +15,6 @@ import CommunityList from "./pages/community/CommunityList";
 import CommunityDetail from "./pages/community/CommunityDetail";
 import CommunityCreate from "./pages/community/CommunityCreate";
 import CommunityEdit from "./pages/community/CommunityEdit";
-import Community from "./pages/community/Community";
 
 import ReviewList from "./pages/review/ReviewList";
 import ReviewDetail from "./pages/review/ReviewDetail";

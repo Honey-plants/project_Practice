@@ -262,6 +262,12 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help=r"Base data directory (e.g. C:\Users\201\Desktop\PGHfolder\haenet\AI\menu_assistant\data)",
     )
+    p.add_argument(
+        "--run_dir",
+                    default = "",
+                    help = "Optional run directory override (e.g. uploads/tmp/.../ai_runs/<run_id>). "
+                     "If provided, Step05 reads/writes under this directory.",
+        )
     p.add_argument("--user_profile_json", default="", help="Optional: path to user profile JSON")
     p.add_argument("--include_debug", action="store_true", help="Save prompt/raw snapshots")
     p.add_argument("--max_retries", type=int, default=2, help="Max retries when schema validation fails")
@@ -274,7 +280,7 @@ def main() -> None:
     args = parse_args()
 
     data_dir = Path(args.data_dir)
-    run_dir = _resolve_run_dir(data_dir, args.run_id)
+    run_dir = Path(args.run_dir) if str(args.run_dir or "").strip() else _resolve_run_dir(data_dir, args.run_id)
     llm_dir = run_dir / "llm"
 
     # -------------------------
