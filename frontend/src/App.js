@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import AppProviders from "./app/AppProviders";
 import Header from "./components/layout/Header";
@@ -15,6 +15,7 @@ import CommunityList from "./pages/community/CommunityList";
 import CommunityDetail from "./pages/community/CommunityDetail";
 import CommunityCreate from "./pages/community/CommunityCreate";
 import CommunityEdit from "./pages/community/CommunityEdit";
+import Community from "./pages/community/Community";
 
 import ReviewList from "./pages/review/ReviewList";
 import ReviewDetail from "./pages/review/ReviewDetail";
@@ -31,7 +32,16 @@ import Register from "./pages/auth/Register";
 // admin 추가
 import Admin from "./pages/admin/Admin_new";
 
+import ResultPage from "./pages/menuscan/ResultPage";
+
 export default function App() {
+  // ✅ PreviewPage에서 navigate("/upload/result", { state: { result } })로 넘어오는 값을 그대로 사용
+  function UploadResultRoute() {
+    const { state } = useLocation();
+    const result = state?.result;
+    if (!result) return <Navigate to="/upload/test" replace />;
+    return <ResultPage result={result} />;
+  }
   return (
     <AppProviders>
       <BrowserRouter>
@@ -46,6 +56,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+           <Route
+           path="/upload/result"
+           element={
+             <ProtectedRoute excludeRoles={["ADMIN"]}>
+               <UploadResultRoute />
+             </ProtectedRoute>
+           }
+         />
 
           <Route path="/login" element={<Login />} />
 

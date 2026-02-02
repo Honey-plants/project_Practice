@@ -94,7 +94,8 @@ def make_run_id() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-def run_cmd(cmd: list, env=None, cwd=None):
+def run_cmd(cmd: List[str], env: Optional[dict] = None, cwd: Optional[Path] = None) -> None:
+    """Run a command and raise on failure (with captured stdout/stderr)."""
     print("\n[RUN]", " ".join(cmd))
 
     p = subprocess.run(
@@ -102,16 +103,24 @@ def run_cmd(cmd: list, env=None, cwd=None):
         shell=False,
         env=env,
         cwd=str(cwd) if cwd else None,
-        stdout=subprocess.PIPE,          # ✅ 핵심
-        stderr=subprocess.STDOUT,        # ✅ stderr도 stdout으로 합침
-        text=True,                       # ✅ 문자열로 받기
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
     )
+
+    if p.stdout:
+        print(p.stdout)
+    if p.stderr:
+        print(p.stderr)
 
     if p.returncode != 0:
         raise RuntimeError(
-            f"Command failed (exit={p.returncode}): {' '.join(cmd)}\n\n"
-            f"--- subprocess output ---\n{p.stdout}"
+            f"Command failed (exit={p.returncode}): {' '.join(cmd)}\n"
+            f"--- stdout ---\n{(p.stdout or '').strip()}\n"
+            f"--- stderr ---\n{(p.stderr or '').strip()}\n"
         )
+
 
 
 
