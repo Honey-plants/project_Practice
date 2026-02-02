@@ -29,24 +29,27 @@ export function MetaProvider({ children }) {
   const [stateMeta, dispatch] = useReducer(reducer, initial);
 
   const metaActions = useMemo(() => {
-    return {
-      loadRestrictions: async ({ force = false } = {}) => {
-        if (!force && stateMeta.loaded) return;
-        dispatch({ type: "LOAD_START" });
+    const loadRestrictions = async ({ force = false } = {}) => {
+      if (!force && stateMeta.loaded) return;
+      dispatch({ type: "LOAD_START" });
+      try {
+        const res = await MetaAPI.getActiveRestrictions();
+        const list = Array.isArray(res?.data?.data) ? res.data.data : (res?.data || []);
+
+        dispatch({ type: "LOAD_OK", payload: list });
+
+        // ✅ localStorage 캐시 (ReviewDetail에서 읽을 수 있게)
         try {
-          const res = await MetaAPI.getActiveRestrictions();
-          const list = Array.isArray(res?.data?.data) ? res.data.data : (res?.data || []);
+          localStorage.setItem("meta_categories", JSON.stringify(list));
+        } catch {}
+      } catch (e) {
+        dispatch({ type: "LOAD_ERR", error: e?.response?.data?.detail || e?.message });
+      }
+    };
 
-          dispatch({ type: "LOAD_OK", payload: list });
-
-          // ✅ localStorage 캐시 (ReviewDetail에서 읽을 수 있게)
-          try {
-            localStorage.setItem("meta_categories", JSON.stringify(list));
-          } catch {}
-        } catch (e) {
-          dispatch({ type: "LOAD_ERR", error: e?.response?.data?.detail || e?.message });
-        }
-      },
+    return {
+      loadRestrictions,
+      refresh: loadRestrictions, // refresh는 loadRestrictions의 별칭
       reset: () => dispatch({ type: "RESET" }),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -25,6 +25,8 @@ export default function EditProfile() {
     item_ids: [],
   });
 
+  const [dislikes, setDislikes] = useState([]);
+  const [dislikeInput, setDislikeInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState(""); // "success" or "error"
@@ -36,6 +38,7 @@ export default function EditProfile() {
       nickname: me.nickname || "",
       item_ids: Array.isArray(me.item_ids) ? me.item_ids : [],
     });
+    setDislikes(Array.isArray(me.dislike_tags) ? me.dislike_tags : []);
   }, [me]);
 
   // meta 데이터 로드
@@ -64,6 +67,36 @@ export default function EditProfile() {
     });
   };
 
+  // Dislike 관련 핸들러
+  const addDislike = () => {
+    const trimmed = dislikeInput.trim();
+    if (!trimmed) return;
+    if (dislikes.length >= 3) {
+      setMsg("최대 3개까지만 추가할 수 있습니다");
+      setMsgType("error");
+      return;
+    }
+    if (dislikes.includes(trimmed)) {
+      setMsg("이미 추가된 재료입니다");
+      setMsgType("error");
+      return;
+    }
+    setDislikes([...dislikes, trimmed]);
+    setDislikeInput("");
+    setMsg("");
+  };
+
+  const removeDislike = (index) => {
+    setDislikes(dislikes.filter((_, i) => i !== index));
+  };
+
+  const handleDislikeKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addDislike();
+    }
+  };
+
   // 저장 핸들러
   const handleSave = async () => {
     setMsg("");
@@ -74,17 +107,14 @@ export default function EditProfile() {
       const payload = {
         nickname: form.nickname?.trim() || null,
         item_ids: form.item_ids || [],
+        dislike_tags: dislikes.length > 0 ? dislikes : null,
       };
 
       await MemberAPI.updateMe(payload);
       await memberActions.loadMe();
 
-      setMsg("Your save is complete");
-      setMsgType("success");
-
-      setTimeout(() => {
-        nav("/member/profile");
-      }, 1000);
+      // 즉시 이동 (로딩 없이)
+      nav("/member/profile");
     } catch (error) {
       const errorMsg = error?.response?.data?.detail || error?.message || "저장에 실패했습니다";
       setMsg(errorMsg);
@@ -146,6 +176,61 @@ export default function EditProfile() {
         mode="select"
         onlyActive={true}
       />
+
+      <div className={styles.sectionHeader}>
+        <h3 className={styles.sectionTitle}>Dislike Ingredients (최대 3개)</h3>
+      </div>
+
+      <div className={styles.card}>
+        <div className={styles.formGroup}>
+          <div className={styles.inputWrapper}>
+            <label className={styles.label}>재료 추가</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="text"
+                value={dislikeInput}
+                onChange={(e) => setDislikeInput(e.target.value)}
+                onKeyDown={handleDislikeKeyDown}
+                placeholder="e.g. 고수 (Enter 또는 추가 버튼 클릭)"
+                maxLength={50}
+                disabled={dislikes.length >= 3}
+                className={styles.input}
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={addDislike}
+                disabled={!dislikeInput.trim() || dislikes.length >= 3}
+                className={`${styles.button} ${styles.buttonSecondary}`}
+              >
+                추가
+              </button>
+            </div>
+          </div>
+
+          {dislikes.length > 0 && (
+            <div className={styles.dislikeTagsContainer}>
+              {dislikes.map((dislike, index) => (
+                <div className={styles.dislikeTag} key={index}>
+                  <span>{dislike}</span>
+                  <button
+                    type="button"
+                    className={styles.dislikeRemoveBtn}
+                    onClick={() => removeDislike(index)}
+                    aria-label="Remove"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className={styles.dislikeCounter}>
+            {dislikes.length} / 3 재료 추가됨
+          </div>
+        </div>
+      </div>
 
       <div className={styles.buttonWrapper}>
         <button

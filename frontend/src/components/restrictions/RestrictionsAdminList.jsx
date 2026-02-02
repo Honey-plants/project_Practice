@@ -49,7 +49,9 @@ export default function RestrictionsAdminList({
               active
             </label>
 
-            <button onClick={() => onSaveCategory(c)} disabled={loading}>저장</button>
+            <button onClick={() => onSaveCategory(c)} disabled={loading} className="save-button">
+              저장
+            </button>
           </div>
 
           <div className="items-list">
@@ -79,7 +81,9 @@ export default function RestrictionsAdminList({
                   active
                 </label>
 
-                <button onClick={() => onSaveItem(c.category_id, it)} disabled={loading}>저장</button>
+                <button onClick={() => onSaveItem(c.category_id, it)} disabled={loading} className="save-button-item">
+                  저장
+                </button>
               </div>
             ))}
           </div>

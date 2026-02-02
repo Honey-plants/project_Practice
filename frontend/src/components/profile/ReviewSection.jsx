@@ -55,6 +55,18 @@ export default function ReviewSection({ reviews, currentPage, onPageChange }) {
 
           {totalPages > 1 && (
             <div className={styles.pagination}>
+              <button
+                onClick={() => onPageChange(Math.max(0, currentPage - 1))}
+                disabled={currentPage === 0}
+                className={styles.pageButton}
+                style={{
+                  opacity: currentPage === 0 ? 0.3 : 1,
+                  cursor: currentPage === 0 ? "not-allowed" : "pointer"
+                }}
+              >
+                &lt;
+              </button>
+
               {Array.from({ length: totalPages }, (_, i) => (
                 <button
                   key={i}
@@ -66,6 +78,18 @@ export default function ReviewSection({ reviews, currentPage, onPageChange }) {
                   {i + 1}
                 </button>
               ))}
+
+              <button
+                onClick={() => onPageChange(Math.min(totalPages - 1, currentPage + 1))}
+                disabled={currentPage === totalPages - 1}
+                className={styles.pageButton}
+                style={{
+                  opacity: currentPage === totalPages - 1 ? 0.3 : 1,
+                  cursor: currentPage === totalPages - 1 ? "not-allowed" : "pointer"
+                }}
+              >
+                &gt;
+              </button>
             </div>
           )}
         </>
