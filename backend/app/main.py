@@ -1,19 +1,23 @@
 import sys
 from pathlib import Path
 
-# 1) sys.path 세팅은 다른 import들보다 먼저
-ROOT_DIR = Path(__file__).resolve().parents[2]  # final_project
+ROOT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT_DIR))
 
 from fastapi import FastAPI, Response
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 
-# from backend.app.core.database import Base, engine   # engine 가져와야 create_all 가능
-# import backend.app.models                            # 모델 로딩 보장(필수)
-from backend.app.api_router import api_router        # 상대경로 말고 절대경로 추천
+from backend.app.api_router import api_router
+from backend.app.core import config
 
 app = FastAPI()
+
+if config.STORAGE_BACKEND == "local":
+    config.LOCAL_UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+    app.mount("/static", StaticFiles(directory=str(config.LOCAL_UPLOAD_ROOT)), name="static")
+
 
 class ForceUTF8Middleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
@@ -28,16 +32,13 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        # "http://localhost:5173",
+        # "http://127.0.0.1:5173",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# @app.on_event("startup")
-# def on_startup():
-#     # 2) create_all은 startup에서 1번 + engine 바인딩
-#     Base.metadata.create_all(bind=engine)
 
 @app.get("/health")
 def health():

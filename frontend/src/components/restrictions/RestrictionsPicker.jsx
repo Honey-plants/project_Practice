@@ -37,21 +37,21 @@ export default function RestrictionsPicker({
 
   if (filtered.length === 0) {
     return (
-      <div style={{ padding: 12, border: "1px solid #ddd", borderRadius: 6 }}>
+      <div className="restrictions-picker-empty">
         표시할 항목이 없습니다.
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div className="restrictions-picker-wrapper">
       {filtered.map((c) => (
-        <div key={c.category_id} className="card" style={{ padding: 12 }}>
-          <div style={{ fontWeight: 700, marginBottom: 10 }}>
+        <div key={c.category_id} className="restrictions-category-card">
+          <div className="restrictions-category-title">
             {c.category_label_ko ?? c.category_label_en ?? `Category#${c.category_id}`}
           </div>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+          <div className="restrictions-items-container">
             {(c.items || []).map((it) => {
               const id = it.item_id;
               const label = it.item_label_ko ?? it.item_label_en ?? `item#${id}`;
@@ -60,16 +60,7 @@ export default function RestrictionsPicker({
               // view 모드(읽기 전용): 뱃지 형태
               if (mode === "view") {
                 return (
-                  <span
-                    key={id}
-                    style={{
-                      padding: "6px 10px",
-                      border: "1px solid #ddd",
-                      borderRadius: 999,
-                      background: "#e6ffed",
-                      fontWeight: 700,
-                    }}
-                  >
+                  <span key={id} className="restriction-item-badge">
                     {label}
                   </span>
                 );
@@ -79,24 +70,12 @@ export default function RestrictionsPicker({
               return (
                 <label
                   key={id}
-                  style={{
-                    display: "inline-flex",
-                    gap: 8,
-                    alignItems: "center",
-                    border: "1px solid #ddd",
-                    borderRadius: 999,
-                    padding: "6px 10px",
-                    cursor: "pointer",
-                    userSelect: "none",
-                    background: checked ? "#e6ffed" : "transparent",
-                    fontWeight: checked ? 700 : 400,
-                  }}
+                  className={`restriction-item-label ${checked ? "checked" : ""}`}
                 >
                   <input
                     type="checkbox"
                     checked={checked}
                     onChange={() => onToggle?.(id)}
-                    style={{ margin: 0 }}
                   />
                   <span>{label}</span>
                 </label>

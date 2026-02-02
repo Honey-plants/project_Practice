@@ -25,14 +25,14 @@ def main():
         y_threshold=args.y_threshold,
     )
 
-    # ✅ save for step4
+    #  save for step4
     out_json = args.out / "step3_normalize_result.json"
     out_json.write_text(
         json.dumps(result, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
-    print("✅ saved:", out_json)
+    print(" saved:", out_json)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

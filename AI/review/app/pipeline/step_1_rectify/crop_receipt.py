@@ -19,7 +19,7 @@ class CropConfig:
     border: int = 10
     max_area_ratio: float = 0.92
 
-    # ✅ fallback: 4점 못 찾으면 minAreaRect로라도 사각형 뽑기
+    # fallback: 4점 못 찾으면 minAreaRect로라도 사각형 뽑기
     allow_minarearect_fallback: bool = True
 
 def _receipt_mask(image_bgr: np.ndarray) -> np.ndarray:
@@ -153,7 +153,7 @@ def find_receipt_quad(image_bgr: np.ndarray, cfg: CropConfig) -> Tuple[Optional[
             if area > debug_candidates[m]["area"]:
                 debug_candidates[m] = {"area": float(area), "peri": float(peri), "eps": float(eps), "vertices": int(v)}
 
-        # ✅ accept quad candidates
+        # accept quad candidates
         if v == 4 and cv2.isContourConvex(approx):
             pts = approx.reshape(4, 2).astype(np.float32)
             quad = _order_points(pts)
@@ -176,7 +176,7 @@ def find_receipt_quad(image_bgr: np.ndarray, cfg: CropConfig) -> Tuple[Optional[
         "debug_top_candidates": sorted(debug_candidates, key=lambda d: d["area"], reverse=True),
     }
 
-    # ✅ fallback to minAreaRect of biggest contour (still useful)
+    #  fallback to minAreaRect of biggest contour (still useful)
     if best_quad is None and cfg.allow_minarearect_fallback and best_cnt is not None:
         best_quad = _quad_from_minarearect(best_cnt)
         meta["found"] = True

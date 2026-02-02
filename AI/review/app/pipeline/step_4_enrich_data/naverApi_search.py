@@ -15,6 +15,15 @@ def _extract_city(address: Optional[str]) -> Optional[str]:
     parts = address.strip().split()
     return parts[0] if parts else None
 
+def format_korean_phone(phone: str) -> str:
+    if phone.startswith("02") and len(phone) == 10:
+        return f"02-{phone[2:6]}-{phone[6:]}"
+    if phone.startswith("02") and len(phone) == 9:
+        return f"02-{phone[2:5]}-{phone[5:]}"
+    if phone.startswith("01"):
+        return f"{phone[:3]}-{phone[3:7]}-{phone[7:]}"
+    return phone
+
 def find_store_by_phone(
     phone: str,
     *,
@@ -27,14 +36,15 @@ def find_store_by_phone(
         "X-Naver-Client-Id": client_id,
         "X-Naver-Client-Secret": client_secret,
     }
+    phone = format_korean_phone(phone)
     params = {
         "query": phone,
-        "display": 5,  # ✅ 1 말고 5로 늘려서 확인
+        "display": 5,  #  1 말고 5로 늘려서 확인
     }
 
     r = http_requests.get(url, headers=headers, params=params, timeout=10)
 
-    # ✅ 디버그
+    #  디버그
     try:
         js = r.json()
     except Exception:
@@ -48,6 +58,7 @@ def find_store_by_phone(
     items = js.get("items") or []
     print(f"[naver] query={phone} total={js.get('total')} items={len(items)}")
 
+    print(items)
     if not items:
         return None
 

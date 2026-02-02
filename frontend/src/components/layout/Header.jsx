@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { MemberContext } from "../../context/MemberContext";
+import "./Header.css"
 
 export default function Header() {
   const { stateAuth, authActions } = useContext(AuthContext);
@@ -13,16 +14,23 @@ export default function Header() {
     nav("/login");
   };
 
+  const isAdmin = stateMember.me?.role === "ADMIN";
+
   return (
     <div className="header">
       <div className="nav">
-        <Link to="/">Home</Link>
-        <Link to="/community">Community</Link>
-        <Link to="/review">Review</Link>
-        <Link to="/upload/test">UploadTest</Link>
-        <Link to="/menu/upload">menu scan</Link>
-
-        {stateMember.me?.role === "ADMIN" && <Link to="/admin">Admin</Link>}
+        {isAdmin ? (
+          <>
+            <Link to="/admin">Admin</Link>
+          </>
+        ) : (
+          <>
+            <Link to="/">Home</Link>
+            <Link to="/community">Community</Link>
+            <Link to="/review">Review</Link>
+            <Link to="/upload/test">UploadTest</Link>
+          </>
+        )}
       </div>
 
       {/* 여기(auth 영역)에 Register를 추가 */}
@@ -32,7 +40,7 @@ export default function Header() {
             <span className="me">
               {stateMember.me?.nickname || stateMember.me?.email || "me"}
             </span>
-            <Link to="/member/profile">Profile</Link>
+            {!isAdmin && <Link to="/member/profile">Profile</Link>}
             <button onClick={onLogout}>Logout</button>
           </>
         ) : (

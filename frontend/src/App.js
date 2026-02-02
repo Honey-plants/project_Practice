@@ -15,14 +15,14 @@ import CommunityList from "./pages/community/CommunityList";
 import CommunityDetail from "./pages/community/CommunityDetail";
 import CommunityCreate from "./pages/community/CommunityCreate";
 import CommunityEdit from "./pages/community/CommunityEdit";
-import Community from "./pages/community/Community";
 
 import ReviewList from "./pages/review/ReviewList";
 import ReviewDetail from "./pages/review/ReviewDetail";
 import ReviewCreate from "./pages/review/ReviewCreate";
 import ReviewEdit from "./pages/review/ReviewEdit";
 
-import CameraUploadPage from "./pages/menuscan/CameraUploadPage";
+// test
+import ReviewTestCreate from "./pages/review/ReviewTestCreate";
 
 import UploadTest from "./pages/upload/UploadTest";
 
@@ -38,11 +38,18 @@ export default function App() {
         <Header />
 
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
 
           <Route path="/login" element={<Login />} />
 
-          // Routes 안에 추가
+          {/* Routes 안에 추가 */}
           {/* auth */}
           <Route path="/register" element={<Register />} />
           <Route
@@ -58,7 +65,7 @@ export default function App() {
           <Route
             path="/member/profile"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
                 <Profile />
               </ProtectedRoute>
             }
@@ -66,19 +73,33 @@ export default function App() {
           <Route
             path="/member/edit"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
                 <EditProfile />
               </ProtectedRoute>
             }
           />
 
           {/* community */}
-          <Route path="/community" element={<Community />} />
-          <Route path="/community/:id" element={<CommunityDetail />} />
+          <Route
+            path="/community"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <CommunityList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/community/:id"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <CommunityDetail />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/community/new"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
                 <CommunityCreate />
               </ProtectedRoute>
             }
@@ -86,27 +107,51 @@ export default function App() {
           <Route
             path="/community/:id/edit"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
                 <CommunityEdit />
               </ProtectedRoute>
             }
           />
 
           {/* review */}
-          <Route path="/review" element={<ReviewList />} />
-          <Route path="/review/:id" element={<ReviewDetail />} />
           <Route
-            path="/review/new"
+            path="/review"
             element={
-              <ProtectedRoute>
-                <ReviewCreate />
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <ReviewList />
               </ProtectedRoute>
             }
           />
           <Route
+            path="/review/:id"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <ReviewDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/review/new"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <ReviewCreate />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/review/test"
+            element={
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
+                <ReviewTestCreate />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/review/:id/edit"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
                 <ReviewEdit />
               </ProtectedRoute>
             }
@@ -116,17 +161,8 @@ export default function App() {
           <Route
             path="/upload/test"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute excludeRoles={["ADMIN"]}>
                 <UploadTest />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/menu/upload"
-            element={
-              <ProtectedRoute>
-                <CameraUploadPage />
               </ProtectedRoute>
             }
           />

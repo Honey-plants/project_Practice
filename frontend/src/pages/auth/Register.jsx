@@ -44,7 +44,7 @@ export default function Register() {
   const nav = useNavigate();
   const { stateMeta, metaActions } = useContext(MetaContext);
 
-  // ✅ active True 리스트만 (MetaContext가 active 캐시라고 가정 + 안전 필터는 Picker에서 onlyActive로 처리)
+  //  active True 리스트만 (MetaContext가 active 캐시라고 가정 + 안전 필터는 Picker에서 onlyActive로 처리)
   const categories = useMemo(() => stateMeta?.restrictions || [], [stateMeta?.restrictions]);
 
   const [form, setForm] = useState({
@@ -155,8 +155,8 @@ export default function Register() {
     }
   };
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
+  // 회원가입 실행 함수
+  const submitSignup = async () => {
     setMsg("");
 
     // 유효성 검사
@@ -164,13 +164,13 @@ export default function Register() {
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       setMsg("❌ Please check the input information.");
-      return;
+      return false;
     }
 
     // 닉네임 중복 확인 여부 체크
     if (checkStatus.nickname !== true) {
       setMsg("❌ Please check nickname duplication");
-      return;
+      return false;
     }
 
     setLoading(true);
@@ -189,8 +189,8 @@ export default function Register() {
 
       await MemberAPI.register(payload);
       console.log("Sign up success");
-      setMsg("✅ Sign up success");
-      setTimeout(() => nav("/login"), 1000);
+      setMsg(" Sign up success");
+      return true;
     } catch (err) {
       const detail =
         err?.response?.data?.detail ||
@@ -198,8 +198,43 @@ export default function Register() {
         err?.message ||
         "Failed to sign up";
       setMsg(`❌ ${detail}`);
+      return false;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    const success = await submitSignup();
+    if (success) {
+      setTimeout(() => nav("/login"), 1000);
+    }
+  };
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState(null);
+
+  const openModal = (type) => {
+    setModalType(type);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirm = async () => {
+    if (modalType === "cancel") {
+      console.log("Cancel Complete");
+      setIsModalOpen(false);
+      nav("/");
+      return;
+    }
+
+    // signup
+    if (modalType === "signup") {
+      setIsModalOpen(false);
+      const success = await submitSignup();
+      if (success) {
+        setTimeout(() => nav("/login"), 1000);
+      }
     }
   };
 
@@ -209,7 +244,7 @@ export default function Register() {
         <h2>Sign Up</h2>
       </div>
 
-      {msg && <div className={`RegisterMsg ${msg.startsWith("✅") ? "ok" : "err"}`}>{msg}</div>}
+      {msg && <div className={`RegisterMsg ${msg.startsWith("") ? "ok" : "err"}`}>{msg}</div>}
 
       <form className="card RegisterForm" onSubmit={onSubmit}>
         <div className="row">
@@ -269,7 +304,7 @@ export default function Register() {
               Check
             </button>
           </div>
-          {checkStatus.nickname === true && <div className="successText">✅ Available nickname</div>}
+          {checkStatus.nickname === true && <div className="successText"> Available nickname</div>}
           {checkStatus.nickname === false && <div className="errorText">❌ Nickname already in use</div>}
         </div>
 
@@ -278,8 +313,8 @@ export default function Register() {
           <select name="gender" value={form.gender} onChange={onChange}>
             <option value="" disabled>
               Select Gender
-            </option>
-
+            </option>            
+                    
             {GENDER.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -293,8 +328,8 @@ export default function Register() {
           <select name="country" value={form.country} onChange={onChange}>
             <option value="" disabled>
               Select Country
-            </option>
-
+            </option>            
+            
             {COUNTRY_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -320,7 +355,7 @@ export default function Register() {
           </div>
         )}
 
-        {/* ✅ 공통 컴포넌트 사용 */}
+        {/*  공통 컴포넌트 사용 */}
         <RestrictionsPicker
           categories={categories}
           selectedIds={itemIds}
@@ -385,12 +420,28 @@ export default function Register() {
         </div>
 
         <div className="RegisterActions">
-          <button
-            type="submit"
-            disabled={loading || checkStatus.nickname !== true}
-          >
-            {loading ? "Signing up..." : "Sign Up"}
-          </button>
+          <button type="button" onClick={() => openModal("cancel")}>
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              disabled={loading || checkStatus.nickname !== true}
+              onClick={() => openModal("signup")}
+            >
+              {loading ? "Signing up..." : "Sign Up"}
+            </button>
+
+            <Modal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              onConfirm={handleConfirm}
+              message={
+                modalType === "cancel"
+                  ? "Are you sure you want to cancel?"
+                  : "Do you want to proceed with sign up?"
+              }
+            />
         </div>
       </form>
     </div>
