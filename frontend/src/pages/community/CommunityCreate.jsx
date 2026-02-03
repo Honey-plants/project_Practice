@@ -21,7 +21,7 @@ export default function CommunityCreate() {
       template_id: templateId,
       review_ids: reviewIds,
     }
-    
+
     console.log("community create payload:", payload);
 
     try {
@@ -58,4 +58,3 @@ export default function CommunityCreate() {
     </div>
   );
 }
-
