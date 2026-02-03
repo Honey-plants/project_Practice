@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import '../../styles/Community.css';
 import CommunityList from "./CommunityList";
 
+
 export default function Community () {
 
     const nav = useNavigate();
@@ -10,13 +11,11 @@ export default function Community () {
     return (
         <div className="container">
             <h1>Community</h1>
+            <button onClick={()=>nav('/community/new')}>Create AI Image
 
-            {/* 이미지 생성 페이지로 이동 */}
-            <div className="create_img">
-                <button onClick={()=>nav('/community/new')}>
-                    Generate Image
-                </button>
-            </div>
+            </button>
+
+
 
             <div className='notice'>
                 <div className='text'>

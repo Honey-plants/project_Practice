@@ -43,7 +43,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
 
           {/* 커뮤니티 - 목록/상세 공개 */}
-          <Route path="/community" element={<CommunityList />} />
+          <Route path="/community" element={<Community />} />
           <Route path="/community/:id" element={<CommunityDetail />} />
 
           {/* 리뷰 - 목록/상세 공개 */}

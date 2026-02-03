@@ -63,10 +63,14 @@ def run_map_template(payload: Dict[str, Any]) -> Tuple[bytes, str]:
     reviews = payload.get("reviews", [])
 
     places: List[Dict[str, Any]] = payload.get("places") or [
-        {"coords": r["coords"], "label": str(i + 1)}
+        {
+            "label": str(i + 1),
+            "location": r["location"],  # e.g. ["1269852828","375735721"]
+        }
         for i, r in enumerate(reviews)
-        if r.get("coords") and r["coords"].get("x") and r["coords"].get("y")
+        if isinstance(r.get("location"), list) and len(r["location"]) == 2
     ]
+
     if not places:
         raise ValueError("No coordinates found to pin on the map.")
 

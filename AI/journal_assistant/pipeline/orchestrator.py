@@ -7,24 +7,24 @@ from AI.journal_assistant.pipeline.templates.map_template.run_map_template impor
 
 
 def run_orchestrator(payload: Dict[str, Any]) -> bytes:
-    template = payload.get("template") or {}
+    template_id = payload.get("template_id") or {}
 
     # ✅ 너 payload가 template_id로 오면 이걸 쓰고, template_type도 지원
-    ttype = template.get("template_type", template.get("template_id"))
+    # ttype = template.get("template_id")
 
     try:
-        ttype = int(ttype)
+        template_id = int(template_id)
     except Exception:
-        raise ValueError(f"Invalid template_type/template_id: {ttype}")
+        raise ValueError(f"Invalid template_type/template_id: {template_id}")
 
-    if ttype == 1:
+    if template_id == 1:
         prompt = build_journal_prompt(payload)
         out = generate_image(prompt)
         if not out:
             raise RuntimeError("Journal generation failed (blocked or empty).")
         return out
 
-    if ttype == 2:
+    if template_id == 2:
         ref_bytes, prompt = run_map_template(payload)
 
         out = generate_image_with_ref(
@@ -37,4 +37,4 @@ def run_orchestrator(payload: Dict[str, Any]) -> bytes:
             raise RuntimeError("Map generation failed (blocked or empty).")
         return out
 
-    raise ValueError(f"Unknown template type: {ttype} (1=journal, 2=map)")
+    raise ValueError(f"Unknown template type: {template_id} (1=journal, 2=map)")

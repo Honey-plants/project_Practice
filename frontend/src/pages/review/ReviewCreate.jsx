@@ -170,17 +170,19 @@ export default function ReviewCreateInline({ onCreated }) {
         <div className="step-section">
           <div className="step-header">2) 메뉴 확인</div>
           <div className="menu-confirm-section">
-            {!menuConfirmed && <p className="menu-confirm-text">다음 메뉴들이 맞나요?</p>}
+            {!menuConfirmed && <p className="menu-confirm-text">Confirm your receipt</p>}
             <div className="menu-list">
-              {extracted.menu_name && (
-                Array.isArray(extracted.menu_name)
-                  ? extracted.menu_name.map((menu, idx) => (
+              <p>Store name</p>
+              <p>{extracted.store_name}/{extracted.store_name_en}</p>
+              {extracted.menu_en && (
+                Array.isArray(extracted.menu_en)
+                  ? extracted.menu_en.map((menu, idx) => (
                       <div key={idx} className="menu-item">
                         <span className="menu-icon">🍽️</span>
                         <span className="menu-name">{String(menu).replace(/["[\]]/g, '').trim()}</span>
                       </div>
                     ))
-                  : extracted.menu_name.split(',').map((menu, idx) => (
+                  : extracted.menu_en.split(',').map((menu, idx) => (
                       <div key={idx} className="menu-item">
                         <span className="menu-icon">🍽️</span>
                         <span className="menu-name">{menu.replace(/["[\]]/g, '').trim()}</span>
