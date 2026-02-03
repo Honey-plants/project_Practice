@@ -123,7 +123,7 @@ async def upload_menu(
 
     finally:
         cleanup()
-        delete_prefix(prefix_key=tmp_prefix)
+        # delete_prefix(prefix_key=tmp_prefix)
 
 
 
