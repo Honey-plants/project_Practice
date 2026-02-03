@@ -1,23 +1,59 @@
 import './ReviewCard.css';
 import { useNavigate } from "react-router-dom";
+import { useContext, useMemo, useState } from "react";
+import { MetaContext } from "../../context/MetaContext";
 
 function ReviewItem({ review }) {
   const nav = useNavigate();
+  const { stateMeta } = useContext(MetaContext);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // 데이터 정규화 (API 응답 형식이 다를 수 있으므로)
   const reviewId = review.review_id || review.id;
   const title = review.review_title || review.title || review.subject || "(제목 없음)";
   const content = review.review_content || review.content || "";
   const rating = review.rating || 0;
-  const location = review.location || "";
-  const imageUrl = review.image_urls?.[0] || review.image_url || null;
-  const menu = review.menu_name || [];
-  const tags = review.review_items || [];
-  const createdAt = review.created_at || "";
+  const imageUrls = review.image_urls || (review.image_url ? [review.image_url] : []);
+
+  // menu_name이 배열이면 join, 문자열이면 그대로, 없으면 빈 문자열
+  const menuName = Array.isArray(review.menu_name)
+    ? review.menu_name.join(',')
+    : (review.menu_name || "");
+
+  const createdAt = review.created_at || review.create_at || "";
+
+  // 아이템 ID에 해당하는 라벨 찾기
+  const itemLabels = useMemo(() => {
+    const reviewItems = review.review_items || [];
+    const itemIds = typeof reviewItems === 'string'
+      ? reviewItems.split(',').map(id => Number(id.trim()))
+      : Array.isArray(reviewItems)
+      ? reviewItems.map(id => Number(id))
+      : [];
+
+    if (!itemIds.length || !stateMeta.restrictions.length) return [];
+
+    const allItems = stateMeta.restrictions.flatMap(cat => cat.items || []);
+    return itemIds
+      .map(id => {
+        const item = allItems.find(item => item.item_id === id);
+        return item ? (item.item_label_ko || item.item_label_en || `Item #${id}`) : `Item #${id}`;
+      });
+  }, [review.review_items, stateMeta.restrictions]);
 
   const handleClick = () => {
       console.log("클릭 reviewId :: ", {reviewId})
       nav(`/review/${reviewId}`);
+  };
+
+  const handlePrevImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev === 0 ? imageUrls.length - 1 : prev - 1));
+  };
+
+  const handleNextImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev === imageUrls.length - 1 ? 0 : prev + 1));
   };
 
   // 별점 렌더링 함수
@@ -34,72 +70,62 @@ function ReviewItem({ review }) {
   };
 
   return (
-    <div
-      onClick={handleClick}
-      className="review-card"
-      style={{
-        cursor: "pointer",
-        border: "1px solid #e0e0e0",
-        borderRadius: "12px",
-        overflow: "hidden",
-        transition: "transform 0.2s, box-shadow 0.2s",
-        background: "white",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-6px)";
-        e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.12)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.05)";
-      }}
-    >
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={title}
-          style={{
-            width: "100%",
-            height: "200px",
-            objectFit: "cover"
-          }}
-        />
+    <div onClick={handleClick} className="review-card">
+      {imageUrls.length > 0 ? (
+        <div className="review-card-image-container">
+          <img
+            src={imageUrls[currentImageIndex]}
+            alt={title}
+            className="review-card-image"
+          />
+          {imageUrls.length > 1 && (
+            <>
+              <button
+                onClick={handlePrevImage}
+                className="image-nav-btn prev"
+              >
+                ‹
+              </button>
+              <button
+                onClick={handleNextImage}
+                className="image-nav-btn next"
+              >
+                ›
+              </button>
+              <div className="image-indicator">
+                {currentImageIndex + 1} / {imageUrls.length}
+              </div>
+            </>
+          )}
+        </div>
       ) : (
-        <div style={{
-          width: "100%",
-          height: "200px",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "white",
-          fontSize: "48px"
-        }}>
+        <div className="review-card-no-image">
           🍽️
         </div>
       )}
 
-      <div style={{ padding: "16px" }}>
-        {/* 제목 */} {menu}
+      <div className="review-card-content">
+        {/* 메뉴 이름 */}
+        {menuName && (
+          <div className="menu-names-container">
+            {menuName.split(',').map((menu, idx) => (
+              <div key={idx} className="menu-name-tag">
+                🍽️ {menu.replace(/["[\]]/g, '').trim()}
+              </div>
+            ))}
+          </div>
+        )}
 
-        <h3 style={{
-          margin: "0 0 8px 0",
-          fontSize: "18px",
-          fontWeight: "600",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          color: "#212529"
-        }}>
+        {/* 제목 */}
+        <h3 className="review-card-title">
           {title}
         </h3>
 
         {/* 별점 */}
         {rating > 0 && (
-          <div style={{ marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+          <div className="review-card-rating">
             {renderStars(rating)}
-            <span style={{ fontSize: "14px", color: "#666", marginLeft: "4px" }}>
+            <span className="rating-text">
               ({rating}.0)
             </span>
           </div>
@@ -107,55 +133,17 @@ function ReviewItem({ review }) {
 
         {/* 내용 미리보기 */}
         {content && (
-          <p style={{
-            margin: "0 0 8px 0",
-            fontSize: "14px",
-            color: "#666",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap"
-          }}>
+          <p className="review-card-preview">
             {content}
           </p>
         )}
 
-        {/* 위치 정보 */}
-        {location && (
-          <div style={{
-            fontSize: "12px",
-            color: "#999",
-            marginBottom: "8px",
-            display: "flex",
-            alignItems: "center",
-            gap: "4px"
-          }}>
-            <span>📍</span>
-            <span>{location}</span>
-          </div>
-        )}
-
-        {/* 알레르기 태그 */}
-        {tags.length > 0 && (
-          <div style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "6px",
-            marginTop: "12px"
-          }}>
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  padding: "4px 10px",
-                  background: "#fff3cd",
-                  color: "#856404",
-                  borderRadius: "12px",
-                  fontSize: "11px",
-                  fontWeight: "500",
-                  border: "1px solid #ffeaa7"
-                }}
-              >
-                ⚠️ {tag}
+        {/* 제한사항 아이템 태그 */}
+        {itemLabels.length > 0 && (
+          <div className="item-labels-container">
+            {itemLabels.map((label, idx) => (
+              <span key={idx} className="item-label-tag">
+                ⚠️ {label}
               </span>
             ))}
           </div>
@@ -163,13 +151,7 @@ function ReviewItem({ review }) {
 
         {/* 작성일 */}
         {createdAt && (
-          <div style={{
-            fontSize: "11px",
-            color: "#aaa",
-            marginTop: "12px",
-            paddingTop: "8px",
-            borderTop: "1px solid #f0f0f0"
-          }}>
+          <div className="review-card-date">
             {new Date(createdAt).toLocaleDateString('ko-KR')}
           </div>
         )}

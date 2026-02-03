@@ -23,8 +23,6 @@ import ReviewCreate from "./pages/review/ReviewCreate";
 import ReviewEdit from "./pages/review/ReviewEdit";
 
 // test
-import ReviewTestCreate from "./pages/review/ReviewTestCreate";
-
 import UploadTest from "./pages/upload/UploadTest";
 
 import Register from "./pages/auth/Register";

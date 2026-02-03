@@ -47,7 +47,6 @@ export default function ReviewSection({ reviews, currentPage, onPageChange }) {
                 </p>
                 <div className={styles.itemFooter}>
                   <span>⭐ {review.rating || 0}</span>
-                  <span>{review.location || "위치 미상"}</span>
                 </div>
               </Link>
             ))}

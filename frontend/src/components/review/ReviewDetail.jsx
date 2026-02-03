@@ -37,7 +37,7 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
 
   if (!review) return null;
 
-  const { title, content, rating, createdAt, images, menuNames, location, itemIds, menuName } = review;
+  const { title, content, rating, createdAt, images, location, itemIds, menuName } = review;
 
   // review_items를 배열로 변환
   const reviewItemIds = (() => {
@@ -212,13 +212,16 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
       )}
 
       {/* 메뉴명(영수증 디텍트 결과) */}
-      {menuName?.length > 0 && (
+      {menuName && (
         <div>
           <strong style={{ fontSize: 15, color: "#495057", display: "block", marginBottom: 12 }}>
             영수증 메뉴
           </strong>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {menuName.map((m, idx) => (
+            {(Array.isArray(menuName)
+              ? menuName
+              : menuName.split(',')
+            ).map((m, idx) => (
               <span
                 key={`${m}-${idx}`}
                 style={{
@@ -230,7 +233,7 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
                   color: "#495057"
                 }}
               >
-                {m}
+                🍽️ {String(m).replace(/["[\]]/g, '').trim()}
               </span>
             ))}
           </div>
