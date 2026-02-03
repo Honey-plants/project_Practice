@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import Modal from "../common/Modal";
 import styles from "../../styles/CreateModal.css";
 import TemplateRadioCard from "./TemplateRadioCard";
+
+import { MemberContext } from "../../context/MemberContext";
 
 export default function CreateModal({
   isOpen,
@@ -11,15 +13,21 @@ export default function CreateModal({
   onConfirm,
   saving = false,
 }) {
+  // 로그인 사용자 정보
+  const { stateMember } = useContext(MemberContext);
+  const myMemberId = stateMember?.me?.member_id;
+
   const [templateId, setTemplateId] = useState(1);
   const [selectedIds, setSelectedIds] = useState([]);
 
-  const reviews = stateReview.list ?? [];
-
+  // 여기서부터 list로 사용 (서버에서 내것만 내려줌)
+  const myReviews = useMemo(() => stateReview.list ?? [], [stateReview.list]);
+  console.log("community :: ", myReviews)
   const isReviewActive = (r) =>
     (r.available ?? r.is_active ?? r.isActive) === true;
 
-  const activeReviews = useMemo(() => reviews.filter(isReviewActive), [reviews]);
+  // active도 내 리뷰(myList) 기준
+  const activeReviews = useMemo(() => myReviews.filter(isReviewActive), [myReviews]);
 
   const activeIds = useMemo(
     () => activeReviews.map((r) => r.review_id ?? r.id),
@@ -29,14 +37,23 @@ export default function CreateModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    if (reviews.length === 0 && !stateReview.loading) {
-      reviewActions.fetchList();
+    // 로그인 안 됐으면 호출하지 않음
+    if (!myMemberId) {
+      setTemplateId(1);
+      setSelectedIds([]);
+      return;
+    }
+
+    // ✅ 내 리스트가 비어있으면 /review/me 호출
+    if (myReviews.length === 0 && !stateReview.loading) {
+      // ⚠️ ReviewContext에 fetchMyList가 있어야 함
+      reviewActions.fetchMyList();
     }
 
     setTemplateId(1);
     setSelectedIds([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, myMemberId]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -95,18 +112,22 @@ export default function CreateModal({
 
       <div className="section" style={{ marginTop: 12 }}>
         <div className="sectionTitle">
-          Total reviews ({reviews.length}) / ACTIVE ({activeReviews.length})
+          Total reviews ({myReviews.length}) / ACTIVE ({activeReviews.length})
         </div>
 
-        {stateReview.loading && (
+        {!myMemberId && (
+          <div className={styles.empty}>로그인이 필요합니다.</div>
+        )}
+
+        {myMemberId && stateReview.loading && (
           <div className={styles.loading}>리뷰 불러오는 중...</div>
         )}
 
-        {!stateReview.loading && reviews.length === 0 && (
+        {myMemberId && !stateReview.loading && myReviews.length === 0 && (
           <div className={styles.empty}>리뷰가 없습니다.</div>
         )}
 
-        {!stateReview.loading && reviews.length > 0 && (
+        {myMemberId && !stateReview.loading && myReviews.length > 0 && (
           <>
             {templateId === 1 && (
               <>
@@ -115,7 +136,7 @@ export default function CreateModal({
                 </div>
 
                 <ul className="reviewList">
-                  {reviews.map((r) => {
+                  {myReviews.map((r) => {
                     const id = r.review_id ?? r.id;
                     const title = r.review_title ?? r.title ?? "(no title)";
                     const isActive = isReviewActive(r);
@@ -151,8 +172,7 @@ export default function CreateModal({
 
             {templateId === 2 && (
               <div className={styles.hint}>
-                Template 2 uses the location of ALL ACTIVE reviews to create a
-                roadmap.
+                Template 2 uses the location of ALL ACTIVE reviews to create a roadmap.
               </div>
             )}
           </>

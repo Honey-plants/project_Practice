@@ -3,12 +3,7 @@ import { CommunityAPI } from "../api/communityApi";
 
 export const CommunityContext = createContext(null);
 
-const initial = {
-  list: [],
-  detail: null,
-  loading: false,
-  error: "",
-};
+const initial = { list: [], detail: null, loading: false, error: "" };
 
 function reducer(state, action) {
   switch (action.type) {
@@ -29,10 +24,25 @@ export function CommunityProvider({ children }) {
   const [stateCommunity, dispatch] = useReducer(reducer, initial);
 
   const communityActions = {
+    // 전체: active만
     fetchList: async () => {
       dispatch({ type: "LOADING" });
       try {
         const r = await CommunityAPI.list();
+        const list = Array.isArray(r.data) ? r.data : r.data?.items ?? [];
+        dispatch({ type: "SET_LIST", payload: list });
+        return list;
+      } catch (e) {
+        dispatch({ type: "ERROR", payload: e.message });
+        return [];
+      }
+    },
+
+    // 내것: active 상관없이 전부
+    fetchMyList: async () => {
+      dispatch({ type: "LOADING" });
+      try {
+        const r = await CommunityAPI.myList();
         const list = Array.isArray(r.data) ? r.data : r.data?.items ?? [];
         dispatch({ type: "SET_LIST", payload: list });
         return list;
