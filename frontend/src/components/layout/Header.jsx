@@ -17,39 +17,39 @@ export default function Header() {
   const isAdmin = stateMember.me?.role === "ADMIN";
 
   return (
-    <div className="header">
-      <div className="nav">
-        {isAdmin ? (
-          <>
-            <Link to="/admin">Admin</Link>
-          </>
-        ) : (
-          <>
-            <Link to="/">Home</Link>
-            <Link to="/community">Community</Link>
-            <Link to="/review">Review</Link>
-            <Link to="/upload/test">UploadTest</Link>
-          </>
-        )}
-      </div>
+    <div className="header-wrapper">
+      <div className="header">
+        <div className="nav">
+          {isAdmin ? (
+            <>
+              <Link to="/admin">Admin</Link>
+            </>
+          ) : (
+            <>
+              <Link to="/">Home</Link>
+              <Link to="/review">Review</Link>
+              <Link to="/community">Community</Link>
+            </>
+          )}
+        </div>
 
-      {/* 여기(auth 영역)에 Register를 추가 */}
-      <div className="auth">
-        {stateAuth.accessToken ? (
-          <>
-            <span className="me">
-              {stateMember.me?.nickname || stateMember.me?.email || "me"}
-            </span>
-            {!isAdmin && <Link to="/member/profile">Profile</Link>}
-            <button onClick={onLogout}>Logout</button>
-          </>
-        ) : (
-          <>
-            {/* 2-2번: Register 링크 추가 위치 */}
-            <Link to="/register">Register</Link>
-            <Link to="/login">Login</Link>
-          </>
-        )}
+        {/* 여기(auth 영역)에 Register를 추가 */}
+        <div className="auth">
+          {stateAuth.accessToken ? (
+            <>
+              <Link to="/member/profile" className="me-link">
+                {stateMember.me?.nickname || stateMember.me?.email || "me"}
+              </Link>
+              <button onClick={onLogout}>Logout</button>
+            </>
+          ) : (
+            <>
+              {/* 2-2번: Register 링크 추가 위치 */}
+              <Link to="/register">Register</Link>
+              <Link to="/login">Login</Link>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

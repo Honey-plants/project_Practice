@@ -4,14 +4,22 @@
   min-height: 100vh;
   padding: 40px 20px;
   box-sizing: border-box;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+  background: linear-gradient(
+    135deg,
+    #2b1f22 0%,
+    #1a1416 100%
+  ) !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   position: relative;
 }
 
 /* ===== Override body background ===== */
 :global(body:has(.container)) {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+  background: linear-gradient(
+    135deg,
+    #1a1315 0%,
+    #120d0f 100%
+  ) !important;
   min-height: 100vh;
 }
 
@@ -37,28 +45,33 @@
   justify-content: center;
   align-items: center;
   min-height: 60vh;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 16px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 15px;
 }
 
 .loading p {
   margin: 0;
-  padding: 20px 40px;
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  padding: 18px 36px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 120, 120, 0.25);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
 }
 
 /* ===== Error Message ===== */
 .error {
   margin: 0 0 24px 0;
   padding: 14px 18px;
-  background: linear-gradient(135deg, rgba(245, 87, 108, 0.15) 0%, rgba(240, 93, 251, 0.15) 100%);
-  border: 1px solid rgba(245, 87, 108, 0.4);
-  border-radius: 8px;
-  color: #ffbcbc;
+  background: linear-gradient(
+    135deg,
+    rgba(180, 60, 60, 0.18) 0%,
+    rgba(120, 30, 30, 0.18) 100%
+  );
+  border: 1px solid rgba(220, 90, 90, 0.45);
+  border-radius: 10px;
+  color: #ffb3b3;
   font-size: 14px;
   font-weight: 500;
-  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.2);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }

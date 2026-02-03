@@ -1,0 +1,191 @@
+/* ===================================================
+   Home Container
+   =================================================== */
+
+.home-container,
+.home-result-container {
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 20px;
+  box-sizing: border-box;
+
+  background: transparent;
+  min-height: calc(100vh - 80px);
+}
+
+
+/* ===================================================
+   Title Section
+   =================================================== */
+
+.home-title {
+  text-align: center;
+  margin: 28px 0;
+}
+
+.home-title p {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-text-brown);
+}
+
+
+/* ===================================================
+   Image Preview
+   =================================================== */
+
+.home-image-preview {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.home-image-preview img {
+  max-width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+
+/* ===================================================
+   Button Container
+   =================================================== */
+
+.home-button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+
+/* ===================================================
+   Base Button
+   =================================================== */
+
+.home-button {
+  padding: 14px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+
+  background: var(--color-button);
+  color: #fff;
+
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.home-button:active {
+  transform: translateY(1px);
+}
+
+.home-button:hover {
+  opacity: 0.9;
+}
+
+
+/* ===================================================
+   Button Variants
+   =================================================== */
+
+/* Camera */
+.home-button-camera {
+  background: var(--color-primary);
+}
+
+/* File */
+.home-button-file {
+  background: var(--color-secondary);
+}
+
+/* Analyze */
+.home-button-analyze {
+  background: var(--color-tertiary);
+}
+
+.home-button-analyze:disabled {
+  background: var(--color-input-border);
+  color: var(--color-placeholder);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+
+/* ===================================================
+   Reset Button
+   =================================================== */
+
+.home-button-reset {
+  margin-bottom: 16px;
+  padding: 12px 20px;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+
+  background: transparent;
+  color: var(--color-text-brown);
+
+  transition: background 0.15s ease;
+}
+
+.home-button-reset:hover {
+  background: var(--color-box);
+}
+
+
+/* ===================================================
+   Message Box
+   =================================================== */
+
+.home-message {
+  margin-top: 20px;
+  padding: 12px 16px;
+
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.home-message-success {
+  color: #4f7d4f;
+  background: transparent;
+}
+
+.home-message-error {
+  color: #b24a4a;
+  background: transparent;
+}
+
+
+/* ===================================================
+   Mobile Refinement
+   =================================================== */
+
+@media (max-width: 480px) {
+  .home-container,
+  .home-result-container {
+    padding: 20px 16px;
+  }
+
+  .home-title {
+    margin: 20px 0;
+  }
+
+  .home-title p {
+    font-size: 1rem;
+  }
+
+  .home-image-preview img {
+    max-height: 280px;
+  }
+}
