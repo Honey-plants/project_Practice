@@ -63,10 +63,16 @@ async def review_create(
         log_exception("router.review_create", e)
         raise
 
+# active True or 1
 @router.get("", response_model=list[ReviewRead])
 def review_list(db: Session = Depends(get_db)):
-    return list_reviews(db, limit=50)
+    return list_reviews(db, member_id=None, active_only=True)
 
+# active 상관없이 내것 전부
+@router.get("/me", response_model=list[ReviewRead])
+def review_my_list(db: Session = Depends(get_db), current=Depends(get_current_member)):
+    print("review list 내것만 조회중")
+    return list_reviews(db, member_id=current.member_id, active_only=None)
 
 @router.get("/{review_id}", response_model=ReviewRead)
 def review_detail(
