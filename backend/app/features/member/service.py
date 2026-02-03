@@ -91,6 +91,7 @@ def get_member(db: Session, member_id: int) -> dict:
             dislike_tags = [tag_raw]  # 혹시 그냥 문자열이면 방어
 
     return {
+        "member_id": m.member_id,
         "email": m.email,
         "nickname": m.nickname,
         "gender": m.gender,

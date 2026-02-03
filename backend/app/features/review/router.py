@@ -86,6 +86,8 @@ def review_update_content(
     db: Session = Depends(get_db),
     current=Depends(get_current_member),
 ):
+    print("수정 들어옴", payload)
+
     return update_review_content_only(
         db,
         review_id=review_id,
