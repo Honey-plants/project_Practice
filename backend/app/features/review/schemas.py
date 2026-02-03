@@ -3,17 +3,14 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
-
 class ReceiptVerifyResponse(BaseModel):
     receipt_id: str
     extracted: Dict[str, Any]
-
 
 class ReviewCreateResponse(BaseModel):
     review_id: int
     image_urls: List[str] = Field(default_factory=list)
     review_items: List[int] = Field(default_factory=list)
-
 
 class ReviewCreatePayload(BaseModel):
     receipt_id: str
@@ -24,7 +21,6 @@ class ReviewCreatePayload(BaseModel):
     # 추후 ocr 작업 끝나면 list로 변경 예정
     menu_name: List[str] = Field(default_factory=list)
     review_items: List[str] = Field(default_factory=list)
-
 
 class ReviewRead(BaseModel):
     review_id: int
@@ -40,8 +36,6 @@ class ReviewRead(BaseModel):
 
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
-
-    available: bool
 
 class ReviewContentUpdate(BaseModel):
     review_content: str = Field(..., min_length=1, max_length=5000)
