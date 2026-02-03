@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Modal from "../common/Modal";
-import styles from "../../styles/CreateModal.css";
+import styles from "../../styles/CreateModal.module.css";
 import TemplateRadioCard from "./TemplateRadioCard";
 
 export default function CreateModal({
@@ -73,7 +73,7 @@ export default function CreateModal({
     <Modal isOpen={isOpen} onClose={onClose} title="AI 이미지 생성">
       <p className={styles.desc}>Choose a template</p>
 
-      <div className="templateGrid">
+      <div className={styles.templateGrid}>
         <TemplateRadioCard
           value={1}
           checked={templateId === 1}
@@ -93,8 +93,8 @@ export default function CreateModal({
         />
       </div>
 
-      <div className="section" style={{ marginTop: 12 }}>
-        <div className="sectionTitle">
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>
           Total reviews ({reviews.length}) / ACTIVE ({activeReviews.length})
         </div>
 
@@ -114,7 +114,7 @@ export default function CreateModal({
                   Chosen 3 reviews will be used ({selectedIds.length}/3)
                 </div>
 
-                <ul className="reviewList">
+                <ul className={styles.reviewList}>
                   {reviews.map((r) => {
                     const id = r.review_id ?? r.id;
                     const title = r.review_title ?? r.title ?? "(no title)";
@@ -128,17 +128,17 @@ export default function CreateModal({
                           !isActive ? styles.inactive : ""
                         }`}
                       >
-                        <label className="checkboxRow">
+                        <label className={styles.checkboxRow}>
                           <input
                             type="checkbox"
                             checked={checked}
                             disabled={!isActive}
                             onChange={() => toggleSelect(id, isActive)}
                           />
-                          <span className="reviewTitle">
+                          <span className={styles.reviewTitle}>
                             {title}
                             {!isActive && (
-                              <span className="inactiveTag"> (INACTIVE)</span>
+                              <span className={styles.inactiveTag}> (INACTIVE)</span>
                             )}
                           </span>
                         </label>

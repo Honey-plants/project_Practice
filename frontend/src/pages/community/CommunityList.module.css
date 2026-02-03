@@ -1,0 +1,59 @@
+/* ===== Community List Container ===== */
+.listContainer {
+  margin-top: 20px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.listItem {
+  background: #FFFFFF; /* 흰색 배경 */
+  border: 1px solid #DDDDDD;
+  border-radius: 12px;
+  padding: 16px 20px;
+  transition: all 0.3s ease;
+}
+
+.listItem:hover {
+  border-color: #81C784; /* 라이트 그린 */
+  background-color: #F1F8E9; /* 아주 연한 그린 */
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(129, 199, 132, 0.3);
+}
+
+.listLink {
+  text-decoration: none;
+  color: #333333; /* 다크 그레이 */
+  font-size: 16px;
+  font-weight: 600;
+  display: block;
+}
+
+.listLink:hover {
+  color: #2E7D32; /* 딥 그린 */
+}
+
+/* ===== Error & Loading States ===== */
+.errorBox {
+  padding: 16px;
+  background: #FFFFFF;
+  border: 1px solid #D32F2F; /* 레드 */
+  border-radius: 10px;
+  color: #D32F2F;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666666; /* 미디엄 그레이 */
+  font-size: 15px;
+}

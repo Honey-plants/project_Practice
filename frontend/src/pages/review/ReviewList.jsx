@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ReviewContext } from "../../context/ReviewContext";
 import ReviewItem from "../../components/review/ReviewCard";
 import { MetaAPI } from "../../api/metaApi";
+import styles from "./ReviewList.module.css";
 
 export default function ReviewList() {
   const { stateReview, reviewActions } = useContext(ReviewContext);
@@ -81,111 +82,42 @@ export default function ReviewList() {
   const displayError = stateReview.error;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: "24px"
-      }}>
-        <h1 style={{ margin: 0, fontSize: "28px", fontWeight: "700" }}>리뷰 목록</h1>
-        <Link
-          to="/review/new"
-          style={{
-            padding: "10px 20px",
-            background: "#007bff",
-            color: "white",
-            textDecoration: "none",
-            borderRadius: "6px",
-            fontWeight: "600",
-            transition: "background 0.2s"
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = "#0056b3"}
-          onMouseLeave={(e) => e.currentTarget.style.background = "#007bff"}
-        >
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>리뷰 목록</h1>
+        <Link to="/review/new" className={styles.createButton}>
           + 새 리뷰 작성
         </Link>
       </div>
 
       {/* 필터링 섹션 */}
       {categories.length > 0 && (
-        <div style={{
-          marginBottom: "24px",
-          padding: "20px",
-          background: "white",
-          borderRadius: "12px",
-          border: "1px solid #e0e0e0"
-        }}>
+        <div className={styles.filterSection}>
           {/* 헤더 */}
-          <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "16px"
-          }}>
-            <div style={{ fontWeight: "600", fontSize: "16px" }}>
-              필터
-            </div>
+          <div className={styles.filterHeader}>
+            <div className={styles.filterTitle}>필터</div>
             {(selectedCategory || selectedItemIds.length > 0) && (
-              <button
-                onClick={clearFilters}
-                style={{
-                  padding: "6px 12px",
-                  background: "#f8f9fa",
-                  color: "#dc3545",
-                  border: "1px solid #dc3545",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                  fontWeight: "500"
-                }}
-              >
+              <button onClick={clearFilters} className={styles.clearButton}>
                 필터 초기화
               </button>
             )}
           </div>
 
           {/* 카테고리 선택 */}
-          <div style={{ marginBottom: "16px" }}>
-            <div style={{ marginBottom: "10px", fontWeight: "600", fontSize: "14px", color: "#495057" }}>
-              카테고리
-            </div>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <div className={styles.categorySection}>
+            <div className={styles.categoryLabel}>카테고리</div>
+            <div className={styles.categoryButtons}>
               <button
-                onClick={() => {
-                  setSelectedCategory(null);
-                }}
-                style={{
-                  padding: "8px 16px",
-                  background: !selectedCategory ? "#007bff" : "#f8f9fa",
-                  color: !selectedCategory ? "white" : "#333",
-                  border: "1px solid " + (!selectedCategory ? "#007bff" : "#ddd"),
-                  borderRadius: "20px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  transition: "all 0.2s"
-                }}
+                onClick={() => setSelectedCategory(null)}
+                className={`${styles.categoryButton} ${!selectedCategory ? styles.active : ''}`}
               >
                 전체
               </button>
               {categories.map((category) => (
                 <button
                   key={category.category_id}
-                  onClick={() => {
-                    setSelectedCategory(category);
-                  }}
-                  style={{
-                    padding: "8px 16px",
-                    background: selectedCategory?.category_id === category.category_id ? "#007bff" : "#f8f9fa",
-                    color: selectedCategory?.category_id === category.category_id ? "white" : "#333",
-                    border: "1px solid " + (selectedCategory?.category_id === category.category_id ? "#007bff" : "#ddd"),
-                    borderRadius: "20px",
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    transition: "all 0.2s"
-                  }}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`${styles.categoryButton} ${selectedCategory?.category_id === category.category_id ? styles.active : ''}`}
                 >
                   {category.category_label_ko || category.category_label_en || `Category #${category.category_id}`}
                 </button>
@@ -195,28 +127,16 @@ export default function ReviewList() {
 
           {/* 선택된 아이템 표시 (다른 카테고리에서 선택한 것들) */}
           {selectedItemIds.length > 0 && (
-            <div style={{ marginBottom: "16px" }}>
-              <div style={{ marginBottom: "10px", fontWeight: "600", fontSize: "14px", color: "#495057" }}>
-                선택된 항목 ({selectedItemIds.length}개)
-              </div>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <div className={styles.itemSection}>
+              <div className={styles.itemLabel}>선택된 항목 ({selectedItemIds.length}개)</div>
+              <div className={styles.itemButtons}>
                 {categories.flatMap(cat => cat.items || [])
                   .filter(item => selectedItemIds.includes(item.item_id))
                   .map((item) => (
                     <button
                       key={item.item_id}
                       onClick={() => toggleItem(item.item_id)}
-                      style={{
-                        padding: "6px 14px",
-                        background: "#28a745",
-                        color: "white",
-                        border: "1px solid #28a745",
-                        borderRadius: "16px",
-                        cursor: "pointer",
-                        fontSize: "13px",
-                        fontWeight: "500",
-                        transition: "all 0.2s"
-                      }}
+                      className={`${styles.itemButton} ${styles.selected}`}
                     >
                       ✓ {item.item_label_ko || item.item_label_en || `Item #${item.item_id}`}
                     </button>
@@ -227,28 +147,18 @@ export default function ReviewList() {
 
           {/* 아이템 선택 (카테고리가 선택되었을 때만 표시) */}
           {selectedCategory && selectedCategory.items && selectedCategory.items.length > 0 && (
-            <div>
-              <div style={{ marginBottom: "10px", fontWeight: "600", fontSize: "14px", color: "#495057" }}>
+            <div className={styles.itemSection}>
+              <div className={styles.itemLabel}>
                 {selectedCategory.category_label_ko || selectedCategory.category_label_en} 세부 항목
               </div>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <div className={styles.itemButtons}>
                 {selectedCategory.items.map((item) => {
                   const isSelected = selectedItemIds.includes(item.item_id);
                   return (
                     <button
                       key={item.item_id}
                       onClick={() => toggleItem(item.item_id)}
-                      style={{
-                        padding: "6px 14px",
-                        background: isSelected ? "#28a745" : "#fff",
-                        color: isSelected ? "white" : "#495057",
-                        border: "1px solid " + (isSelected ? "#28a745" : "#ced4da"),
-                        borderRadius: "16px",
-                        cursor: "pointer",
-                        fontSize: "13px",
-                        fontWeight: "500",
-                        transition: "all 0.2s"
-                      }}
+                      className={`${styles.itemButton} ${isSelected ? styles.selected : ''}`}
                     >
                       {isSelected && "✓ "}
                       {item.item_label_ko || item.item_label_en || `Item #${item.item_id}`}
@@ -261,14 +171,7 @@ export default function ReviewList() {
 
           {/* 필터 상태 표시 */}
           {(selectedCategory || selectedItemIds.length > 0) && (
-            <div style={{
-              marginTop: "16px",
-              padding: "10px 12px",
-              background: "#e7f3ff",
-              borderRadius: "6px",
-              fontSize: "13px",
-              color: "#004085"
-            }}>
+            <div className={styles.filterStatus}>
               {selectedItemIds.length > 0 ? (
                 <>
                   <strong>{selectedItemIds.length}개 항목</strong>이 선택된 리뷰를 표시 중
@@ -284,57 +187,27 @@ export default function ReviewList() {
       )}
 
       {displayError && (
-        <div style={{
-          padding: "16px",
-          background: "#fee",
-          color: "#c00",
-          borderRadius: "8px",
-          marginBottom: "20px",
-          border: "1px solid #fcc"
-        }}>
+        <div className={styles.errorBox}>
           <strong>오류 발생:</strong> {displayError}
         </div>
       )}
 
       {displayLoading && (
-        <div style={{
-          textAlign: "center",
-          padding: "80px 20px",
-          fontSize: "18px",
-          color: "#666"
-        }}>
-          <div style={{
-            display: "inline-block",
-            width: "40px",
-            height: "40px",
-            border: "4px solid #f3f3f3",
-            borderTop: "4px solid #007bff",
-            borderRadius: "50%",
-            animation: "spin 1s linear infinite"
-          }}></div>
-          <div style={{ marginTop: "16px" }}>로딩 중...</div>
+        <div className={styles.loadingContainer}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText}>로딩 중...</div>
         </div>
       )}
 
       {!displayLoading && displayList.length === 0 && (
-        <div style={{
-          textAlign: "center",
-          padding: "80px 20px",
-          color: "#999",
-          background: "#f8f9fa",
-          borderRadius: "8px"
-        }}>
-          <div style={{ fontSize: "48px", marginBottom: "16px" }}>📝</div>
-          <div style={{ fontSize: "18px", marginBottom: "8px" }}>아직 리뷰가 없습니다</div>
-          <div style={{ fontSize: "14px" }}>첫 번째 리뷰를 작성해보세요!</div>
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>📝</div>
+          <div className={styles.emptyTitle}>아직 리뷰가 없습니다</div>
+          <div className={styles.emptyDescription}>첫 번째 리뷰를 작성해보세요!</div>
         </div>
       )}
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-        gap: "24px"
-      }}>
+      <div className={styles.reviewGrid}>
         {displayList.map((review) => (
           <ReviewItem
             key={review.review_id || review.id}

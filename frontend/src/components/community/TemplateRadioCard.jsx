@@ -1,4 +1,4 @@
-import "../../styles/TemplateRadioCard.css";
+import styles from "../../styles/TemplateRadioCard.module.css";
 
 export default function TemplateRadioCard({
   value,
@@ -10,7 +10,7 @@ export default function TemplateRadioCard({
   className = "",
 }) {
   return (
-    <label className={`card ${checked ? "active" : ""} ${className}`}>
+    <label className={`${styles.card} ${checked ? styles.active : ""} ${className}`}>
       <input
         type="radio"
         name="template"
@@ -21,9 +21,9 @@ export default function TemplateRadioCard({
 
       <img src={imgSrc} alt={title} />
 
-      <div className="info">
-        <div className="title">{title}</div>
-        <div className="desc">{description}</div>
+      <div className={styles.info}>
+        <div className={styles.title}>{title}</div>
+        <div className={styles.desc}>{description}</div>
       </div>
     </label>
   );

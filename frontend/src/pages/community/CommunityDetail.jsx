@@ -1,6 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { CommunityContext } from "../../context/CommunityContext";
+import styles from "./CommunityDetail.module.css";
 
 export default function CommunityDetail() {
   const { id } = useParams();
@@ -20,17 +21,17 @@ export default function CommunityDetail() {
   const d = stateCommunity.detail;
 
   return (
-    <div style={{ padding: 16, maxWidth: 720 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div className={styles.container}>
+      <div className={styles.header}>
         <h2>Community Detail</h2>
-        <div style={{ display: "flex", gap: 8 }}>
-          <Link to={`/community/${id}/edit`}>Edit</Link>
-          <button onClick={onDelete}>Delete</button>
+        <div className={styles.actions}>
+          <Link to={`/community/${id}/edit`} className={styles.editLink}>Edit</Link>
+          <button onClick={onDelete} className={styles.deleteButton}>Delete</button>
         </div>
       </div>
 
-      {stateCommunity.error && <div className="errorBox">{stateCommunity.error}</div>}
-      {!d ? <div>Loading...</div> : <pre className="card">{JSON.stringify(d, null, 2)}</pre>}
+      {stateCommunity.error && <div className={styles.errorBox}>{stateCommunity.error}</div>}
+      {!d ? <div className={styles.loading}>Loading...</div> : <pre className={styles.content}>{JSON.stringify(d, null, 2)}</pre>}
     </div>
   );
 }

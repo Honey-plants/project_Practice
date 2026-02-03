@@ -1,12 +1,12 @@
 /* ===== Header Wrapper ===== */
-.header-wrapper {
+.headerWrapper {
   width: 100%;
   display: flex;
   justify-content: center;
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: #f5f5f5; /* 바깥쪽 배경 */
+  background: #F5F5F5; /* 아주 연한 웜그레이 */
 }
 
 /* ===== Global Header ===== */
@@ -23,68 +23,62 @@
   padding: 14px 20px;
   box-sizing: border-box;
 
-  background: linear-gradient(
-    135deg,
-    rgba(255, 237, 213, 0.95) 0%,
-    rgba(255, 224, 178, 0.95) 100%
-  );
-  backdrop-filter: blur(10px);
+  background: #FFFFFF; /* 흰색 배경 */
+  border-bottom: 2px solid #2E7D32; /* 딥 그린 보더 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-  border-bottom: 1px solid rgba(237, 187, 153, 0.3);
-  box-shadow: 0 4px 16px rgba(237, 146, 73, 0.15);
-
-  color: #5d4037;
+  color: #333333; /* 다크 그레이 */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
 }
 
 /* ===== Left Navigation ===== */
-.header .nav {
+.nav {
   display: flex;
   gap: 16px;
   align-items: center;
 }
 
-.header .nav a {
+.nav a {
   font-size: 14px;
   font-weight: 600;
-  color: #6d4c41;
+  color: #333333; /* 다크 그레이 */
   text-decoration: none;
   position: relative;
   transition: color 0.2s ease;
   white-space: nowrap;
 }
 
-.header .nav a:hover {
-  color: #d84315;
+.nav a:hover {
+  color: #2E7D32; /* 딥 그린 */
 }
 
 /* underline hover effect */
-.header .nav a::after {
+.nav a::after {
   content: "";
   position: absolute;
   left: 0;
   bottom: -6px;
   width: 0%;
   height: 2px;
-  background: linear-gradient(135deg, #ff8a65 0%, #ef6c00 100%);
+  background: #2E7D32; /* 딥 그린 */
   transition: width 0.25s ease;
 }
 
-.header .nav a:hover::after {
+.nav a:hover::after {
   width: 100%;
 }
 
 /* ===== Right Auth Area ===== */
-.header .auth {
+.auth {
   display: flex;
   gap: 12px;
   align-items: center;
 }
 
-.header .auth a {
+.auth a {
   font-size: 12px;
   font-weight: 600;
-  color: #6d4c41;
+  color: #333333; /* 다크 그레이 */
   text-decoration: none;
   padding: 6px 10px;
   border-radius: 8px;
@@ -92,19 +86,19 @@
   white-space: nowrap;
 }
 
-.header .auth a:hover {
-  color: #d84315;
-  background-color: rgba(255, 138, 101, 0.15);
+.auth a:hover {
+  color: #2E7D32; /* 딥 그린 */
+  background-color: #F1F8E9; /* 아주 연한 그린 */
 }
 
 /* nickname 링크 스타일 */
-.header .auth .me-link {
+.meLink {
   font-size: 13px;
   font-weight: 700;
-  color: #5d4037;
+  color: #FFFFFF;
   padding: 6px 12px;
   border-radius: 8px;
-  background-color: rgba(255, 138, 101, 0.2);
+  background-color: #2E7D32; /* 딥 그린 */
   transition: all 0.2s ease;
   cursor: pointer;
   white-space: nowrap;
@@ -113,34 +107,33 @@
   text-overflow: ellipsis;
 }
 
-.header .auth .me-link:hover {
-  color: #ffffff;
-  background-color: rgba(255, 112, 67, 0.85);
+.meLink:hover {
+  background-color: #1B5E20; /* 더 진한 그린 */
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 112, 67, 0.3);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
 }
 
 /* ===== Logout Button ===== */
-.header .auth button {
+.auth button {
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 600;
-  color: #fff;
+  color: #FFFFFF;
 
-  background: linear-gradient(135deg, #ff8a65 0%, #ff6f00 100%);
+  background: #81C784; /* 라이트 그린 */
   border: none;
   border-radius: 8px;
   cursor: pointer;
 
   transition: all 0.25s ease;
-  box-shadow: 0 3px 10px rgba(255, 111, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(129, 199, 132, 0.3);
   white-space: nowrap;
 }
 
-.header .auth button:hover {
+.auth button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(255, 111, 0, 0.4);
-  background: linear-gradient(135deg, #ff7043 0%, #ef6c00 100%);
+  box-shadow: 0 4px 10px rgba(129, 199, 132, 0.4);
+  background: #66BB6A; /* 약간 더 진한 라이트 그린 */
 }
 
 /* ===== Responsive ===== */
@@ -151,25 +144,25 @@
     gap: 12px;
   }
 
-  .header .nav {
+  .nav {
     gap: 12px;
   }
 
-  .header .nav a {
+  .nav a {
     font-size: 13px;
   }
 
-  .header .auth {
+  .auth {
     gap: 10px;
   }
 
-  .header .auth a,
-  .header .auth button {
+  .auth a,
+  .auth button {
     font-size: 11px;
     padding: 5px 8px;
   }
 
-  .header .auth .me-link {
+  .meLink {
     font-size: 12px;
     padding: 5px 10px;
     max-width: 80px;

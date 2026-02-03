@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CommunityContext } from "../../context/CommunityContext";
 import CreateModal from "../../components/community/CreateModal";
 import { ReviewContext } from "../../context/ReviewContext";
+import styles from "./CommunityCreate.module.css";
 
 
 export default function CommunityCreate() {
@@ -39,10 +40,10 @@ export default function CommunityCreate() {
   };
 
   return (
-    <div style={{ padding: 16, maxWidth: 720 }}>
+    <div className={styles.container}>
       <h2>New Community Post</h2>
 
-      <button type="button" onClick={() => setIsOpen(true)} disabled={saving}>
+      <button type="button" onClick={() => setIsOpen(true)} disabled={saving} className={styles.selectButton}>
         리뷰선택
       </button>
 

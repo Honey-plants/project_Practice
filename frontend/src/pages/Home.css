@@ -28,7 +28,7 @@
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.5;
-  color: var(--color-text-brown);
+  color: #333333; /* 다크 그레이 - 본문 텍스트 */
 }
 
 
@@ -47,8 +47,8 @@
   object-fit: contain;
 
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border: 1px solid #DDDDDD;
+  background: #FFFFFF; /* 흰색 배경 */
 }
 
 
@@ -94,22 +94,22 @@
 
 /* Camera */
 .home-button-camera {
-  background: var(--color-primary);
+  background: #2E7D32; /* 딥 그린 */
 }
 
 /* File */
 .home-button-file {
-  background: var(--color-secondary);
+  background: #81C784; /* 라이트 그린 */
 }
 
 /* Analyze */
 .home-button-analyze {
-  background: var(--color-tertiary);
+  background: #2E7D32; /* 딥 그린 */
 }
 
 .home-button-analyze:disabled {
-  background: var(--color-input-border);
-  color: var(--color-placeholder);
+  background: #E0E0E0;
+  color: #999999;
   cursor: not-allowed;
   opacity: 1;
 }
@@ -127,16 +127,16 @@
   font-weight: 600;
 
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: 1px solid #DDDDDD;
 
   background: transparent;
-  color: var(--color-text-brown);
+  color: #333333; /* 다크 그레이 */
 
   transition: background 0.15s ease;
 }
 
 .home-button-reset:hover {
-  background: var(--color-box);
+  background: #F5F5F5; /* 아주 연한 웜그레이 */
 }
 
 
@@ -153,16 +153,16 @@
   font-weight: 500;
 
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: 1px solid #DDDDDD;
 }
 
 .home-message-success {
-  color: #4f7d4f;
+  color: #2E7D32; /* 딥 그린 */
   background: transparent;
 }
 
 .home-message-error {
-  color: #b24a4a;
+  color: #D32F2F; /* 레드 - 주의/위험용 */
   background: transparent;
 }
 

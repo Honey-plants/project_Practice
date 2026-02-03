@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { MemberContext } from "../../context/MemberContext";
-import "./Header.css"
+import styles from "./Header.module.css";
 
 export default function Header() {
   const { stateAuth, authActions } = useContext(AuthContext);
@@ -17,9 +17,9 @@ export default function Header() {
   const isAdmin = stateMember.me?.role === "ADMIN";
 
   return (
-    <div className="header-wrapper">
-      <div className="header">
-        <div className="nav">
+    <div className={styles.headerWrapper}>
+      <div className={styles.header}>
+        <div className={styles.nav}>
           {isAdmin ? (
             <>
               <Link to="/admin">Admin</Link>
@@ -34,10 +34,10 @@ export default function Header() {
         </div>
 
         {/* 여기(auth 영역)에 Register를 추가 */}
-        <div className="auth">
+        <div className={styles.auth}>
           {stateAuth.accessToken ? (
             <>
-              <Link to="/member/profile" className="me-link">
+              <Link to="/member/profile" className={styles.meLink}>
                 {stateMember.me?.nickname || stateMember.me?.email || "me"}
               </Link>
               <button onClick={onLogout}>Logout</button>

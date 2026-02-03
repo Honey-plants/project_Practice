@@ -30,19 +30,13 @@ export default function RestrictionsSection({ selectedIds }) {
       </div>
 
       {stateMeta?.loading && (
-        <div style={{ margin: "10px 0", textAlign: "center", color: "#999" }}>
+        <div className={styles.loading}>
           information loading...
         </div>
       )}
 
       {stateMeta?.error && (
-        <div style={{
-          margin: "10px 0",
-          padding: 10,
-          border: "1px solid #ffbcbc",
-          background: "#ffecec",
-          borderRadius: "8px"
-        }}>
+        <div className={styles.errorBox}>
           {stateMeta.error}
         </div>
       )}
