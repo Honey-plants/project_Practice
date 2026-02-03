@@ -600,6 +600,22 @@ class PipelineOrchestrator:
                 llm_input_items=llm_input_items,
                 llm_output_items=llm_output_items,
             )
+            # --- NEW: 최종 결과물에 user_profile 메타 포함 (Step05 단계에서 확정) ---
+            profile_source = "default"
+            if step5.user_profile_json:
+                try:
+                    if Path(step5.user_profile_json).exists():
+                        profile_source = "provided"
+                    else:
+                        profile_source = "missing_file"
+                except Exception:
+                    profile_source = "invalid_path"
+
+            final_obj.setdefault("meta", {})
+            final_obj["meta"]["user_profile"] = user_profile
+            final_obj["meta"]["profile_source"] = profile_source
+            # (선택) 디버깅용으로 경로까지 넣고 싶으면:
+            # final_obj["meta"]["user_profile_json"] = step5.user_profile_json
 
             final_json.parent.mkdir(parents=True, exist_ok=True)
             final_json.write_text(json.dumps(final_obj, ensure_ascii=False, indent=2), encoding="utf-8")

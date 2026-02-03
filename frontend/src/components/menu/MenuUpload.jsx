@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { MenuAPI } from "../../api/menuApi";
-import ResultPage from "../../pages/menuscan/ResultPage"
+import ResultPage from "../../pages/menuscan/ResultPage";
 
 /**
  * 백엔드 응답 형태 방어적 표준화
  * - router response_model: { job_id, upload_type, result }
- * - result 내부: { final, rectified_image: { mime, base64 }, run_id }
+ * - result 내부: { final, rectified_image: { mime, base64 }, run_id, meta? }
  */
 function normalizeBackendPayload(raw) {
   const root = raw?.data ?? raw;
@@ -28,13 +28,39 @@ function normalizeBackendPayload(raw) {
   return { raw: root, payload, final: finalObj, imageDataUrl, runId };
 }
 
+const LS_KEY = "haenet_user_profile_json";
+
 export default function MenuUploadInline() {
   const [file, setFile] = useState(null);
   const [msg, setMsg] = useState("");
   const [rawRes, setRawRes] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ 추가: user_profile JSON 입력(문자열)
+  const [profileText, setProfileText] = useState("");
+
+  useEffect(() => {
+    // 새로고침 후에도 입력 유지(편의)
+    const saved = localStorage.getItem(LS_KEY);
+    if (saved) setProfileText(saved);
+  }, []);
+
   const normalized = useMemo(() => (rawRes ? normalizeBackendPayload(rawRes) : null), [rawRes]);
+
+  const parseProfile = () => {
+    const t = (profileText || "").trim();
+    if (!t) return null; // 미전송 → 백엔드 default profile 사용
+
+    try {
+      const obj = JSON.parse(t);
+      if (!obj || typeof obj !== "object" || Array.isArray(obj)) {
+        throw new Error("user_profile은 JSON object 형태여야 해");
+      }
+      return obj;
+    } catch (e) {
+      throw new Error(`user_profile JSON 파싱 실패: ${e?.message || e}`);
+    }
+  };
 
   const onUpload = async () => {
     if (!file) return setMsg("이미지를 선택해줘");
@@ -43,14 +69,35 @@ export default function MenuUploadInline() {
     setLoading(true);
 
     try {
-      const r = await MenuAPI.uploadMenu(file);
+      const profileObj = parseProfile();
+
+      // ✅ 저장(파싱 성공 or 빈 값)
+      localStorage.setItem(LS_KEY, (profileText || "").trim());
+
+      const r = await MenuAPI.uploadMenu(file, profileObj);
+
       setRawRes(r);
-      setMsg("✅ 메뉴 분석 완료");
+
+      // meta.profile_source가 있으면 메시지 개선(없어도 기존 메시지 유지)
+      const profileSource = r?.data?.result?.meta?.profile_source;
+      if (profileSource === "default") {
+        setMsg("✅ 메뉴 분석 완료 (프로필 미제공 → 기본 프로필로 분석됨)");
+      } else if (profileSource === "provided") {
+        setMsg("✅ 메뉴 분석 완료 (사용자 프로필 적용됨)");
+      } else {
+        setMsg("✅ 메뉴 분석 완료");
+      }
     } catch (e) {
       setMsg(`❌ ${e?.response?.data?.detail || e?.message || "업로드 실패"}`);
     } finally {
       setLoading(false);
     }
+  };
+
+  const onClearProfile = () => {
+    setProfileText("");
+    localStorage.removeItem(LS_KEY);
+    setMsg("프로필 입력을 초기화했어 (다음 업로드는 기본 프로필로 분석됨)");
   };
 
   if (normalized) {
@@ -71,16 +118,58 @@ export default function MenuUploadInline() {
     <div style={{ border: "1px solid #ddd", padding: 12, borderRadius: 8 }}>
       <h3 style={{ marginTop: 0 }}>메뉴 이미지 업로드</h3>
 
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
-      />
-      <button onClick={onUpload} disabled={loading} style={{ marginLeft: 8 }}>
-        {loading ? "분석중..." : "업로드/분석"}
-      </button>
+      <div style={{ display: "grid", gap: 10 }}>
+        <div>
+          <div style={{ fontSize: 13, color: "#444", marginBottom: 6 }}>
+            1) 이미지 선택
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
+        </div>
 
-      {msg && <div style={{ marginTop: 10 }}>{msg}</div>}
+        <div>
+          <div style={{ fontSize: 13, color: "#444", marginBottom: 6 }}>
+            2) 사용자 프로필(JSON, 선택)
+          </div>
+          <textarea
+            value={profileText}
+            onChange={(e) => setProfileText(e.target.value)}
+            placeholder={`예시:
+{
+  "allergy_tags": ["ALG_PEANUT", "ALG_CRUSTACEANS"],
+  "avoid_foods": ["땅콩", "새우", "돼지고기"],
+  "religion": "islam_halal"
+}`}
+            rows={8}
+            style={{
+              width: "100%",
+              fontFamily: "monospace",
+              fontSize: 12,
+              padding: 10,
+              borderRadius: 8,
+              border: "1px solid #ddd",
+            }}
+          />
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button onClick={onClearProfile} disabled={loading}>
+              프로필 초기화
+            </button>
+            <div style={{ fontSize: 12, color: "#666", alignSelf: "center" }}>
+              비워두면 백엔드가 기본 프로필(알러지/회피/종교 없음)로 분석해.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <button onClick={onUpload} disabled={loading} style={{ marginRight: 8 }}>
+            {loading ? "분석중..." : "업로드/분석"}
+          </button>
+          {msg && <span style={{ marginLeft: 8 }}>{msg}</span>}
+        </div>
+      </div>
     </div>
   );
 }

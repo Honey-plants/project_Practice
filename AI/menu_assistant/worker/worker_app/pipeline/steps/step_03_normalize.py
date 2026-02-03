@@ -79,6 +79,85 @@ _SET_COMPONENT_WORDS = {
     "스프", "후식", "드링크", "와인", "샐러드", "샐러드", "파스타", "리조토", "피자",
 }
 
+# ============================================================
+# Bracket-aware policy (menu name vs composition/options)
+# - menu_norm should be derived from OUTSIDE brackets only.
+# - We keep original poly as-is for backward compatibility.
+# - Optionally, we compute poly_menu / poly_bracket when token-trace is available.
+# ============================================================
+
+_BRACKET_ANY_RE = re.compile(r"[\(\[\{].*?[\)\]\}]", re.UNICODE)
+_OPEN_BR = {"(", "[", "{"}
+_CLOSE_BR = {")", "]", "}"}
+
+
+def strip_bracket_content(text: str) -> str:
+    """Remove bracket segments for menu-name normalization.
+
+    Example:
+      "만두전골 (만두4개+칼국수)" -> "만두전골"
+    """
+    t = (text or "").strip()
+    if not t:
+        return ""
+    return _BRACKET_ANY_RE.sub("", t).strip()
+
+
+def _union_bbox_of_polys(polys: List[List[List[float]]]) -> Optional[List[List[float]]]:
+    """Union bbox of multiple polys (each poly is 4 points). Return None if empty."""
+    if not polys:
+        return None
+    xs: List[float] = []
+    ys: List[float] = []
+    for poly in polys:
+        if not isinstance(poly, list) or len(poly) < 4:
+            continue
+        for p in poly:
+            if not isinstance(p, (list, tuple)) or len(p) < 2:
+                continue
+            try:
+                xs.append(float(p[0]))
+                ys.append(float(p[1]))
+            except Exception:
+                continue
+    if not xs or not ys:
+        return None
+    x1, y1, x2, y2 = min(xs), min(ys), max(xs), max(ys)
+    return [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
+
+
+def split_tokens_by_brackets(tokens: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Split tokens into (main_tokens, bracket_tokens) using bracket depth.
+
+    Conservative rules:
+      - If a token includes any bracket char, classify as bracket token.
+      - Otherwise, classify by current depth while scanning tokens left->right.
+    """
+    main_tokens: List[Dict[str, Any]] = []
+    bracket_tokens: List[Dict[str, Any]] = []
+
+    depth = 0
+    for tk in tokens:
+        txt = str(tk.get("text", "") or "")
+
+        has_br_char = any((ch in _OPEN_BR) or (ch in _CLOSE_BR) for ch in txt)
+        if has_br_char:
+            bracket_tokens.append(tk)
+        else:
+            if depth > 0:
+                bracket_tokens.append(tk)
+            else:
+                main_tokens.append(tk)
+
+        for ch in txt:
+            if ch in _OPEN_BR:
+                depth += 1
+            elif ch in _CLOSE_BR:
+                depth = max(0, depth - 1)
+
+    return main_tokens, bracket_tokens
+
+
 
 def _contains_any(s: str, words) -> bool:
     for w in words:
@@ -210,10 +289,14 @@ def _is_mergeable_general(text: str) -> bool:
 
 
 def _merge_two(a: Dict[str, Any], b: Dict[str, Any]) -> Dict[str, Any]:
+    # Keep original behavior + carry token trace (internal-only)
+    a_tokens = a.get("_tokens") if isinstance(a.get("_tokens"), list) else []
+    b_tokens = b.get("_tokens") if isinstance(b.get("_tokens"), list) else []
     return {
         "text": str(a["text"]) + str(b["text"]),
         "poly": _union_poly_bbox(a["poly"], b["poly"]),
         "score": float(min(float(a.get("score", 0.0)), float(b.get("score", 0.0)))),
+        "_tokens": (a_tokens + b_tokens),
     }
 
 
@@ -370,11 +453,13 @@ def merge_det_items_stable(
         poly = _safe_poly(it.get("poly"))
         if not poly:
             continue
+        txt = str(it.get("text", ""))
         prepared.append(
             {
-                "text": str(it.get("text", "")),
+                "text": txt,
                 "poly": poly,
                 "score": float(it.get("score", 0.0)),
+                "_tokens": [{"text": txt, "poly": poly}],
             }
         )
 
@@ -504,12 +589,30 @@ def run_step_03_normalize(
 
         for part in parts:
             raw_menu = part
-            menu_norm = normalize_menu_korean_only(raw_menu)
+            raw_menu_main = strip_bracket_content(raw_menu)
+            menu_norm = normalize_menu_korean_only(raw_menu_main)
 
             if not is_menu_candidate(raw_menu=raw_menu, menu_norm=menu_norm, score=score, cfg=cfg):
                 continue
 
-            items_out.append({"raw_menu": raw_menu, "poly": poly, "menu_norm": menu_norm})
+            row: Dict[str, Any] = {"raw_menu": raw_menu, "poly": poly, "menu_norm": menu_norm}
+
+            tokens = it.get("_tokens") if isinstance(it.get("_tokens"), list) else []
+            if tokens:
+                main_tks, br_tks = split_tokens_by_brackets(tokens)
+                poly_menu = _union_bbox_of_polys([
+                    t.get("poly") for t in main_tks if isinstance(t.get("poly"), list)
+                ])
+                poly_bracket = _union_bbox_of_polys([
+                    t.get("poly") for t in br_tks if isinstance(t.get("poly"), list)
+                ])
+                if poly_menu is None:
+                    poly_menu = poly
+                row["poly_menu"] = poly_menu
+                row["poly_bracket"] = poly_bracket
+                row["raw_menu_main"] = raw_menu_main
+
+            items_out.append(row)
 
     out = {"items": items_out}
     out_json_path.parent.mkdir(parents=True, exist_ok=True)
