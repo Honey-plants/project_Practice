@@ -62,3 +62,6 @@ test/
 tmp_receipt/
 AI/review/test/
 AI/review/tmp_receipt/
+
+# uploads
+/uploads

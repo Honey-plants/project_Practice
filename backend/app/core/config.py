@@ -43,6 +43,7 @@ LOCAL_TMP_ROOT = (LOCAL_UPLOAD_ROOT / "tmp").resolve()
 LOCAL_PERM_ROOT = (LOCAL_UPLOAD_ROOT / "perm").resolve()
 
 TMP_TTL_SECONDS = int(os.getenv("TMP_TTL_SECONDS", "1800"))  # 30분
+TMP_CLEAN_INTERVAL_SECONDS = int(os.getenv("TMP_CLEAN_INTERVAL_SECONDS", "600"))  # 10분마다
 
 # S3
 S3_BUCKET = os.getenv("S3_BUCKET", "")
