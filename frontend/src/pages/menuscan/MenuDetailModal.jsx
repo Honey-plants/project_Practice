@@ -1,139 +1,90 @@
 import React from "react";
+import "./MenuDetailModal.css";
 
 export default function MenuDetailModal({ item, onClose }) {
   if (!item) return null;
 
-  // Step06(final_translated.json) 기준 구조 방어
-  // - item.menu.menu_name_en, item.menu.menu_description_en
-  // - item.risk.risk_description_en
-  // - item.comment.comment_en
-  const menuName =
-    item?.menu?.menu_name_en ||
-    item?.menu?.menu_name_ko ||
-    item?.menu_name_en ||
-    item?.menu_name_ko ||
-    "Menu";
+  const menuNameEn = item?.menu?.menu_name_en || item?.menu_name_en || "";
+  const menuDescEn = item?.menu?.menu_description_en || item?.menu_description_en || "";
+  const riskDescEn = item?.risk?.risk_description_en || item?.risk_description_en || "";
 
-  const menuDesc =
-    item?.menu?.menu_description_en ||
-    item?.menu?.menu_description_ko ||
-    item?.menu_description_en ||
-    item?.menu_description_ko ||
-    "";
-
-  const riskDesc =
-    item?.risk?.risk_description_en ||
-    item?.risk?.risk_description_ko ||
-    item?.risk_description_en ||
-    item?.risk_description_ko ||
-    "";
-
-  const commentText =
-    item?.comment?.comment_en ||
-    item?.comment?.comment_ko ||
-    item?.comment_en ||
-    item?.comment_ko ||
-    "";
-
-  const algTags =
-    item?.menu?.alg_tags ||
-    item?.alg_tags ||
-    item?.risk?.alg_tags ||
-    item?.risk?.matched_allergens ||
-    [];
-
-  const copy = async (text) => {
-    try {
-      await navigator.clipboard.writeText(String(text || ""));
-    } catch (_) {
-      // clipboard 권한이 없을 수 있어 조용히 무시
-    }
-  };
+  const commentKo = item?.comment?.comment_ko || item?.comment_ko || "";
+  const commentEn = item?.comment?.comment_en || item?.comment_en || "";
+  const hasComment = Boolean(commentKo || commentEn);
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.4)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 16,
-        zIndex: 9999,
-      }}
-      onClick={onClose}
-    >
+    <div className="ms-mdm__overlay" onClick={onClose}>
       <div
-        style={{
-          width: "min(720px, 100%)",
-          background: "#fff",
-          borderRadius: 12,
-          padding: 16,
-          boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-        }}
+        className="ms-mdm__modal"
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <h3 style={{ margin: 0 }}>{menuName}</h3>
-          <button onClick={onClose}>Close</button>
+        {/* Header */}
+        <div className="ms-mdm__header">
+          <div className="ms-mdm__titleWrap">
+            <div className="ms-mdm__subtitle">Menu details (EN)</div>
+            <h3 className="ms-mdm__title">
+              {menuNameEn || "Menu details"}
+            </h3>
+          </div>
+
+          <button className="ms-mdm__close" onClick={onClose}>
+            Close
+          </button>
         </div>
 
-        {Array.isArray(algTags) && algTags.length > 0 && (
-          <div style={{ marginTop: 10, fontSize: 13, color: "#444" }}>
-            <b>Allergen tags:</b> {algTags.join(", ")}
-          </div>
+        {/* English description */}
+        {menuDescEn && (
+          <section className="ms-mdm__section">
+            <h4 className="ms-mdm__sectionTitle">English description</h4>
+            <p className="ms-mdm__text">{menuDescEn}</p>
+          </section>
         )}
 
-        {menuDesc && (
-          <div style={{ marginTop: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <h4 style={{ margin: 0 }}>English description</h4>
-              <button onClick={() => copy(menuDesc)} style={{ fontSize: 12 }}>
-                Copy
-              </button>
+        {/* Risk */}
+        {riskDescEn && (
+          <section className="ms-mdm__section">
+            <h4 className="ms-mdm__sectionTitle">
+              Allergy / dietary risk (EN)
+            </h4>
+            <div className="ms-mdm__riskBox">
+              <p className="ms-mdm__riskText">{riskDescEn}</p>
             </div>
-            <p style={{ marginTop: 8, color: "#333" }}>{menuDesc}</p>
-          </div>
+          </section>
         )}
 
-        {riskDesc && (
-          <div style={{ marginTop: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <h4 style={{ margin: 0 }}>Allergy / dietary risk (EN)</h4>
-              <button onClick={() => copy(riskDesc)} style={{ fontSize: 12 }}>
-                Copy
-              </button>
+        {/* Comment for staff */}
+        {hasComment && (
+          <section className="ms-mdm__section">
+            <div className="ms-mdm__commentHeader">
+              <h4 className="ms-mdm__sectionTitle">Show this to staff</h4>
+              <span className="ms-mdm__badge">직원에게 보여주세요</span>
             </div>
-            <p style={{ marginTop: 8, color: "#b00020" }}>{riskDesc}</p>
-          </div>
-        )}
 
-        {commentText && (
-          <div style={{ marginTop: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <h4 style={{ margin: 0 }}>Comment / question for staff (EN)</h4>
-              <button onClick={() => copy(commentText)} style={{ fontSize: 12 }}>
-                Copy
-              </button>
+            <div className="ms-mdm__commentBox">
+              {commentKo && (
+                <div className="ms-mdm__commentBlock">
+                  <div className="ms-mdm__langLabel">Korean (KO)</div>
+                  <div className="ms-mdm__commentKo">{commentKo}</div>
+                </div>
+              )}
+
+              {commentKo && commentEn && (
+                <div className="ms-mdm__divider" />
+              )}
+
+              {commentEn && (
+                <div className="ms-mdm__commentBlock">
+                  <div className="ms-mdm__langLabel">English (EN)</div>
+                  <div className="ms-mdm__commentEn">{commentEn}</div>
+                </div>
+              )}
             </div>
-            <p style={{ marginTop: 8 }}>{commentText}</p>
-          </div>
-        )}
 
-        <details style={{ marginTop: 14 }}>
-          <summary style={{ cursor: "pointer" }}>item JSON 보기</summary>
-          <pre
-            style={{
-              whiteSpace: "pre-wrap",
-              background: "#f6f8fa",
-              padding: 10,
-              borderRadius: 8,
-            }}
-          >
-            {JSON.stringify(item, null, 2)}
-          </pre>
-        </details>
+            <div className="ms-mdm__hint">
+              직원에게 위 문장을 보여주고 알레르기/식이 제한 관련 재료 포함 여부를 확인하세요.
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
