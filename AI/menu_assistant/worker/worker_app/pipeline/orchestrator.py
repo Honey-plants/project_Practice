@@ -510,6 +510,8 @@ class PipelineOrchestrator:
                 # (호환용: step_04는 받기만 함)
                 "--rerank_top_k",
                 str(step4.rerank_top_k),
+                "--menu_index_json",
+                str('AI/menu_assistant/data/datasets/raw/menu_seed_with_alg_tags_variants_v3.json')
             ]
 
             if step4.use_rerank:
@@ -750,7 +752,12 @@ if __name__ == "__main__":
     p.add_argument("--use-rerank", action="store_true")
     p.add_argument("--no-rerank", action="store_true")
     p.add_argument("--rag-debug", action="store_true")
-
+    p.add_argument(
+        "--menu_index_json",
+        type=str,
+        default='AI/menu_assistant/data/datasets/raw/menu_seed_with_alg_tags_variants_v3.json',
+        help="Optional menu index json for STRING EXACT precheck. If omitted, uses env MENU_ASSISTANT_MENU_INDEX_JSON.",
+    )
     # ---------------- Step5 passthrough ----------------
     p.add_argument("--run-step5", action="store_true", help="Run step5 (default: on)")
     p.add_argument("--no-step5", action="store_true", help="Skip step5")
