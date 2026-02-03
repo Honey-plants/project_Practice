@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import styles from "./ProfileSidebar.module.css";
 
@@ -52,7 +51,7 @@ export default function ProfileSidebar({ member }) {
                 </span>
               ))
             ) : (
-              <p className={styles.infoValue}>없음</p>
+              <p className={styles.infoValue}>None</p>
             )}
           </div>
         </div>

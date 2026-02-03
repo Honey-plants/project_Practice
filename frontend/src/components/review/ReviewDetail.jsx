@@ -15,7 +15,7 @@ function renderStars(rating) {
   return "★".repeat(clamped) + "☆".repeat(5 - clamped);
 }
 
-export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent = false }) {
+export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent = false, currentMemberId = null }) {
   const [categories, setCategories] = useState([]);
 
   console.log("review :: ", review)
@@ -38,6 +38,9 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
   if (!review) return null;
 
   const { title, content, rating, createdAt, images, location, itemIds, menuName } = review;
+
+  // 현재 로그인한 사용자와 리뷰 작성자가 일치하는지 확인
+  const isOwner = currentMemberId && review.raw?.member_id && currentMemberId === review.raw.member_id;
 
   // review_items를 배열로 변환
   const reviewItemIds = (() => {
@@ -86,7 +89,7 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
         </div>
 
         {/* 수정 버튼 */}
-        {canEdit && !isUsedInContent && onEdit && (
+        {canEdit && !isUsedInContent && onEdit && isOwner && (
           <button
             onClick={onEdit}
             style={{

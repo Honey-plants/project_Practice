@@ -58,9 +58,9 @@ export default function ReviewList() {
         ? reviewItems.map(id => Number(id))
         : [];
 
-      // 특정 아이템이 선택되었으면 해당 아이템이 포함된 리뷰만 표시 (다중 선택 가능)
+      // 특정 아이템이 선택되었으면 선택된 모든 아이템이 포함된 리뷰만 표시
       if (selectedItemIds.length > 0) {
-        return selectedItemIds.some(itemId => reviewItemIds.includes(itemId));
+        return selectedItemIds.every(itemId => reviewItemIds.includes(itemId));
       }
 
       // 아이템이 선택되지 않고 카테고리만 선택되었으면 해당 카테고리의 아이템 중 하나라도 포함된 리뷰 표시

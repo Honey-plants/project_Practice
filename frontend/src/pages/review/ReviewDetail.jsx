@@ -1,6 +1,7 @@
 import { useContext, useEffect, useMemo } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ReviewContext } from "../../context/ReviewContext";
+import { MemberContext } from "../../context/MemberContext";
 import { ReviewDetail } from "../../components/review/ReviewDetail"
 
 function normalizeReview(raw) {
@@ -59,6 +60,7 @@ export default function ReviewDetailPage() {
   const { id } = useParams();
   const nav = useNavigate();
   const { stateReview, reviewActions } = useContext(ReviewContext);
+  const { stateMember } = useContext(MemberContext);
 
   useEffect(() => {
     if (!id) return;
@@ -138,6 +140,7 @@ export default function ReviewDetailPage() {
           onEdit={handleEdit}
           canEdit={true}
           isUsedInContent={isUsedInContent}
+          currentMemberId={stateMember.me?.member_id}
         />
       )}
     </div>

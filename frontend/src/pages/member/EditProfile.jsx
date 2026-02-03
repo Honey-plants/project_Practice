@@ -107,7 +107,7 @@ export default function EditProfile() {
       const payload = {
         nickname: form.nickname?.trim() || null,
         item_ids: form.item_ids || [],
-        dislike_tags: dislikes.length > 0 ? dislikes : null,
+        dislike_tags: dislikes,
       };
 
       await MemberAPI.updateMe(payload);

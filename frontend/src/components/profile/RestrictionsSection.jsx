@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { MetaContext } from "../../context/MetaContext";
 import RestrictionsPicker from "../restrictions/RestrictionsPicker";
 import styles from "./Section.module.css";
