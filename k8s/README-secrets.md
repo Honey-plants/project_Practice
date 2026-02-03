@@ -50,7 +50,7 @@ Disable in-chart Secret creation:
 - k8s/charts/worker/values.yaml: secrets.enabled = false
 
 Secret mount key mapping (must match ExternalSecret output keys):
-- API: secretsMount.dbPasswordKey = db_password, jwtSecretKeyKey = jwt_secret_key
+- API: secretsMount.dbPasswordKey = DB_PASSWORD, jwtSecretKeyKey = JWT_SECRET_KEY
 - Worker: secretMount.openaiApiKeyKey = OPENAI_API_KEY, dbPasswordKey = DB_PASSWORD, jwtSecretKeyKey = JWT_SECRET_KEY
 
 ## External Secrets Manifests

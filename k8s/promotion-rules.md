@@ -14,7 +14,8 @@ while preserving prod-specific endpoints, credentials, and domains.
 ### k8s/env/prod/api-values.yaml
 - DB_HOST: database-1.c7oeqq6c6a58.ap-northeast-2.rds.amazonaws.com
 - REDIS_URL: redis://redis-master.app-prod.svc.cluster.local:6379/0
-- dbPassword/jwtSecretKey: PROD_DB_PASSWORD_CHANGE_ME / PROD_JWT_CHANGE_ME
+- secretsMount.dbPasswordKey/jwtSecretKeyKey: DB_PASSWORD / JWT_SECRET_KEY
+- secret.dbPassword/secret.jwtSecretKey: PROD_DB_PASSWORD_CHANGE_ME / PROD_JWT_CHANGE_ME
 - ingress.host: app.example.com
 
 ### k8s/env/prod/frontend-values.yaml

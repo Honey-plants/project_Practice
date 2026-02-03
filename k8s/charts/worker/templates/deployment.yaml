@@ -60,7 +60,7 @@ spec:
 
           {{- $secrets := .Values.secrets | default dict -}}
           {{- $sm := .Values.secretMount | default dict -}}
-          {{- if and ($secrets.enabled | default false) ($sm.enabled | default false) }}
+          {{- if ($sm.enabled | default false) }}
           volumeMounts:
             - name: app-secrets
               mountPath: {{ $sm.mountPath | default "/run/app-secrets" | quote }}
@@ -72,7 +72,7 @@ spec:
 
       {{- $secrets := .Values.secrets | default dict -}}
       {{- $sm := .Values.secretMount | default dict -}}
-      {{- if and ($secrets.enabled | default false) ($sm.enabled | default false) }}
+      {{- if ($sm.enabled | default false) }}
       volumes:
         - name: app-secrets
           secret:

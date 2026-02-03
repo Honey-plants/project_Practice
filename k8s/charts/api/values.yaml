@@ -61,8 +61,8 @@ secret:
 secretsMount:
   enabled: true
   mountPath: /run/app-secrets
-  dbPasswordKey: db_password
-  jwtSecretKeyKey: jwt_secret_key
+  dbPasswordKey: DB_PASSWORD
+  jwtSecretKeyKey: JWT_SECRET_KEY
 
 probes:
   readinessPath: /health
