@@ -90,10 +90,10 @@ def _merge_translation_into_final_item(*, item, translated):
 
     item["risk"]["risk_description_en"] = (risk_t.get("risk_description_en") or "").strip()
 
-    # ✅ 올바른 경로로 comment_en 저장
+    #  올바른 경로로 comment_en 저장
     item["comment"]["comment_en"] = (comment_t.get("comment_en") or "").strip()
 
-    # ✅ comment_ko: LLM이 준 값 우선, 없으면 원본 risk.comment 사용
+    #  comment_ko: LLM이 준 값 우선, 없으면 원본 risk.comment 사용
     src_ko = (comment_t.get("comment_ko") or "").strip()
     if not src_ko:
         src_ko = (item.get("risk", {}).get("comment") or "").strip()

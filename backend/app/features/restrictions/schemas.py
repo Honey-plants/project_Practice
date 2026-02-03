@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from backend.app.common.schemas.base import ORMBase
 
 # category, item 전체 조회 --- start
 class RestrictionItemRead(BaseModel):
@@ -21,12 +20,12 @@ class CategoryItemRead(BaseModel):
 class ItemCreate(BaseModel):
     item_label_ko: str
     item_label_en: str
-    item_active: bool
+    item_active: bool = True
 
 class CategoryCreate(BaseModel):
     category_label_ko: str
     category_label_en: str
-    category_active: bool
+    category_active: bool = True
     items: list[ItemCreate] = Field(default_factory=list)
 
 class CategoriesBatchCreate(BaseModel):

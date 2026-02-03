@@ -2,7 +2,7 @@
 
 from backend.app.core.database import Base
 
-# ✅ 반드시 모델들을 import 해서 매퍼 등록되게 함
+#  반드시 모델들을 import 해서 매퍼 등록되게 함
 from backend.app.models.comment import Comment
 from backend.app.models.community import Community
 from backend.app.models.img_file import ImgFile

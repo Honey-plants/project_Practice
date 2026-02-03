@@ -1,24 +1,40 @@
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommunityContext } from "../../context/CommunityContext";
+import CreateModal from "../../components/community/CreateModal";
+import { ReviewContext } from "../../context/ReviewContext";
+
 
 export default function CommunityCreate() {
   const nav = useNavigate();
   const { communityActions } = useContext(CommunityContext);
+  const { stateReview, reviewActions } = useContext(ReviewContext);
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
+  const handleConfirm = async ({ templateId, reviewIds }) => {
     setError("");
+    setSaving(true);
+    const payload = {
+      template_id: templateId,
+      review_ids: reviewIds,
+    }
+
+    console.log("community create payload:", payload);
+
     try {
-      const created = await communityActions.create({ title, content });
-      const id = created?.id ?? created?.community_id;
-      nav(id ? `/community/${id}` : "/community");
-    } catch (e2) {
-      setError(e2.message || "작성 실패");
+      const created = await communityActions.create(payload);
+      console.log("[CommunityCreate] create response:", created);
+
+
+      setIsOpen(false);     // 모달 닫기
+      nav("/community");    // 커뮤니티 목록으로 이동
+    } catch (e) {
+      setError(e.message || "Generate AI image failed");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -26,13 +42,19 @@ export default function CommunityCreate() {
     <div style={{ padding: 16, maxWidth: 720 }}>
       <h2>New Community Post</h2>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="title" />
-        <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="content" rows={8} />
-        <button type="submit">Create</button>
-      </form>
+      <button type="button" onClick={() => setIsOpen(true)} disabled={saving}>
+        리뷰선택
+      </button>
 
-      {error && <div className="errorBox">{error}</div>}
+      <CreateModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        stateReview={stateReview}
+        reviewActions={reviewActions}
+        onConfirm={handleConfirm}   // 이름 맞추기
+        saving={saving}            // (선택) 버튼 disable용
+      />
+
     </div>
   );
 }

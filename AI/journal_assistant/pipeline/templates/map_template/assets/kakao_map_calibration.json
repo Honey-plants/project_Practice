@@ -1,0 +1,16 @@
+{
+  "center_lat": 36.5,
+  "center_lon": 127.8,
+  "width": 900,
+  "height": 520,
+  "scale": 36514.32423391708,
+  "calib_pin_px": {
+    "x": 444,
+    "y": 85
+  },
+  "calib_pin_naver": {
+    "x": "1277400846",
+    "y": "378573820"
+  },
+  "note": "Valid only if map frame is identical (same center/size/level/style/capture)."
+}

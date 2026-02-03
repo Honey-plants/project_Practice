@@ -11,8 +11,13 @@ def enrich_data(
     gemini_api_key: str,
 ) -> Dict:
     store = None
+
+    #  둘 다 지원 (NAVER_* / client_*)
+    client_id = (naver_cfg or {}).get("NAVER_CLIENT_ID") or (naver_cfg or {}).get("client_id")
+    client_secret = (naver_cfg or {}).get("NAVER_CLIENT_SECRET") or (naver_cfg or {}).get("client_secret")
+
     if phone:
-        store = find_store_by_phone(phone, **naver_cfg)
+        store = find_store_by_phone(phone, client_id=client_id, client_secret=client_secret)
 
     texts_to_translate = []
     if store:

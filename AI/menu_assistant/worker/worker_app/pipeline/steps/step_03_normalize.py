@@ -51,6 +51,9 @@ _NON_MENU_TITLES = {
 _KEEP_HANGUL_ONLY = re.compile(r"[^가-힣]+", re.UNICODE)
 _WS_RE = re.compile(r"\s+", re.UNICODE)
 _SLASH_SPLIT_RE = re.compile(r"\s*/\s*", re.UNICODE)
+
+# Comma split (treat as separate menus)
+_COMMA_CHARS = {',', '，'}
 _HAS_DIGIT_RE = re.compile(r"\d", re.UNICODE)
 _HAS_WON_RE = re.compile(r"(원|₩)", re.UNICODE)
 
@@ -78,6 +81,85 @@ _SELECTION_HINTS = [
 _SET_COMPONENT_WORDS = {
     "스프", "후식", "드링크", "와인", "샐러드", "샐러드", "파스타", "리조토", "피자",
 }
+
+# ============================================================
+# Bracket-aware policy (menu name vs composition/options)
+# - menu_norm should be derived from OUTSIDE brackets only.
+# - We keep original poly as-is for backward compatibility.
+# - Optionally, we compute poly_menu / poly_bracket when token-trace is available.
+# ============================================================
+
+_BRACKET_ANY_RE = re.compile(r"[\(\[\{].*?[\)\]\}]", re.UNICODE)
+_OPEN_BR = {"(", "[", "{"}
+_CLOSE_BR = {")", "]", "}"}
+
+
+def strip_bracket_content(text: str) -> str:
+    """Remove bracket segments for menu-name normalization.
+
+    Example:
+      "만두전골 (만두4개+칼국수)" -> "만두전골"
+    """
+    t = (text or "").strip()
+    if not t:
+        return ""
+    return _BRACKET_ANY_RE.sub("", t).strip()
+
+
+def _union_bbox_of_polys(polys: List[List[List[float]]]) -> Optional[List[List[float]]]:
+    """Union bbox of multiple polys (each poly is 4 points). Return None if empty."""
+    if not polys:
+        return None
+    xs: List[float] = []
+    ys: List[float] = []
+    for poly in polys:
+        if not isinstance(poly, list) or len(poly) < 4:
+            continue
+        for p in poly:
+            if not isinstance(p, (list, tuple)) or len(p) < 2:
+                continue
+            try:
+                xs.append(float(p[0]))
+                ys.append(float(p[1]))
+            except Exception:
+                continue
+    if not xs or not ys:
+        return None
+    x1, y1, x2, y2 = min(xs), min(ys), max(xs), max(ys)
+    return [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
+
+
+def split_tokens_by_brackets(tokens: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Split tokens into (main_tokens, bracket_tokens) using bracket depth.
+
+    Conservative rules:
+      - If a token includes any bracket char, classify as bracket token.
+      - Otherwise, classify by current depth while scanning tokens left->right.
+    """
+    main_tokens: List[Dict[str, Any]] = []
+    bracket_tokens: List[Dict[str, Any]] = []
+
+    depth = 0
+    for tk in tokens:
+        txt = str(tk.get("text", "") or "")
+
+        has_br_char = any((ch in _OPEN_BR) or (ch in _CLOSE_BR) for ch in txt)
+        if has_br_char:
+            bracket_tokens.append(tk)
+        else:
+            if depth > 0:
+                bracket_tokens.append(tk)
+            else:
+                main_tokens.append(tk)
+
+        for ch in txt:
+            if ch in _OPEN_BR:
+                depth += 1
+            elif ch in _CLOSE_BR:
+                depth = max(0, depth - 1)
+
+    return main_tokens, bracket_tokens
+
 
 
 def _contains_any(s: str, words) -> bool:
@@ -210,10 +292,14 @@ def _is_mergeable_general(text: str) -> bool:
 
 
 def _merge_two(a: Dict[str, Any], b: Dict[str, Any]) -> Dict[str, Any]:
+    # Keep original behavior + carry token trace (internal-only)
+    a_tokens = a.get("_tokens") if isinstance(a.get("_tokens"), list) else []
+    b_tokens = b.get("_tokens") if isinstance(b.get("_tokens"), list) else []
     return {
         "text": str(a["text"]) + str(b["text"]),
         "poly": _union_poly_bbox(a["poly"], b["poly"]),
         "score": float(min(float(a.get("score", 0.0)), float(b.get("score", 0.0)))),
+        "_tokens": (a_tokens + b_tokens),
     }
 
 
@@ -370,11 +456,13 @@ def merge_det_items_stable(
         poly = _safe_poly(it.get("poly"))
         if not poly:
             continue
+        txt = str(it.get("text", ""))
         prepared.append(
             {
-                "text": str(it.get("text", "")),
+                "text": txt,
                 "poly": poly,
                 "score": float(it.get("score", 0.0)),
+                "_tokens": [{"text": txt, "poly": poly}],
             }
         )
 
@@ -438,6 +526,74 @@ class NormalizeConfig:
     min_score: float = 0.0
 
 
+
+def split_by_comma(raw_text: str) -> List[str]:
+    """Split by comma into independent menu candidates (conservative).
+
+    Rules (conservative):
+      - Avoid splitting numeric thousand separators like "59,500".
+      - Normalize full-width comma (，) to ','.
+    """
+    t = _norm_space(raw_text)
+    if not t:
+        return []
+    if not any(ch in t for ch in _COMMA_CHARS):
+        return [t]
+    # normalize different comma chars to ","
+    for ch in list(_COMMA_CHARS):
+        t = t.replace(ch, ",")
+
+    # Do not split when comma is used only as numeric separator (e.g., 59,500)
+    # If the whole string is mostly numeric/won, keep as-is (it will be filtered by is_menu_candidate anyway)
+    if _HAS_DIGIT_RE.search(t) and not normalize_menu_korean_only(t):
+        return [t]
+
+    raw_parts = [p.strip() for p in t.split(",") if p.strip()]
+    # Filter out parts that are clearly numeric separators like "500" from "59,500"
+    parts: List[str] = []
+    for p in raw_parts:
+        # if segment is only digits/won symbols, drop it
+        if _HAS_DIGIT_RE.search(p) and not normalize_menu_korean_only(p):
+            continue
+        parts.append(p)
+    return parts or []
+
+
+def _tokens_union_poly(tokens: List[Dict[str, Any]]) -> Optional[List[List[float]]]:
+    polys: List[List[List[float]]] = []
+    for tk in tokens:
+        poly = tk.get("poly")
+        if isinstance(poly, list) and len(poly) >= 4:
+            polys.append(poly)
+    return _union_bbox_of_polys(polys)
+
+
+def split_tokens_by_commas(tokens: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
+    """Split tokens into groups separated by comma characters.
+
+    If OCR keeps commas, this preserves per-segment polys.
+    """
+    if not tokens:
+        return []
+
+    groups: List[List[Dict[str, Any]]] = []
+    cur: List[Dict[str, Any]] = []
+
+    for tk in tokens:
+        txt = str(tk.get("text", "") or "")
+        if any(ch in txt for ch in _COMMA_CHARS):
+            # Treat comma token as a pure separator.
+            # If the token contains other text besides comma, we do NOT try to split its poly here;
+            # downstream text-level split_by_comma will handle it conservatively.
+            if cur:
+                groups.append(cur)
+            cur = []
+            continue
+        cur.append(tk)
+
+    if cur:
+        groups.append(cur)
+    return groups
 def is_menu_candidate(raw_menu: str, menu_norm: str, score: float, cfg: NormalizeConfig) -> bool:
     if not menu_norm:
         return False
@@ -497,20 +653,60 @@ def run_step_03_normalize(
         raw_text = str(it.get("text", ""))
         poly = it.get("poly")
         score = float(it.get("score", 0.0))
+        tokens = it.get("_tokens") if isinstance(it.get("_tokens"), list) else []
+        # NEW: comma-separated segments should be treated as independent detections.
+        # Prefer token-level split to preserve per-segment polys.
+        if tokens and any(ch in raw_text for ch in _COMMA_CHARS):
+            token_groups: List[List[Dict[str, Any]]] = split_tokens_by_commas(tokens)
+            if not token_groups:
+                token_groups = [tokens]
+        else:
+            token_groups = [tokens] if tokens else [[]]
 
-        parts = split_by_slash(raw_text)
-        if not parts:
-            continue
+        for tg in token_groups:
+            tg_text = "".join([str(t.get("text", "") or "") for t in tg]).strip() if tg else raw_text
+            tg_poly = _tokens_union_poly(tg) if tg else poly
+            if tg_poly is None:
+                tg_poly = poly
 
-        for part in parts:
-            raw_menu = part
-            menu_norm = normalize_menu_korean_only(raw_menu)
-
-            if not is_menu_candidate(raw_menu=raw_menu, menu_norm=menu_norm, score=score, cfg=cfg):
+            # 1) Slash split first (existing policy)
+            parts = split_by_slash(tg_text)
+            if not parts:
                 continue
 
-            items_out.append({"raw_menu": raw_menu, "poly": poly, "menu_norm": menu_norm})
+            for part in parts:
+                # 2) Comma split (new policy): treat each as independent detection
+                for sub in split_by_comma(strip_bracket_content(part)):
+                    raw_menu = _norm_space(sub)
+                    # 1) () 분리 -> 이미 strip_bracket_content로 처리됨
+                    # 2) , 스플릿 -> split_by_comma 결과
+                    # 3) 영문/숫자/특수기호 제거 -> normalize_menu_korean_only
+                    # 4) strip -> 내부에서 처리되지만 안전하게 한 번 더
+                    menu_norm = normalize_menu_korean_only(raw_menu).strip()
 
+                    if not is_menu_candidate(raw_menu=raw_menu, menu_norm=menu_norm, score=score, cfg=cfg):
+                        continue
+
+                    row: Dict[str, Any] = {"raw_menu": raw_menu, "poly": tg_poly, "menu_norm": menu_norm}
+
+                    # Optional: poly split for bracket/main when token trace exists
+                    tg_tokens = tg if isinstance(tg, list) else []
+                    if tg_tokens:
+                        main_tks, br_tks = split_tokens_by_brackets(tg_tokens)
+                        poly_menu = _union_bbox_of_polys([
+                            t.get("poly") for t in main_tks if isinstance(t.get("poly"), list)
+                        ])
+                        poly_bracket = _union_bbox_of_polys([
+                            t.get("poly") for t in br_tks if isinstance(t.get("poly"), list)
+                        ])
+                        if poly_menu is None:
+                            poly_menu = tg_poly
+                        row["poly_menu"] = poly_menu
+                        row["poly_bracket"] = poly_bracket
+
+                    row["raw_menu_main"] = raw_menu
+
+                    items_out.append(row)
     out = {"items": items_out}
     out_json_path.parent.mkdir(parents=True, exist_ok=True)
     with out_json_path.open("w", encoding="utf-8") as f:

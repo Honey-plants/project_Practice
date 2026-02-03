@@ -29,11 +29,29 @@ export function ReviewProvider({ children }) {
   const [stateReview, dispatch] = useReducer(reducer, initial);
 
   const reviewActions = {
+
+    // 전체 리스트 active True or 1
     fetchList: async () => {
       dispatch({ type: "LOADING" });
       try {
         const r = await ReviewAPI.list();
         const list = Array.isArray(r.data) ? r.data : r.data?.items ?? [];
+        dispatch({ type: "SET_LIST", payload: list });
+        return list;
+      } catch (e) {
+        dispatch({ type: "ERROR", payload: e.message });
+        return [];
+      }
+    },
+
+    // 내것: active 상관없이 전부
+    fetchMyList: async () => {
+      dispatch({ type: "LOADING" });
+      try {
+        const r = await ReviewAPI.myList();
+        console.log("myList rrr :: ", r.data)
+        const list = Array.isArray(r.data) ? r.data : r.data?.items ?? [];
+        console.log("myList list :: ", list)
         dispatch({ type: "SET_LIST", payload: list });
         return list;
       } catch (e) {
@@ -55,8 +73,12 @@ export function ReviewProvider({ children }) {
     },
 
     create: async (payload) => (await ReviewAPI.create(payload)).data,
-    update: async (id, payload) => (await ReviewAPI.update(id, payload)).data,
-    remove: async (id) => (await ReviewAPI.remove(id)).data,
+
+    //  content-only
+    updateContent: async (id, review_content) => {
+      const r = await ReviewAPI.updateContent(id, review_content);
+      return r.data;
+    },
   };
 
   return (

@@ -1,0 +1,90 @@
+.ms-rp__root {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.ms-rp__imageWrap {
+  position: relative;
+  width: 100%;
+}
+
+.ms-rp__image {
+  width: 100%;
+  display: block;
+  border-radius: 14px;
+  border: 1px solid #eee;
+}
+
+.ms-rp__empty {
+  margin: 0;
+  padding: 18px;
+  color: #666;
+  background: #fafafa;
+  border: 1px dashed #ddd;
+  border-radius: 14px;
+}
+
+/* ✅ Detected menus */
+.ms-rp__menuSection {
+  margin-top: 14px;
+}
+
+.ms-rp__menuTitle {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.ms-rp__menuGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.ms-rp__menuCard {
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+}
+
+.ms-rp__menuName {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.ms-rp__menuBtn {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+}
+
+.ms-rp__menuBtn:hover {
+  background: #f7f7f7;
+}
+
+/* JSON */
+.ms-rp__jsonWrap {
+  margin-top: 16px;
+}
+
+.ms-rp__jsonTitle {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.ms-rp__jsonPre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #f6f8fa;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}

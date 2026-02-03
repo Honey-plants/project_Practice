@@ -8,11 +8,14 @@ from AI.review.app.pipeline.step_2_ocr.ocr_model import OCRConfig
 from AI.review.app.pipeline.step_2_ocr.run_ocr import run_receipt_ocr  # 네가 만든 step2 엔트리 (payload["items"] 반환)
 
 
-def run_step2_ocr(ctx: PipelineContext, *, out_dir: Path, cfg: Optional[OCRConfig] = None) -> PipelineContext:
+def run_step2_ocr(ctx: PipelineContext, *,
+                  out_dir: Path,
+                  cfg: Optional[OCRConfig] = None,
+                  image_path: Optional[str] = None,) -> PipelineContext:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # step1 결과가 있으면 rectified_path 쓰고, 없으면 input_path라도 허용
-    img_path = ctx.images.rectified_path or ctx.images.input_path
+    img_path = image_path or ctx.images.rectified_path or ctx.images.input_path  # 우선순위
     if not img_path:
         raise ValueError("Need ctx.images.rectified_path or ctx.images.input_path")
 
@@ -24,7 +27,7 @@ def run_step2_ocr(ctx: PipelineContext, *, out_dir: Path, cfg: Optional[OCRConfi
         save_json=(ctx.mode == "debug"),
     )
 
-    # ✅ items를 OCRItem으로 검증/변환
+    # items를 OCRItem으로 검증/변환
     ctx.ocr.items = [OCRItem(**it) for it in payload["items"]]
     ctx.ocr.n_items = payload["n_items"]
     ctx.ocr.overlay_path = payload["outputs"].get("overlay")

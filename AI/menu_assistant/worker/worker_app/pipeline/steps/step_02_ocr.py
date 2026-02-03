@@ -12,6 +12,7 @@ from menu_assistant.worker.worker_app.ocr.paddle_runner import (
     run_paddleocr,
     write_vis_image,
 )
+from menu_assistant.worker.worker_app.pipeline.steps.config import (default_data_dir_from_steps_file)
 
 
 # Optional preprocess (pixel-only, geometry-invariant)
@@ -29,12 +30,16 @@ except Exception:
 # Path resolving (run folder)
 # -----------------------------
 
-def resolve_rectified_from_run(data_dir: Path, run_id: str) -> Path:
-    """Step1 output convention:
-      <data_dir>/runs/<run_id>/rectify/rectified.jpg
+def resolve_rectified_from_run(data_dir: Path, run_id: str, run_dir: Optional[Path] = None) -> Path:
+    """Step1 output convention (backward compatible):
+      - if run_dir provided: <run_dir>/rectify/rectified.jpg
+      - else              : <data_dir>/runs/<run_id>/rectify/rectified.jpg
     """
 
-    p = data_dir / "runs" / run_id / "rectify" / "rectified.jpg"
+    if run_dir is not None:
+        p = run_dir / "rectify" / "rectified.jpg"
+    else:
+        p = data_dir / "runs" / run_id / "rectify" / "rectified.jpg"
     if not p.exists():
         raise FileNotFoundError(f"Rectified image not found: {p}")
     return p
@@ -52,6 +57,7 @@ def main() -> None:
         help="Run id from Step1 (reads <data_dir>/runs/<run_id>/rectify/rectified.jpg)",
     )
     parser.add_argument("--data_dir", default="menu_assistant/data", help="Base data directory (contains runs/)")
+    parser.add_argument("--run_dir", default=None, help="Optional run directory override (tmp/.../ai_runs/<run_id>)")
     parser.add_argument("--image", default=None, help="Direct path to rectified image (if not using --run_id)")
 
     # Output
@@ -68,6 +74,9 @@ def main() -> None:
     parser.add_argument("--det_box_thresh", type=float, default=None)
     parser.add_argument("--det_thresh", type=float, default=None)
     parser.add_argument("--det_unclip_ratio", type=float, default=None)
+
+    parser.add_argument("--device", default="auto", choices=["auto", "cpu", "gpu"])
+    parser.add_argument("--gpu_mem", type=int, default=None)
 
     # Keep "auto correction" OFF by default
     parser.add_argument(
@@ -90,7 +99,9 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    data_dir = Path(args.data_dir)
+    # data_dir 보정: 기존 default 문자열 유지 + repo 기준 fallback
+    data_dir = Path(args.data_dir) if args.data_dir else default_data_dir_from_steps_file(__file__)
+    run_dir = Path(args.run_dir) if args.run_dir else None
 
     # Resolve input image
     if args.image:
@@ -101,8 +112,8 @@ def main() -> None:
     else:
         if not args.run_id:
             raise RuntimeError("Provide either --run_id or --image.")
-        img_path = resolve_rectified_from_run(data_dir=data_dir, run_id=args.run_id)
-        run_base = data_dir / "runs" / args.run_id
+        img_path = resolve_rectified_from_run(data_dir=data_dir, run_id=args.run_id, run_dir=run_dir)
+        run_base = run_dir if run_dir is not None else (data_dir / "runs" / args.run_id)
 
     # Output paths
     if args.out:
@@ -155,6 +166,8 @@ def main() -> None:
         det_box_thresh=args.det_box_thresh,
         det_thresh=args.det_thresh,
         det_unclip_ratio=args.det_unclip_ratio,
+        device=args.device,
+        gpu_mem=args.gpu_mem,
     )
     items = parse_paddleocr_raw(raw)
     elapsed_ms = int((time.time() - t0) * 1000)
@@ -177,6 +190,8 @@ def main() -> None:
             "det_model_dir": args.det_model_dir,
             "rec_model_dir": args.rec_model_dir,
             "cls_model_dir": args.cls_model_dir,
+            "device": args.device,
+            "gpu_mem": args.gpu_mem,
         },
         "items": items,
         "notes": "Rectified image is treated as source. Text normalization/menu policy is handled in Step03.",

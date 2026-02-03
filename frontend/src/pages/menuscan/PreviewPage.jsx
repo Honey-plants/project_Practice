@@ -1,59 +1,119 @@
-import React, { useState } from "react";
-import { menuUploadAPI } from "../../api/menuUploadApi";
-import ResultPage from "./ResultPage";
+import React, { useMemo, useState } from "react";
+import PolygonOverlay from "./PolygonOverlay";
+import MenuDetailModal from "./MenuDetailModal";
+import "./ResultPage.css";
 
-export default function PreviewPage({ file, goBack }) {
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
-  const [result, setResult] = useState(null);
+/**
+ * 백엔드 응답 형태 방어적 표준화
+ * - router response_model: { job_id, upload_type, result }
+ * - result 내부: { final, rectified_image: { mime, base64 }, run_id }
+ */
+function normalizeBackendPayload(raw) {
+  const root = raw?.data ?? raw;
 
-  const handleUpload = async () => {
-    if (!file) return;
+  // router wrapper가 있으면 result로 들어감
+  const payload = root?.result ?? root;
 
-    const formData = new FormData();
-    formData.append("image", file); // FastAPI expects "image"
-    formData.append("type", "menu");
+  // final_translated.json (최종 결과)
+  const finalObj = payload?.final ?? payload?.final_obj ?? payload?.final_json ?? payload;
 
-    setUploading(true);
-    setError("");
+  // rectified 이미지(base64)
+  const rectified = payload?.rectified_image ?? payload?.rectified ?? null;
+  const base64 = rectified?.base64 ?? null;
+  const mime = rectified?.mime ?? "image/jpeg";
+  const imageDataUrl = base64 ? `data:${mime};base64,${base64}` : null;
 
+  const runId = payload?.run_id ?? root?.job_id ?? root?.run_id ?? null;
+
+  return { raw: root, payload, final: finalObj, imageDataUrl, runId };
+}
+
+export default function ResultPage({ result }) {
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [imgSize, setImgSize] = useState({ w: 0, h: 0 });
+  const [imgBroken, setImgBroken] = useState(false);
+
+  const normalized = useMemo(() => normalizeBackendPayload(result), [result]);
+
+  // ✅ items: root.items가 없으면 final.items를 사용
+  const items = result?.items || normalized?.final?.items || [];
+
+  // ✅ image: URL이 없거나 정적서빙이 안 되면 base64(data url) 사용
+  const imageUrl = result?.result_image_url || normalized?.imageDataUrl;
+  const resolvedImageSrc = !imgBroken ? imageUrl : (normalized?.imageDataUrl || imageUrl);
+
+  const jsonText = (() => {
     try {
-      const res = await menuUploadAPI.upload(formData);
-
-      /**
-       * AI 연동 전/후 공통
-       * - res.data가 placeholder여도 OK
-       * - AI 최종 JSON 그대로 ResultPage로 전달
-       */
-      setResult(res.data);
+      return JSON.stringify(result ?? {}, null, 2);
     } catch (e) {
-      console.error(e);
-      setError("Upload failed");
-    } finally {
-      setUploading(false);
+      return String(result);
     }
-  };
+  })();
 
-  if (result) {
-    return <ResultPage result={result} />;
-  }
+  // ✅ overlay 활성화
+  const TEST_TEXT_ONLY = false;
+
+  const getItemLabel = (item) =>
+    item?.menu?.menu_name_en ||
+    item?.menu?.menu_name_ko ||
+    item?.menu_name_en ||
+    item?.menu_name_ko ||
+    "(no name)";
 
   return (
-    <div className="preview-page">
-      <img
-        src={URL.createObjectURL(file)}
-        alt="preview"
-        style={{ maxWidth: "100%" }}
-      />
+    <div className="ms-rp__root">
+      <div className="ms-rp__imageWrap">
+        {resolvedImageSrc ? (
+          <img
+            className="ms-rp__image"
+            src={resolvedImageSrc}
+            alt="result"
+            onLoad={(e) => {
+              const w = e.currentTarget.naturalWidth || 0;
+              const h = e.currentTarget.naturalHeight || 0;
+              setImgSize({ w, h });
+            }}
+            onError={() => {
+              setImgBroken(true);
+              console.error("IMG_LOAD_FAIL:", imageUrl);
+            }}
+          />
+        ) : (
+          <p className="ms-rp__empty">AI result image will appear here.</p>
+        )}
 
-      <div style={{ marginTop: 16 }}>
-        <button onClick={goBack}>Retake</button>
-        <button onClick={handleUpload} disabled={uploading}>
-          {uploading ? "Uploading..." : "Send to AI"}
-        </button>
+        {!TEST_TEXT_ONLY && (
+          <PolygonOverlay items={items} imgSize={imgSize} onSelectItem={(item) => setSelectedItem(item)} />
+        )}
       </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {!TEST_TEXT_ONLY && selectedItem && (
+        <MenuDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+      )}
+
+      {/* ✅ 메뉴별 버튼 목록 */}
+      {!TEST_TEXT_ONLY && Array.isArray(items) && items.length > 0 && (
+        <div className="ms-rp__menuSection">
+          <h3 className="ms-rp__menuTitle">Detected menus</h3>
+
+          <div className="ms-rp__menuGrid">
+            {items.map((it, idx) => (
+              <div className="ms-rp__menuCard" key={it?.id || it?.item_id || idx}>
+                <div className="ms-rp__menuName">{getItemLabel(it)}</div>
+                <button className="ms-rp__menuBtn" onClick={() => setSelectedItem(it)}>
+                  View English details
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* JSON 텍스트는 유지 */}
+      <div className="ms-rp__jsonWrap">
+        <h3 className="ms-rp__jsonTitle">Result JSON (text only)</h3>
+        <pre className="ms-rp__jsonPre">{jsonText}</pre>
+      </div>
     </div>
   );
 }

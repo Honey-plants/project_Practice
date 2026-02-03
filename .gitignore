@@ -7,6 +7,7 @@ __pycache__/
 /venv/
 /env/
 
+AI/menu_assistant/data/chroma/
 
 # allow GitOps values
 !k8s/env/**
@@ -62,3 +63,6 @@ test/
 tmp_receipt/
 AI/review/test/
 AI/review/tmp_receipt/
+
+# uploads
+/uploads

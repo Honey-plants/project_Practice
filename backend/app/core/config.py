@@ -2,8 +2,10 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# 실제 프로젝트 위치 :: backend 하위에 위치 upload 폴더 생성
-ENV_PATH = Path(__file__).resolve().parents[3] / ".env"  # backend/.env
+# backend/app/core/config.py 기준:
+# .../backend/app/core/config.py
+# parents[3] -> .../backend
+ENV_PATH = Path(__file__).resolve().parents[3] / ".env"
 load_dotenv(ENV_PATH)
 
 # ---- DB ----
@@ -22,41 +24,36 @@ DATABASE_URL = (
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "CHANGE_ME__PLEASE_SET_ENV")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-# REFRESH_TOKEN_EXPIRE_MINUTES = int(os.getenv("REFRESH_TOKEN_EXPIRE_MINUTES", "3"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "14"))
 
-# Redis
-from urllib.parse import urlparse
+# ---- Redis ----
+REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_DB = int(os.getenv("REDIS_DB", "0"))
 
-_redis_host = os.getenv("REDIS_HOST", "127.0.0.1")
-_redis_port = os.getenv("REDIS_PORT", "6379")
-_redis_db = os.getenv("REDIS_DB", "0")
-
-REDIS_URL = os.getenv("REDIS_URL", f"redis://{_redis_host}:{_redis_port}/{_redis_db}")
-_u = urlparse(REDIS_URL)
-
-REDIS_HOST = _u.hostname or _redis_host
-REDIS_PORT = _u.port or int(_redis_port)
-REDIS_DB = int((_u.path or f"/{_redis_db}").lstrip("/") or _redis_db)
-
-
-print("ENV_PATH =", ENV_PATH)
-print("ENV exists =", ENV_PATH.exists())
-
-
-# -- FILE UPLOAD --
-# 현재 LOCAL 개발 사용
-# S3: STORAGE_DRIVER=s3 + 버킷/리전/프리픽스 세팅
-STORAGE_DRIVER = os.getenv("STORAGE_DRIVER", "local")  # local | s3
-
-# 프로젝트 root 설정 :: 추후 S3 변경시 변동 적음
+# ---- Project Root ----
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
-# 실제 저장 위치
-LOCAL_UPLOAD_DIR = os.getenv("LOCAL_UPLOAD_DIR", str(PROJECT_ROOT / "upload"))
+# ---- Storage ----
+STORAGE_BACKEND = os.getenv("STORAGE_BACKEND", "local")  # local | s3
 
-# 추후 E2C S3 사용 예정
+# 로컬 업로드 루트 (기본: <PROJECT_ROOT>/uploads)
+LOCAL_UPLOAD_ROOT = Path(os.getenv("LOCAL_UPLOAD_ROOT", str(PROJECT_ROOT / "uploads"))).resolve()
+LOCAL_TMP_ROOT = (LOCAL_UPLOAD_ROOT / "tmp").resolve()
+LOCAL_PERM_ROOT = (LOCAL_UPLOAD_ROOT / "perm").resolve()
+
+TMP_TTL_SECONDS = int(os.getenv("TMP_TTL_SECONDS", "1800"))  # 30분
+TMP_CLEAN_INTERVAL_SECONDS = int(os.getenv("TMP_CLEAN_INTERVAL_SECONDS", "600"))  # 10분마다
+
+# S3
 S3_BUCKET = os.getenv("S3_BUCKET", "")
-S3_REGION = os.getenv("S3_REGION", "")
-S3_PREFIX = os.getenv("S3_PREFIX", "uploads")
-# upload :: upload/menu 폴더명 구조 잡기 좋음
+S3_PREFIX_TMP = os.getenv("S3_PREFIX_TMP", "tmp").strip("/")
+S3_PREFIX_PERM = os.getenv("S3_PREFIX_PERM", "perm").strip("/")
+
+# gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID", "")
+NAVER_API_KEY = os.getenv("NAVER_API_KEY", "")
+
+#  둘 다 지원: NAVER_CLIENT_SECRET 우선, 없으면 NAVER_API_KEY 사용
+NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET") or os.getenv("NAVER_API_KEY", "")
