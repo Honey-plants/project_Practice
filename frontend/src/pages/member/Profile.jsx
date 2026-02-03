@@ -24,7 +24,7 @@ export default function Profile() {
   const [communityPage, setCommunityPage] = useState(0);
 
   const me = stateMember.me;
-
+  console.log("memememememe :: ", me)
   // 내가 선택한 item_ids
   const selectedIds = useMemo(() => (me?.item_ids ? me.item_ids : []), [me]);
 
