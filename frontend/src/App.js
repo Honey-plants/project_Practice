@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import AppProviders from "./app/AppProviders";
 import Header from "./components/layout/Header";
@@ -23,8 +23,6 @@ import ReviewCreate from "./pages/review/ReviewCreate";
 import ReviewEdit from "./pages/review/ReviewEdit";
 
 // test
-import ReviewTestCreate from "./pages/review/ReviewTestCreate";
-
 import UploadTest from "./pages/upload/UploadTest";
 
 import Register from "./pages/auth/Register";
@@ -32,44 +30,27 @@ import Register from "./pages/auth/Register";
 // admin 추가
 import Admin from "./pages/admin/Admin_new";
 
-import ResultPage from "./pages/menuscan/ResultPage";
-
 export default function App() {
-  // ✅ PreviewPage에서 navigate("/upload/result", { state: { result } })로 넘어오는 값을 그대로 사용
-  function UploadResultRoute() {
-    const { state } = useLocation();
-    const result = state?.result;
-    if (!result) return <Navigate to="/upload/test" replace />;
-    return <ResultPage result={result} />;
-  }
   return (
     <AppProviders>
       <BrowserRouter>
         <Header />
 
         <Routes>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-           <Route
-           path="/upload/result"
-           element={
-             <ProtectedRoute excludeRoles={["ADMIN"]}>
-               <UploadResultRoute />
-             </ProtectedRoute>
-           }
-         />
-
+          {/* 공개 페이지 (로그인 불필요) */}
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-
-          {/* Routes 안에 추가 */}
-          {/* auth */}
           <Route path="/register" element={<Register />} />
+
+          {/* 커뮤니티 - 목록/상세 공개 */}
+          <Route path="/community" element={<CommunityList />} />
+          <Route path="/community/:id" element={<CommunityDetail />} />
+
+          {/* 리뷰 - 목록/상세 공개 */}
+          <Route path="/review" element={<ReviewList />} />
+          <Route path="/review/:id" element={<ReviewDetail />} />
+
+          {/* 관리자 페이지 */}
           <Route
             path="/admin"
             element={
@@ -79,6 +60,7 @@ export default function App() {
             }
           />
 
+          {/* 비공개 페이지 (로그인 필수) */}
           {/* member */}
           <Route
             path="/member/profile"
@@ -97,6 +79,7 @@ export default function App() {
             }
           />
 
+          {/* community - 작성/수정은 로그인 필수 */}
           {/* community */}
           <Route
             path="/community"

@@ -1,7 +1,7 @@
 import "../../styles/Register.css";
 import Modal from "../../components/common/Modal";
 import { COUNTRY_OPTIONS, GENDER } from "../../contents/register";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { MetaContext } from "../../context/MetaContext";
 import { MemberAPI } from "../../api/memberApi";
@@ -65,6 +65,12 @@ export default function Register() {
   const [checkStatus, setCheckStatus] = useState({
     nickname: null,
   });
+
+  // Refs for input fields
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+  const passwordConfirmRef = useRef(null);
+  const nicknameRef = useRef(null);
 
   // meta 비어있으면 1회 강제 refresh
   useEffect(() => {
@@ -164,12 +170,25 @@ export default function Register() {
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       setMsg("❌ Please check the input information.");
+
+      // Focus on the first invalid field
+      if (validationErrors.email && emailRef.current) {
+        emailRef.current.focus();
+      } else if (validationErrors.password && passwordRef.current) {
+        passwordRef.current.focus();
+      } else if (validationErrors.passwordConfirm && passwordConfirmRef.current) {
+        passwordConfirmRef.current.focus();
+      }
+
       return false;
     }
 
     // 닉네임 중복 확인 여부 체크
     if (checkStatus.nickname !== true) {
       setMsg("❌ Please check nickname duplication");
+      if (nicknameRef.current) {
+        nicknameRef.current.focus();
+      }
       return false;
     }
 
@@ -250,6 +269,7 @@ export default function Register() {
         <div className="row">
           <label>E-mail</label>
           <input
+            ref={emailRef}
             name="email"
             value={form.email}
             onChange={onChange}
@@ -262,6 +282,7 @@ export default function Register() {
         <div className="row">
           <label>Password (8~20 characters)</label>
           <input
+            ref={passwordRef}
             name="password"
             value={form.password}
             onChange={onChange}
@@ -275,6 +296,7 @@ export default function Register() {
         <div className="row">
           <label>Password Confirm</label>
           <input
+            ref={passwordConfirmRef}
             name="passwordConfirm"
             value={form.passwordConfirm}
             onChange={onChange}
@@ -289,6 +311,7 @@ export default function Register() {
           <label>Nickname</label>
           <div style={{ display: "flex", gap: 8 }}>
             <input
+              ref={nicknameRef}
               name="nickname"
               value={form.nickname}
               onChange={onChange}

@@ -1,5 +1,4 @@
 import uuid
-import json  # ✅ 추가
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -14,6 +13,7 @@ from backend.app.common.service.file_upload_service import (
     upload_input_file,
 )
 from backend.app.features.menu.schemas import MenuUploadResponse
+
 from backend.app.features.menu.service import run_menu_ai
 
 router = APIRouter(prefix="/menu", tags=["menu"])
@@ -45,59 +45,18 @@ async def upload_menu(
 
     local_path, cleanup = ensure_local_path(obj)
 
-    # ✅ runs_root는 기존 그대로 유지
-    runs_root = Path(tmp_prefix) / "ai_runs"
-
-    # ✅ user_profile_json도 tmp_prefix 아래에 생성 (정책 유지: 끝나면 temp 삭제)
-    user_profile_json_path = Path(tmp_prefix) / "user_profile.json"
-
     try:
-        # --- (A) current에서 가능한 정보만 뽑아서 user_profile.json 생성 ---
-        # 필드명은 프로젝트마다 다르니, 있는 것만 가져오게 방어적으로 구성
-        allergy_tags = getattr(current, "allergy_tags", None)
-        avoid_foods = getattr(current, "avoid_foods", None)
-        religion = getattr(current, "religion", None)
+        #  runs_root는 temp 아래로 두어도 됨(디버그 목적)
+        runs_root = Path(tmp_prefix) / "ai_runs"
 
-        # 어떤 백엔드는 current.profile 같은 중첩 구조일 수 있어서 한 번 더 시도
-        profile = getattr(current, "profile", None)
-        if profile is not None:
-            if allergy_tags is None:
-                allergy_tags = getattr(profile, "allergy_tags", None)
-            if avoid_foods is None:
-                avoid_foods = getattr(profile, "avoid_foods", None)
-            if religion is None:
-                religion = getattr(profile, "religion", None)
-
-        # 값이 하나라도 있으면 파일을 생성해서 Step5에 전달
-        user_profile_json = None
-        if allergy_tags or avoid_foods or religion:
-            payload = {
-                "allergy_tags": list(allergy_tags or []),
-                "avoid_foods": list(avoid_foods or []),
-                "religion": religion,
-            }
-            # tmp_prefix가 local 모드에서 로컬 경로라는 전제 하에 저장됨
-            user_profile_json_path.parent.mkdir(parents=True, exist_ok=True)
-            user_profile_json_path.write_text(
-                json.dumps(payload, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-            user_profile_json = str(user_profile_json_path)
-
-        # --- (B) pipeline 실행 ---
-        result = run_menu_ai(
-            image_path=local_path,
-            runs_root=runs_root,
-            run_id=job_id,
-            user_profile_json=user_profile_json,  # ✅ 핵심
-        )
+        result = run_menu_ai(image_path=local_path, runs_root=runs_root, run_id=job_id)
         return MenuUploadResponse(job_id=job_id, upload_type="menu", result=result)
 
     except Exception as e:
         log_exception("menu.ai_failed", e)
-        import builtins
-        raise HTTPException(status_code=500, detail=f"menu ai failed: {builtins.type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail=f"menu ai failed: {type(e).__name__}: {e}")
 
     finally:
         cleanup()
-        delete_prefix(prefix_key=tmp_prefix)
+        #  menu 정책: 작업 끝나면 temp 삭제
+        # delete_prefix(prefix_key=tmp_prefix)

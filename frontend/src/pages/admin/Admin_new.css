@@ -152,12 +152,15 @@ body:has(.admin-container) {
   background-color: rgba(255, 255, 255, 0.06);
 }
 
+.batch-category-header {
+  margin-bottom: 12px;
+}
+
 .batch-category-inputs {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 12px;
 }
 
 .batch-category-inputs input {
@@ -183,15 +186,28 @@ body:has(.admin-container) {
   font-size: 13px;
   font-weight: 600;
   color: #fff;
-  background-color: rgba(102, 126, 234, 0.6);
   border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.batch-category-inputs button:hover {
+.batch-category-inputs .add-item-button {
+  background-color: rgba(102, 126, 234, 0.6);
+}
+
+.batch-category-inputs .add-item-button:hover {
   background-color: rgba(102, 126, 234, 0.8);
+}
+
+.batch-category-inputs .remove-category-button {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 3px 10px rgba(245, 87, 108, 0.3);
+}
+
+.batch-category-inputs .remove-category-button:hover {
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+  transform: translateY(-1px);
 }
 
 .batch-items-list {
@@ -223,6 +239,24 @@ body:has(.admin-container) {
 .batch-item-row input:focus {
   background-color: rgba(255, 255, 255, 0.12);
   border-color: #667eea;
+}
+
+.batch-item-row .remove-item-button {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+}
+
+.batch-item-row .remove-item-button:hover {
+  box-shadow: 0 3px 10px rgba(245, 87, 108, 0.4);
+  transform: translateY(-1px);
 }
 
 .batch-actions {
@@ -378,16 +412,29 @@ body:has(.admin-container) {
   font-size: 13px;
   font-weight: 600;
   color: #fff;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.category-header button:hover:not(:disabled) {
+.category-header .save-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.category-header .save-button:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.category-header .delete-button-list {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+}
+
+.category-header .delete-button-list:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(245, 87, 108, 0.4);
 }
 
 .category-header button:disabled {
@@ -465,16 +512,30 @@ body:has(.admin-container) {
   font-size: 12px;
   font-weight: 600;
   color: #fff;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   border: none;
   border-radius: 5px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.item-row button:hover:not(:disabled) {
+.item-row .save-button-item {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+}
+
+.item-row .save-button-item:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(245, 87, 108, 0.4);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.item-row .delete-button-item {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 3px 10px rgba(245, 87, 108, 0.3);
+}
+
+.item-row .delete-button-item:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
 }
 
 .item-row button:disabled {

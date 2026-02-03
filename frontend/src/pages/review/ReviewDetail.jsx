@@ -71,39 +71,75 @@ export default function ReviewDetailPage() {
     [stateReview.detail]
   );
 
+  // 컨텐츠에 사용 중인지 확인 (실제로는 백엔드에서 체크해야 함)
+  // 여기서는 임시로 review.used_in_content 필드가 있다고 가정
+  const isUsedInContent = review?.raw?.used_in_content || false;
+
+  const handleEdit = () => {
+    nav(`/review/${id}/edit`);
+  };
+
   return (
-    <div>
-      <div style={{ padding: 16, maxWidth: 900, margin: "0 auto" }}>
-        <div
+    <div style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "24px"
+        }}
+      >
+        <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "700" }}>리뷰 상세</h2>
+
+        <button
+          onClick={() => nav("/review")}
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
+            padding: "8px 16px",
+            background: "#6c757d",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "14px",
+            fontWeight: "600"
           }}
         >
-          <h2 style={{ margin: 0 }}>Review Detail</h2>
-
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <Link to="/review">Back</Link>
-            <Link to={`/review/${id}/edit`}>Edit</Link>
-          </div>
-        </div>
-
-        {stateReview.error && (
-          <div className="errorBox" style={{ marginTop: 12 }}>
-            {stateReview.error}
-          </div>
-        )}
-
-        {stateReview.loading && <div style={{ marginTop: 12 }}>Loading...</div>}
-
-        {!stateReview.loading && review && (
-          <div style={{ marginTop: 16 }}>
-            <ReviewDetail review={review} />
-          </div>
-        )}
+          목록으로
+        </button>
       </div>
+
+      {stateReview.error && (
+        <div style={{
+          padding: "12px",
+          background: "#f8d7da",
+          color: "#721c24",
+          borderRadius: "6px",
+          marginBottom: "16px",
+          border: "1px solid #f5c6cb"
+        }}>
+          {stateReview.error}
+        </div>
+      )}
+
+      {stateReview.loading && (
+        <div style={{
+          textAlign: "center",
+          padding: "40px",
+          fontSize: "16px",
+          color: "#666"
+        }}>
+          로딩 중...
+        </div>
+      )}
+
+      {!stateReview.loading && review && (
+        <ReviewDetail
+          review={review}
+          onEdit={handleEdit}
+          canEdit={true}
+          isUsedInContent={isUsedInContent}
+        />
+      )}
     </div>
   );
 }

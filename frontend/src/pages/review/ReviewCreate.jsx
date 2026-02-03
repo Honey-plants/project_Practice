@@ -1,11 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ReviewAPI } from "../../api/reviewApi";
+import { useNavigate } from "react-router-dom";
+import "./ReviewCreate.css";
 
 export default function ReviewCreateInline({ onCreated }) {
+  const navigate = useNavigate();
   // Step1
   const [receiptFile, setReceiptFile] = useState(null);
   const [receiptId, setReceiptId] = useState(null);
   const [extracted, setExtracted] = useState(null);
+  const [menuConfirmed, setMenuConfirmed] = useState(false);
 
   // Step2
   const [title, setTitle] = useState("");
@@ -49,12 +53,26 @@ export default function ReviewCreateInline({ onCreated }) {
       const r = await ReviewAPI.verifyReceipt(receiptFile);
       setReceiptId(r.data?.receipt_id);
       setExtracted(r.data?.extracted || null);
-      setMsg(" 영수증 인증 완료. 리뷰 정보를 입력해줘.");
+      setMsg("영수증 인증 완료. 메뉴를 확인해주세요.");
     } catch (e) {
       setErr(e?.response?.data?.detail || e?.message || "영수증 인증 실패");
     } finally {
       setLoadingVerify(false);
     }
+  };
+
+  const confirmMenu = () => {
+    setMenuConfirmed(true);
+    setMsg("메뉴 확인 완료. 리뷰를 작성해주세요.");
+  };
+
+  const cancelMenu = () => {
+    setReceiptId(null);
+    setExtracted(null);
+    setReceiptFile(null);
+    setMenuConfirmed(false);
+    setMsg("");
+    setErr("");
   };
 
   //  이미지 추가(append) + 3장 제한 + input reset
@@ -84,124 +102,150 @@ export default function ReviewCreateInline({ onCreated }) {
   };
 
   const create = async () => {
-  setErr("");
-  setMsg("");
+    setErr("");
+    setMsg("");
 
-  if (!receiptId) return setErr("먼저 영수증 인증을 해줘");
-  if (!title.trim()) return setErr("title 입력해줘");
-  if (!content.trim()) return setErr("content 입력해줘");
-  if (images.length > 3) return setErr("이미지는 최대 3장");
+    if (!receiptId) return setErr("먼저 영수증 인증을 해줘");
+    if (!title.trim()) return setErr("title 입력해줘");
+    if (!content.trim()) return setErr("content 입력해줘");
+    if (images.length > 3) return setErr("이미지는 최대 3장");
 
-  const x = extracted?.coords?.x;
-  const y = extracted?.coords?.y;
-  const location = x && y ? `${x},${y}` : undefined;
+    setLoadingCreate(true);
+    try {
+      const r = await ReviewAPI.createFromReceipt({
+        receipt_id: receiptId,
+        title,
+        content,
+        rating,
+        images, //  File[] 그대로
+      });
 
-  const menu_name =
-    extracted?.menu_en?.[0] ||
-    extracted?.menu_name?.[0] ||
-    undefined;
+      setMsg("리뷰 생성 완료");
 
-  const payload = {
-    receipt_id: receiptId,
-    title,
-    content,
-    rating,
-    location,
-    menu_name,
-    images,
+      // 리뷰 페이지로 이동
+      navigate("/review");
+
+      onCreated?.(r.data);
+
+      // 초기화
+      setReceiptFile(null);
+      setReceiptId(null);
+      setExtracted(null);
+      setMenuConfirmed(false);
+      setTitle("");
+      setContent("");
+      setRating(5);
+      setImages([]);
+    } catch (e) {
+      setErr(e?.response?.data?.detail || e?.message || "리뷰 생성 실패");
+    } finally {
+      setLoadingCreate(false);
+    }
   };
 
-  console.log("[ReviewCreateInline] payload to send:", {
-    ...payload,
-    images: (images || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
-  });
-
-  setLoadingCreate(true);
-  try {
-    const r = await ReviewAPI.createFromReceipt(payload);
-
-    setMsg("리뷰 생성 완료");
-    onCreated?.(r.data);
-
-    setReceiptFile(null);
-    setReceiptId(null);
-    setExtracted(null);
-    setTitle("");
-    setContent("");
-    setRating(5);
-    setImages([]);
-  } catch (e) {
-    console.error("[ReviewCreateInline] create failed:", e);
-    console.error("[ReviewCreateInline] status:", e?.response?.status);
-    console.error("[ReviewCreateInline] response:", e?.response?.data);
-    setErr(e?.response?.data?.detail || e?.message || "리뷰 생성 실패");
-  } finally {
-    setLoadingCreate(false);
-  }
-};
-
   return (
-    <div style={{ border: "1px solid #ddd", padding: 12, borderRadius: 8 }}>
-      <h3 style={{ marginTop: 0 }}>리뷰 등록</h3>
-
-      {/* Step 1 */}
+  <div className="review-create-container">
+      <h2 className="review-create-title">리뷰 등록</h2>
+ 
+      {/* Step 1: 영수증 인증 */}
       {!receiptId && (
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ fontWeight: 700, marginBottom: 6 }}>1) 영수증 인증</div>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
-          />
-          <button onClick={verify} disabled={loadingVerify} style={{ marginLeft: 8 }}>
-            {loadingVerify ? "인증중..." : "영수증 인증"}
-          </button>
+        <div className="step-section">
+          <div className="step-header">1) 영수증 인증</div>
+          <div className="receipt-upload">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+              className="file-input"
+            />
+            <button onClick={verify} disabled={loadingVerify} className="btn-primary">
+              {loadingVerify ? "인증중..." : "영수증 인증"}
+            </button>
+          </div>
         </div>
       )}
-
-      {/* Step 2 */}
-      {receiptId && (
-        <div>
-          <div style={{ marginBottom: 10 }}>
-            receipt_id: <b>{receiptId}</b>
-          </div>
-
-          {extracted && (
-            <details style={{ marginBottom: 12 }}>
-              <summary>OCR 추출 결과 보기</summary>
-              <pre style={{ whiteSpace: "pre-wrap", background: "#fafafa", padding: 10 }}>
-                {JSON.stringify(extracted, null, 2)}
-              </pre>
-            </details>
-          )}
-
-          <div style={{ fontWeight: 700, marginBottom: 6 }}>2) 리뷰 내용 입력</div>
-
-          <div style={{ display: "grid", gap: 8 }}>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="title" />
-
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="content"
-              rows={6}
-            />
-
-            <div>
-              rating:&nbsp;
-              <select value={rating} onChange={(e) => setRating(Number(e.target.value))}>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
+ 
+      {/* Step 2: 메뉴 확인 */}
+      {receiptId && extracted && (
+        <div className="step-section">
+          <div className="step-header">2) 메뉴 확인</div>
+          <div className="menu-confirm-section">
+            {!menuConfirmed && <p className="menu-confirm-text">다음 메뉴들이 맞나요?</p>}
+            <div className="menu-list">
+              {extracted.menu_name && (
+                Array.isArray(extracted.menu_name)
+                  ? extracted.menu_name.map((menu, idx) => (
+                      <div key={idx} className="menu-item">
+                        <span className="menu-icon">🍽️</span>
+                        <span className="menu-name">{String(menu).replace(/["[\]]/g, '').trim()}</span>
+                      </div>
+                    ))
+                  : extracted.menu_name.split(',').map((menu, idx) => (
+                      <div key={idx} className="menu-item">
+                        <span className="menu-icon">🍽️</span>
+                        <span className="menu-name">{menu.replace(/["[\]]/g, '').trim()}</span>
+                      </div>
+                    ))
+              )}
             </div>
-
-            {/*  이미지 선택 */}
-            <div style={{ marginTop: 6 }}>
-              <div style={{ fontWeight: 700, marginBottom: 6 }}>3) 추가 이미지 (최대 3장)</div>
-
+            {!menuConfirmed && (
+              <div className="menu-confirm-buttons">
+                <button onClick={confirmMenu} className="btn-confirm">
+                  확인
+                </button>
+                <button onClick={cancelMenu} className="btn-cancel">
+                  취소
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+ 
+      {/* Step 3: 리뷰 작성 */}
+      {receiptId && menuConfirmed && (
+        <div className="step-section">
+          <div className="step-header">3) 리뷰 작성</div>
+ 
+          <div className="review-form">
+            <div className="form-group">
+              <label className="form-label">제목</label>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="리뷰 제목을 입력해주세요"
+                className="form-input"
+              />
+            </div>
+ 
+            <div className="form-group">
+              <label className="form-label">내용</label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="리뷰 내용을 입력해주세요"
+                rows={6}
+                className="form-textarea"
+              />
+            </div>
+ 
+            <div className="form-group">
+              <label className="form-label">별점</label>
+              <div className="rating-select">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <span
+                    key={n}
+                    onClick={() => setRating(n)}
+                    className={`star ${n <= rating ? 'active' : ''}`}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+            </div>
+ 
+            <div className="form-group">
+              <label className="form-label">추가 이미지 (최대 3장)</label>
               <input
                 ref={imageInputRef}
                 type="file"
@@ -209,42 +253,25 @@ export default function ReviewCreateInline({ onCreated }) {
                 multiple
                 onChange={onPickImages}
                 disabled={images.length >= 3}
+                className="file-input"
               />
-
-              <div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>
+              <div className="image-count">
                 추가 이미지 {images.length}/3
               </div>
-
-              {/*  미리보기 + 삭제 */}
+ 
               {previewUrls.length > 0 && (
-                <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                <div className="image-preview-list">
                   {previewUrls.map((url, idx) => (
-                    <div key={idx} style={{ position: "relative" }}>
+                    <div key={idx} className="image-preview-item">
                       <img
                         src={url}
                         alt={`preview-${idx}`}
-                        style={{
-                          width: 110,
-                          height: 110,
-                          objectFit: "cover",
-                          borderRadius: 8,
-                          border: "1px solid #eee",
-                        }}
+                        className="preview-image"
                       />
                       <button
                         type="button"
                         onClick={() => removeImage(idx)}
-                        style={{
-                          position: "absolute",
-                          top: -8,
-                          right: -8,
-                          width: 24,
-                          height: 24,
-                          borderRadius: "50%",
-                          border: "1px solid #ccc",
-                          background: "#fff",
-                          cursor: "pointer",
-                        }}
+                        className="btn-remove-image"
                         title="삭제"
                       >
                         ×
@@ -254,16 +281,16 @@ export default function ReviewCreateInline({ onCreated }) {
                 </div>
               )}
             </div>
-
-            <button onClick={create} disabled={loadingCreate}>
+ 
+            <button onClick={create} disabled={loadingCreate} className="btn-submit">
               {loadingCreate ? "생성중..." : "리뷰 생성"}
             </button>
           </div>
         </div>
       )}
-
-      {msg && <div style={{ marginTop: 10 }}>{msg}</div>}
-      {err && <div style={{ marginTop: 10, color: "crimson" }}>{err}</div>}
+ 
+      {msg && <div className="message success">{msg}</div>}
+      {err && <div className="message error">{err}</div>}
     </div>
   );
 }

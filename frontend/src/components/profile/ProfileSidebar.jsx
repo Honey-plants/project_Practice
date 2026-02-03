@@ -42,6 +42,20 @@ export default function ProfileSidebar({ member }) {
             {member.gender || "미설정"}
           </p>
         </div>
+        <div className={styles.infoItem}>
+          <p className={styles.infoLabel}>Dislike Ingredients</p>
+          <div className={styles.dislikesList}>
+            {member.dislike_tags && member.dislike_tags.length > 0 ? (
+              member.dislike_tags.map((tag, index) => (
+                <span key={index} className={styles.dislikeTag}>
+                  {tag}
+                </span>
+              ))
+            ) : (
+              <p className={styles.infoValue}>없음</p>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className={styles.actions}>

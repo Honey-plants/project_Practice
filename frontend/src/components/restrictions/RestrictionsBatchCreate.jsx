@@ -6,11 +6,15 @@ export default function RestrictionsBatchCreate({ onSaved }) {
   const [msg, setMsg] = useState("");
 
   const [draft, setDraft] = useState([
-    { category_label_ko: "", category_label_en: "", items: [{ item_label_ko: "", item_label_en: "" }] },
+    { category_label_ko: "", category_label_en: "", items: [] },
   ]);
 
   const addCategory = () => {
-    setDraft((p) => [...p, { category_label_ko: "", category_label_en: "", items: [{ item_label_ko: "", item_label_en: "" }] }]);
+    setDraft((p) => [...p, { category_label_ko: "", category_label_en: "", items: [] }]);
+  };
+
+  const removeCategory = (cIdx) => {
+    setDraft((p) => p.filter((_, i) => i !== cIdx));
   };
 
   const updateCategory = (idx, patch) => {
@@ -20,6 +24,15 @@ export default function RestrictionsBatchCreate({ onSaved }) {
   const addItem = (cIdx) => {
     setDraft((p) =>
       p.map((c, i) => (i === cIdx ? { ...c, items: [...(c.items || []), { item_label_ko: "", item_label_en: "" }] } : c))
+    );
+  };
+
+  const removeItem = (cIdx, itIdx) => {
+    setDraft((p) =>
+      p.map((c, i) => {
+        if (i !== cIdx) return c;
+        return { ...c, items: (c.items || []).filter((_, j) => j !== itIdx) };
+      })
     );
   };
 
@@ -61,7 +74,7 @@ export default function RestrictionsBatchCreate({ onSaved }) {
 
       await RestrictionsAdminAPI.batchCreate(payload);
       setMsg(" 일괄 등록 완료");
-      setDraft([{ category_label_ko: "", category_label_en: "", items: [{ item_label_ko: "", item_label_en: "" }] }]);
+      setDraft([{ category_label_ko: "", category_label_en: "", items: [] }]);
       onSaved && (await onSaved());
     } catch (e) {
       const detail = e?.response?.data?.detail || e?.message || "배치 등록 실패";
@@ -77,36 +90,48 @@ export default function RestrictionsBatchCreate({ onSaved }) {
 
       {draft.map((c, cIdx) => (
         <div key={cIdx} className="batch-category-box">
-          <div className="batch-category-inputs">
-            <input
-              value={c.category_label_ko}
-              onChange={(e) => updateCategory(cIdx, { category_label_ko: e.target.value })}
-              placeholder="category_label_ko"
-            />
-            <input
-              value={c.category_label_en}
-              onChange={(e) => updateCategory(cIdx, { category_label_en: e.target.value })}
-              placeholder="category_label_en"
-            />
-            <button onClick={() => addItem(cIdx)}>+ item</button>
+          <div className="batch-category-header">
+            <div className="batch-category-inputs">
+              <input
+                value={c.category_label_ko}
+                onChange={(e) => updateCategory(cIdx, { category_label_ko: e.target.value })}
+                placeholder="category_label_ko"
+              />
+              <input
+                value={c.category_label_en}
+                onChange={(e) => updateCategory(cIdx, { category_label_en: e.target.value })}
+                placeholder="category_label_en"
+              />
+              <button onClick={() => addItem(cIdx)} className="add-item-button">+ item</button>
+              {draft.length > 1 && (
+                <button onClick={() => removeCategory(cIdx)} className="remove-category-button">
+                  × 카테고리 삭제
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="batch-items-list">
-            {(c.items || []).map((it, itIdx) => (
-              <div key={itIdx} className="batch-item-row">
-                <input
-                  value={it.item_label_ko}
-                  onChange={(e) => updateItem(cIdx, itIdx, { item_label_ko: e.target.value })}
-                  placeholder="item_label_ko"
-                />
-                <input
-                  value={it.item_label_en}
-                  onChange={(e) => updateItem(cIdx, itIdx, { item_label_en: e.target.value })}
-                  placeholder="item_label_en"
-                />
-              </div>
-            ))}
-          </div>
+          {(c.items || []).length > 0 && (
+            <div className="batch-items-list">
+              {(c.items || []).map((it, itIdx) => (
+                <div key={itIdx} className="batch-item-row">
+                  <input
+                    value={it.item_label_ko}
+                    onChange={(e) => updateItem(cIdx, itIdx, { item_label_ko: e.target.value })}
+                    placeholder="item_label_ko"
+                  />
+                  <input
+                    value={it.item_label_en}
+                    onChange={(e) => updateItem(cIdx, itIdx, { item_label_en: e.target.value })}
+                    placeholder="item_label_en"
+                  />
+                  <button onClick={() => removeItem(cIdx, itIdx)} className="remove-item-button">
+                    × 삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       ))}
 
