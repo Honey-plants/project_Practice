@@ -75,6 +75,9 @@ def main() -> None:
     parser.add_argument("--det_thresh", type=float, default=None)
     parser.add_argument("--det_unclip_ratio", type=float, default=None)
 
+    parser.add_argument("--device", default="auto", choices=["auto", "cpu", "gpu"])
+    parser.add_argument("--gpu_mem", type=int, default=None)
+
     # Keep "auto correction" OFF by default
     parser.add_argument(
         "--use_doc_unwarping", action="store_true", help="(Optional) enable doc unwarping if supported"
@@ -163,6 +166,8 @@ def main() -> None:
         det_box_thresh=args.det_box_thresh,
         det_thresh=args.det_thresh,
         det_unclip_ratio=args.det_unclip_ratio,
+        device=args.device,
+        gpu_mem=args.gpu_mem,
     )
     items = parse_paddleocr_raw(raw)
     elapsed_ms = int((time.time() - t0) * 1000)
@@ -185,6 +190,8 @@ def main() -> None:
             "det_model_dir": args.det_model_dir,
             "rec_model_dir": args.rec_model_dir,
             "cls_model_dir": args.cls_model_dir,
+            "device": args.device,
+            "gpu_mem": args.gpu_mem,
         },
         "items": items,
         "notes": "Rectified image is treated as source. Text normalization/menu policy is handled in Step03.",
