@@ -53,11 +53,15 @@ def build_paddleocr(
     det_box_thresh: Optional[float] = None,
     det_thresh: Optional[float] = None,
     det_unclip_ratio: Optional[float] = None,
+    # ✅ NEW
+    use_gpu: Optional[bool] = None,
+    gpu_mem: Optional[int] = None,
 ) -> Any:
     sig = inspect.signature(PaddleOCR_cls.__init__)
     supported = set(sig.parameters.keys())
-
     kwargs: Dict[str, Any] = {}
+
+
 
     if "lang" in supported:
         kwargs["lang"] = lang
@@ -72,6 +76,12 @@ def build_paddleocr(
         kwargs["use_doc_unwarping"] = bool(use_doc_unwarping)
     if "use_textline_orientation" in supported:
         kwargs["use_textline_orientation"] = bool(use_textline_orientation)
+
+    # ✅ NEW: GPU flags (only if supported by installed PaddleOCR)
+    if use_gpu is not None and "use_gpu" in supported:
+        kwargs["use_gpu"] = bool(use_gpu)
+    if gpu_mem is not None and "gpu_mem" in supported:
+        kwargs["gpu_mem"] = int(gpu_mem)
 
     # DET tuning (only if supported by installed PaddleOCR)
     if det_box_thresh is not None and "det_box_thresh" in supported:
@@ -150,10 +160,24 @@ def run_paddleocr(
     det_box_thresh: Optional[float] = None,
     det_thresh: Optional[float] = None,
     det_unclip_ratio: Optional[float] = None,
+    device: str = "auto",  # ✅ NEW
+    gpu_mem: Optional[int] = None,  # ✅ NEW
 ) -> Any:
     PaddleOCR = import_paddleocr()
+    # device -> use_gpu mapping
+    # - auto: do not force (None) -> PaddleOCR defaults (depends on installed paddlepaddle build)
+    # - cpu : force use_gpu=False
+    # - gpu : force use_gpu=True
+    use_gpu: Optional[bool] = None
+    dev = (device or "auto").lower().strip()
+
+    if dev == "gpu":
+        use_gpu = True
+    elif dev == "cpu":
+        use_gpu = False
     ocr = build_paddleocr(
         PaddleOCR,
+
         lang=lang, #언어(korean)
         det_limit_side_len=det_limit_side_len,#DET 전에 이미지의 긴변을 이 값으로 리사이즈
         det_limit_type=det_limit_type,#det_limit_side_len을 어떤 기준으로 적용할지 결정
@@ -164,7 +188,9 @@ def run_paddleocr(
         cls_model_dir=cls_model_dir,#텍스트 방향(0° / 180°) 분류 모델 경로
         det_box_thresh=det_box_thresh,#텍스트 박스로 채택할 최소 confidence
         det_thresh=det_thresh,#픽셀 단위에서 “글자일 가능성” 판정 기준
-        det_unclip_ratio=det_unclip_ratio,#검출된 텍스트 영역을 얼마나 확장(unclip) 할지
+        det_unclip_ratio=det_unclip_ratio,
+        use_gpu=use_gpu,
+        gpu_mem=gpu_mem,
     )
     return ocr_predict_or_ocr(ocr, image_path, image_bgr)
 

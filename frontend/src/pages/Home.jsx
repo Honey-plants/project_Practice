@@ -1,3 +1,4 @@
+import MenuUpload from "../components/menu/MenuUpload";
 import React, { useState, useRef } from "react";
 import { MenuAPI } from "../api/menuApi";
 import ResultPage from "./menuscan/ResultPage";

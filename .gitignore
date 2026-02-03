@@ -7,6 +7,7 @@ __pycache__/
 /venv/
 /env/
 
+AI/menu_assistant/data/chroma/
 
 # allow GitOps values
 !k8s/env/**

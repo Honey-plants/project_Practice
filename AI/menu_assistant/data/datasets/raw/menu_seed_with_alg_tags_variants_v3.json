@@ -23466,5 +23466,64 @@
     ],
     "ingredients_ko": [],
     "alg_tags": []
+  },
+  {
+    "id": "rep_2017",
+    "menu": "만두샤브세트",
+    "variants": [
+      "만두샤브세트",
+      "만두샤브 세트",
+      "만두샤브SET",
+      "만두샤브세트메뉴"
+    ],
+    "ingredients_ko": [
+      "Wheat"
+    ],
+    "alg_tags": [
+      "ALG_CEREALS_GLUTEN"
+    ]
+  },
+  {
+    "id": "rep_2018",
+    "menu": "샤브고기",
+    "variants": [
+      "샤브고기",
+      "샤브용고기",
+      "샤브용 고기"
+    ],
+    "ingredients_ko": [],
+    "alg_tags": []
+  },
+  {
+    "id": "rep_2019",
+    "menu": "손만두",
+    "variants": [
+      "손만두",
+      "수제만두"
+    ],
+    "ingredients_ko": [
+      "Wheat"
+    ],
+    "alg_tags": [
+      "ALG_CEREALS_GLUTEN"
+    ]
+  },
+  {
+    "id": "rep_2020",
+    "menu": "냉모밀",
+    "variants": [
+      "냉모밀",
+      "냉모밀소바",
+      "냉소바",
+      "메밀소바",
+      "소바",
+      "모밀"
+    ],
+    "ingredients_ko": [
+      "Wheat"
+    ],
+    "alg_tags": [
+      "ALG_CEREALS_GLUTEN"
+    ]
   }
 ]

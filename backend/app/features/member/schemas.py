@@ -22,6 +22,7 @@ class MemberUpdate(BaseModel):
 
 # response [응답]
 class MemberRead(BaseModel):
+    member_id: int
     email: str
     nickname: str
     gender: str
