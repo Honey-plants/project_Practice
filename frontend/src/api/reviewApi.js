@@ -7,8 +7,6 @@ export const ReviewAPI = {
     fd.append("type", "receipt");
     fd.append("file", file);
 
-    console.log("fd")
-
     return api.post("/review/receipt/verify", fd, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -32,8 +30,11 @@ export const ReviewAPI = {
     });
   },
 
-  //  리뷰 리스트
+  //  전체 리뷰 리스트
   list: () => api.get("/review"),
+
+  //  본인 리스트
+  myList: () => api.get("/review/me"),
 
   //  리뷰 상세
   detail: (id) => api.get(`/review/${id}`),

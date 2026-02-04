@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
@@ -129,6 +129,8 @@ async def create_review_from_receipt(
 
     final_payload = session.get("payload") or {}
 
+    print("바뀐거 찾기 :: input_value ", final_payload)
+
     # x, y list 작업
     location_list = []
     x = final_payload.get('coords')['x']
@@ -137,8 +139,11 @@ async def create_review_from_receipt(
     location_list.append(x)
     location_list.append(y)
 
+    print("localtion ::: x, y :: ", location_list)
+
     # menu_en list 작업
-    menu_en_list = ensure_list(final_payload.get('menu_name'))
+    raw = final_payload.get("menu_name")
+    menu_en_list = ensure_list(raw) if raw else []
 
     # review Items
     member_item_ids = db.execute(
@@ -203,25 +208,30 @@ async def create_review_from_receipt(
 
     return {"review_id": review.review_id, "image_urls": image_urls}
 
+# 전체 조회 / 본인 리스트 조회 한번에 처리
+def list_reviews(db: Session, *, member_id: Optional[int] = None, active_only: bool = True,) -> List[Dict[str, Any]]:
+    stmt = select(Review)
 
-def list_reviews(db: Session, limit: int = 50) -> List[Dict[str, Any]]:
+    # member_id
+    if member_id is not None:
+        stmt = stmt.where(Review.member_id == member_id)
+
+    # active
+    if active_only:
+        stmt = stmt.where(Review.available == True)
+
     # 최신순
     reviews = db.execute(
-        select(Review)
-        # .where(Review.available == True)  # available만 노출
-        .order_by(Review.review_id.desc())
-        .limit(limit)
+        stmt.order_by(Review.review_id.desc())
     ).scalars().all()
 
     if not reviews:
         return []
 
-    # review_ids = [r.review_id for r in reviews]
 
     # 이미지: review_id 기준으로 묶기
     imgs = db.execute(
         select(ImgFile)
-        # .where(ImgFile.review_id.in_(review_ids))
         .where(ImgFile.owner_type == "review")
         .order_by(ImgFile.review_id.asc(), ImgFile.sort_order.asc())
     ).scalars().all()
@@ -243,14 +253,15 @@ def list_reviews(db: Session, limit: int = 50) -> List[Dict[str, Any]]:
             "location": r.location,
             "available": r.available,
             "menu_name": [r.menu_name] if r.menu_name else [],
-            # "menu_name": _parse_csv_ids(r.menu_name),
             "review_items": parse_ids(r.review_items),
             # 프론트가 created_at/updated_at 키를 기대해서 맞춰줌
             "created_at": r.create_at.isoformat() if getattr(r, "create_at", None) else None,
             "updated_at": r.update_at.isoformat() if getattr(r, "update_at", None) else None,
             "image_urls": img_map.get(r.review_id, []),
-            "available": r.available
         })
+
+    print("out :: ", out)
+
     return out
 
 

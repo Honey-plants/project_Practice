@@ -38,16 +38,18 @@ export default function Profile() {
 
   // 리뷰와 커뮤니티 데이터 로드
   useEffect(() => {
-    reviewActions.fetchList();
+    reviewActions.fetchMyList();
     communityActions.fetchList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 내가 작성한 리뷰만 필터링
-  const myReviews = useMemo(
-    () => stateReview.list.filter((review) => review.member_id === me?.member_id),
-    [stateReview.list, me?.member_id]
-  );
+  const myReviews = useMemo(() => stateReview.list ?? [], [stateReview.list]);
+  console.log("myReviews :: ", stateReview)
+//   const myReviews = useMemo(
+//     () => stateReview.myList.filter((review) => review.member_id === me?.member_id),
+//     [stateReview.list, me?.member_id]
+//   );
 
   // 내가 작성한 커뮤니티 글만 필터링
   const myCommunities = useMemo(

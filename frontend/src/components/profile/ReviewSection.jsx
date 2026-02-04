@@ -14,6 +14,9 @@ export default function ReviewSection({ reviews, currentPage, onPageChange }) {
     (currentPage + 1) * itemsPerPage
   );
 
+  console.log("reviewToShow :: ", reviewsToShow)
+  console.log("123123123123 :: ", {reviews})
+
   return (
     <div className={styles.section}>
       <div className={styles.header}>
