@@ -122,9 +122,6 @@ def run_cmd(cmd: List[str], env: Optional[dict] = None, cwd: Optional[Path] = No
         )
 
 
-
-
-
 def ensure_exists(path: Path, msg: str) -> None:
     if not path.exists():
         raise RuntimeError(f"{msg}: {path}")
@@ -205,28 +202,13 @@ class Step3Options:
     min_score: float = 0.0
 
 
-
+# ✅ Step4 최종본(EXACT-ONLY)에 맞춰 최소 옵션만 유지
 @dataclass
 class Step4Options:
-    # RAG match options (match step_04_rag_match.py)
-    top_k: int = 20
-    embed_ambiguous: float = 0.90
-    jamo_threshold: float = 0.55
-    score_threshold: float = 0.55
-    save_top_n: int = 2
-
-    # kept for compatibility only (step_04 accepts but does not use)
-    rerank_top_k: int = 5
-    use_rerank: bool = True
-
-    include_debug: bool = False
-
     # Retrieval routing (stability)
     chroma_dir: Optional[str] = None
     collection: str = "menu_index"
 
-
-# orchestrator.py
 
 @dataclass
 class Step5Options:
@@ -236,12 +218,10 @@ class Step5Options:
     max_retries: int = 2
     require_poly: bool = True
 
-    #  NEW: orchestrator-level retry backoff (seconds)
+    # NEW: orchestrator-level retry backoff (seconds)
     sleep_base: float = 2.0
 
 
-
-#  NEW: Step6 options (Translate)
 @dataclass
 class Step6Options:
     model: str = "gemini-2.5-flash"
@@ -254,7 +234,6 @@ class Step6Options:
     max_retries: int = 2
     sleep_base: float = 0.7
 
-    # .env 로딩(선택) - client.py가 상위 탐색하지만 필요하면 강제 지정
     dotenv_path: Optional[str] = None
     max_dotenv_up: int = 8
 
@@ -276,27 +255,23 @@ class PipelineOrchestrator:
         if ai_root_str not in sys.path:
             sys.path.insert(0, ai_root_str)
 
-
-
     def run(
-            self,
-            image_path: Path,
-            run_id: Optional[str] = None,
-            *,
-            step1: Optional[Step1Options] = None,
-            step2: Optional[Step2Options] = None,
-            step3: Optional[Step3Options] = None,
-            step4: Optional[Step4Options] = None,
-            step5: Optional[Step5Options] = None,
-            step6: Optional[Step6Options] = None,
-
-            run_step5: bool = True,
-            run_step6: bool = True,
-
-            do_check: bool = True,
-            check_keywords: Optional[List[str]] = None,
-            show_structured: bool = True,
-            run_step4: bool = True,
+        self,
+        image_path: Path,
+        run_id: Optional[str] = None,
+        *,
+        step1: Optional[Step1Options] = None,
+        step2: Optional[Step2Options] = None,
+        step3: Optional[Step3Options] = None,
+        step4: Optional[Step4Options] = None,
+        step5: Optional[Step5Options] = None,
+        step6: Optional[Step6Options] = None,
+        run_step5: bool = True,
+        run_step6: bool = True,
+        do_check: bool = True,
+        check_keywords: Optional[List[str]] = None,
+        show_structured: bool = True,
+        run_step4: bool = True,
     ) -> Path:
         if not image_path.exists():
             raise FileNotFoundError(f"Input image not found: {image_path}")
@@ -323,21 +298,20 @@ class PipelineOrchestrator:
             sys.executable,
             "-m",
             "menu_assistant.worker.worker_app.pipeline.steps.step_01_rectify",
-            "--input",str(image_path),
-            "--run_id",run_id,
-            "--data_dir",str(self.data_dir),
+            "--input", str(image_path),
+            "--run_id", run_id,
+            "--data_dir", str(self.data_dir),
             "--run_dir", str(run_dir),
-            "--backend",step1.backend,
-            "--device",step1.device,
-            "--gamma",str(step1.gamma),
-            "--clahe_clip",str(step1.clahe_clip),
-            "--shadow_strength",str(step1.shadow_strength),
+            "--backend", step1.backend,
+            "--device", step1.device,
+            "--gamma", str(step1.gamma),
+            "--clahe_clip", str(step1.clahe_clip),
+            "--shadow_strength", str(step1.shadow_strength),
         ]
         if step1.model_dir:
             cmd1 += ["--model_dir", step1.model_dir]
 
         run_cmd(cmd1, cwd=self.ai_root)
-
         ensure_exists(rectify_img, "Step01 expected output missing (rectified image)")
 
         # ----------------------------------------------------
@@ -347,21 +321,15 @@ class PipelineOrchestrator:
             sys.executable,
             "-m",
             "menu_assistant.worker.worker_app.pipeline.steps.step_02_ocr",
-            "--run_id",
-            run_id,
-            "--data_dir",
-            str(self.data_dir),
+            "--run_id", run_id,
+            "--data_dir", str(self.data_dir),
             "--run_dir", str(run_dir),
-            "--lang",
-            step2.lang,
-            "--det_limit_side_len",
-            str(step2.det_limit_side_len),
-            "--det_limit_type",
-            step2.det_limit_type,
+            "--lang", step2.lang,
+            "--det_limit_side_len", str(step2.det_limit_side_len),
+            "--det_limit_type", step2.det_limit_type,
         ]
-        # ✅ NEW: device routing
+        # ✅ device routing
         cmd2 += ["--device", step2.ocr_device]
-
         if step2.ocr_gpu_mem is not None:
             cmd2 += ["--gpu_mem", str(step2.ocr_gpu_mem)]
 
@@ -383,12 +351,11 @@ class PipelineOrchestrator:
 
         if step2.dump_raw:
             cmd2 += ["--dump_raw"]
-
         if step2.out:
             cmd2 += ["--out", step2.out]
         if step2.vis:
             cmd2 += ["--vis", step2.vis]
-        # orchestrator.py (cmd2 구성 부분)
+
         if step2.det_box_thresh is not None:
             cmd2 += ["--det_box_thresh", str(step2.det_box_thresh)]
         if step2.det_thresh is not None:
@@ -397,13 +364,10 @@ class PipelineOrchestrator:
             cmd2 += ["--det_unclip_ratio", str(step2.det_unclip_ratio)]
 
         step2_env = os.environ.copy()
-        step2_env["FLAGS_use_mkldnn"] = "0"  # oneDNN(MKLDNN) off
-        step2_env["FLAGS_use_onednn"] = "0"  # 일부 버전에서 사용
-        step2_env["FLAGS_enable_pir_api"] = "0"  # PIR 경로 차단(버전별로 효과)
+        step2_env["FLAGS_use_mkldnn"] = "0"
+        step2_env["FLAGS_use_onednn"] = "0"
+        step2_env["FLAGS_enable_pir_api"] = "0"
         step2_env["FLAGS_enable_pir_in_executor"] = "0"
-
-        # ✅ NEW: GPU selection (useful on EKS / multi-GPU)
-
         if step2.cuda_visible_devices:
             step2_env["CUDA_VISIBLE_DEVICES"] = str(step2.cuda_visible_devices)
 
@@ -413,24 +377,19 @@ class PipelineOrchestrator:
         ensure_exists(ocr_json_check, "Step02 expected output missing (ocr json)")
 
         # ----------------------------------------------------
-        # Step 03: Normalize (NO-MERGE version)
+        # Step 03: Normalize
         # ----------------------------------------------------
         cmd3 = [
             sys.executable,
             "-m",
             "menu_assistant.worker.worker_app.pipeline.steps.step_03_normalize",
-            "--runs-root",
-            str(self.runs_root),
-            "--run-id",
-            run_id,
-            "--min-len",
-            str(step3.min_len),
-            "--min-score",
-            str(step3.min_score),
+            "--runs-root", str(self.runs_root),
+            "--run-id", run_id,
+            "--min-len", str(step3.min_len),
+            "--min-score", str(step3.min_score),
         ]
 
         run_cmd(cmd3, cwd=self.ai_root)
-
         ensure_exists(normalize_json, "Step03 expected output missing (normalize json)")
 
         # ----------------------------------------------------
@@ -441,18 +400,19 @@ class PipelineOrchestrator:
                 sys.executable,
                 "-m",
                 "menu_assistant.worker.worker_app.utils.check_step_03_result",
-                "--json",
-                str(normalize_json),
+                "--json", str(normalize_json),
             ]
             if show_structured:
                 check_cmd += ["--show-structured"]
             if check_keywords:
                 check_cmd += ["--keywords"] + list(check_keywords)
 
-            run_cmd(check_cmd,cwd=self.ai_root)
+            run_cmd(check_cmd, cwd=self.ai_root)
 
         # ----------------------------------------------------
-        # Step 04: RAG Match
+        # Step 04: RAG Match (EXACT-ONLY 최종본)
+        # - step_04_rag_match.py는: --run_id --data_dir --run_dir 만 받는다고 가정
+        # - retrieval 라우팅은 env로만 주입
         # ----------------------------------------------------
         if run_step4:
             chroma_dir = _resolve_chroma_dir(self.data_dir, step4.chroma_dir)
@@ -467,39 +427,12 @@ class PipelineOrchestrator:
                 sys.executable,
                 "-m",
                 "menu_assistant.worker.worker_app.pipeline.steps.step_04_rag_match",
-                "--run_id",
-                run_id,
-                "--data_dir",
-                str(self.data_dir),
+                "--run_id", run_id,
+                "--data_dir", str(self.data_dir),
                 "--run_dir", str(run_dir),
-                "--top_k",
-                str(step4.top_k),
-                "--embed_ambiguous",
-                str(step4.embed_ambiguous),
-                "--jamo_threshold",
-                str(step4.jamo_threshold),
-                "--score_threshold",
-                str(step4.score_threshold),
-                "--save_top_n",
-                str(step4.save_top_n),
-
-                # (호환용: step_04는 받기만 함)
-                "--rerank_top_k",
-                str(step4.rerank_top_k),
-                "--menu_index_json",
-                str('AI/menu_assistant/data/datasets/raw/menu_seed_with_alg_tags_variants_v3.json')
             ]
 
-            if step4.use_rerank:
-                cmd4 += ["--use_rerank"]
-            else:
-                cmd4 += ["--no_rerank"]
-
-            if step4.include_debug:
-                cmd4 += ["--include_debug"]
-
             run_cmd(cmd4, env=step4_env, cwd=self.ai_root)
-
             ensure_exists(rag_match_json, "Step04 expected output missing (rag_match json)")
 
         # ----------------------------------------------------
@@ -525,32 +458,21 @@ class PipelineOrchestrator:
             if step5.include_debug:
                 cmd5 += ["--include_debug"]
 
-            #  NEW: retry wrapper (keeps pipeline alive on transient 503/overload)
-            last_err: Optional[Exception] = None
             for attempt in range(int(step5.max_retries) + 1):
                 try:
                     if attempt > 0:
                         wait = float(step5.sleep_base) * (2 ** (attempt - 1))
-                        print(
-                            f"[STEP05] previous attempt failed. retrying in {wait:.1f}s... (attempt {attempt}/{step5.max_retries})")
+                        print(f"[STEP05] retrying in {wait:.1f}s... (attempt {attempt}/{step5.max_retries})")
                         time.sleep(wait)
-
                     run_cmd(cmd5, cwd=self.ai_root)
-                    last_err = None
                     break
-
-                except Exception as e:
-                    last_err = e
-                    # 다음 루프로 재시도. 마지막이면 raise.
+                except Exception:
                     if attempt >= int(step5.max_retries):
                         raise
-
-            # 이후 llm_input/llm_output 읽는 로직은 그대로
 
             llm_input_path = run_dir / "llm" / "llm_input.json"
             llm_output_path = run_dir / "llm" / "llm_output.json"
 
-            # llm_input.json 은 Step05가 항상 저장
             ensure_exists(llm_input_path, "Step05 expected output missing (llm_input.json)")
 
             llm_input_obj = json.loads(llm_input_path.read_text(encoding="utf-8"))
@@ -561,12 +483,10 @@ class PipelineOrchestrator:
             }
             llm_input_items = llm_input_obj.get("items") or []
 
-            #  핵심: items가 0개면 Step05가 llm_output.json을 만들지 않을 수 있음
             if llm_output_path.exists():
                 llm_output_obj = json.loads(llm_output_path.read_text(encoding="utf-8"))
                 llm_output_items = llm_output_obj.get("items") or []
             else:
-                # Step05 로그: "No items to send to LLM." 케이스
                 print("[STEP05] llm_output.json not found -> treating as empty output (no items).")
                 llm_output_items = []
 
@@ -578,29 +498,24 @@ class PipelineOrchestrator:
                 llm_input_items=llm_input_items,
                 llm_output_items=llm_output_items,
             )
-            # --- NEW: 최종 결과물에 user_profile 메타 포함 (Step05 단계에서 확정) ---
+
             profile_source = "default"
             if step5.user_profile_json:
                 try:
-                    if Path(step5.user_profile_json).exists():
-                        profile_source = "provided"
-                    else:
-                        profile_source = "missing_file"
+                    profile_source = "provided" if Path(step5.user_profile_json).exists() else "missing_file"
                 except Exception:
                     profile_source = "invalid_path"
 
             final_obj.setdefault("meta", {})
             final_obj["meta"]["user_profile"] = user_profile
             final_obj["meta"]["profile_source"] = profile_source
-            # (선택) 디버깅용으로 경로까지 넣고 싶으면:
-            # final_obj["meta"]["user_profile_json"] = step5.user_profile_json
 
             final_json.parent.mkdir(parents=True, exist_ok=True)
             final_json.write_text(json.dumps(final_obj, ensure_ascii=False, indent=2), encoding="utf-8")
             ensure_exists(final_json, "Step05 final output missing (final.json)")
 
         # ----------------------------------------------------
-        #  Step 06: Translate (final.json -> final_translated.json)
+        # Step 06: Translate
         # ----------------------------------------------------
         final_translated_json = run_dir / "final" / "final_translated.json"
         translate_json = run_dir / "translate" / "translate.json"
@@ -612,30 +527,18 @@ class PipelineOrchestrator:
                 sys.executable,
                 "-m",
                 "menu_assistant.worker.worker_app.pipeline.steps.step_06_translate",
-                "--run_id",
-                run_id,
-                "--data_dir",
-                str(self.data_dir),
+                "--run_id", run_id,
+                "--data_dir", str(self.data_dir),
                 "--run_dir", str(run_dir),
-                "--model",
-                step6.model,
-                "--api_key_env",
-                step6.api_key_env,
-                "--temperature",
-                str(step6.temperature),
-                "--top_p",
-                str(step6.top_p),
-                "--top_k",
-                str(step6.top_k),
-
-                "--max_retries",
-                str(step6.max_retries),
-                "--sleep_base",
-                str(step6.sleep_base),
-                "--max_dotenv_up",
-                str(step6.max_dotenv_up),
+                "--model", step6.model,
+                "--api_key_env", step6.api_key_env,
+                "--temperature", str(step6.temperature),
+                "--top_p", str(step6.top_p),
+                "--top_k", str(step6.top_k),
+                "--max_retries", str(step6.max_retries),
+                "--sleep_base", str(step6.sleep_base),
+                "--max_dotenv_up", str(step6.max_dotenv_up),
             ]
-
             if step6.dotenv_path:
                 cmd6 += ["--dotenv_path", step6.dotenv_path]
 
@@ -666,7 +569,7 @@ class PipelineOrchestrator:
 if __name__ == "__main__":
     import argparse
 
-    p = argparse.ArgumentParser(description="Pipeline Orchestrator: step_01 -> step_02 -> step_03 -> step_04")
+    p = argparse.ArgumentParser(description="Pipeline Orchestrator: step_01 -> step_06")
 
     p.add_argument("--image", required=True, help="Input image path")
     p.add_argument("--runs-root", default=str(_default_runs_root()), help="Runs root directory")
@@ -701,39 +604,20 @@ if __name__ == "__main__":
     p.add_argument("--ocr-out", default=None, help="Override step2 --out path (default: <run>/ocr/ocr.json)")
     p.add_argument("--ocr-vis", default=None, help="Override step2 --vis path (default: <run>/ocr/ocr_vis.jpg)")
 
-    # ✅ NEW: Step2 GPU/CPU control
     p.add_argument("--ocr-device", default="auto", choices=["auto", "cpu", "gpu"])
     p.add_argument("--ocr-gpu-mem", type=int, default=None)
     p.add_argument("--cuda-visible-devices", default=None)
 
     # ---------------- Step3 passthrough ----------------
     p.add_argument("--min-len", type=int, default=2)
-    p.add_argument("--line-y-tol", type=int, default=20)
-    p.add_argument("--merge-gap-px", type=int, default=25)
     p.add_argument("--min-score", type=float, default=0.0)
-    p.add_argument("--aggressive-merge", action="store_true", help="Enable Step3 merge pass2 (more aggressive).")
 
-    # ---------------- Step4 passthrough ----------------
+    # ---------------- Step4 toggles + routing only (최종본) ----------------
     p.add_argument("--run-step4", action="store_true", help="Run step4 (default: on)")
     p.add_argument("--no-step4", action="store_true", help="Skip step4")
+    p.add_argument("--chroma-dir", default=None, help="Chroma persist directory.")
+    p.add_argument("--collection", default="menu_index", help="Chroma collection name (default: menu_index)")
 
-    p.add_argument("--top-k", type=int, default=5)
-    p.add_argument("--embed-ambiguous", type=float, default=0.90)
-    p.add_argument("--jamo-threshold", type=float, default=0.55)
-    p.add_argument("--score-threshold", type=float, default=0.55)
-    p.add_argument("--save-top-n", type=int, default=2)
-
-    # (호환용) Step4는 받기만 함
-    p.add_argument("--rerank-top-k", type=int, default=5)
-    p.add_argument("--use-rerank", action="store_true")
-    p.add_argument("--no-rerank", action="store_true")
-    p.add_argument("--rag-debug", action="store_true")
-    p.add_argument(
-        "--menu_index_json",
-        type=str,
-        default='AI/menu_assistant/data/datasets/raw/menu_seed_with_alg_tags_variants_v3.json',
-        help="Optional menu index json for STRING EXACT precheck. If omitted, uses env MENU_ASSISTANT_MENU_INDEX_JSON.",
-    )
     # ---------------- Step5 passthrough ----------------
     p.add_argument("--run-step5", action="store_true", help="Run step5 (default: on)")
     p.add_argument("--no-step5", action="store_true", help="Skip step5")
@@ -742,15 +626,7 @@ if __name__ == "__main__":
     p.add_argument("--step5-max-retries", type=int, default=2)
     p.add_argument("--step5-no-require-poly", action="store_true", help="Do not require poly (debug only)")
 
-    #  hard-fix routing (stability)
-    p.add_argument(
-        "--chroma-dir",
-        default=None,
-        help="Chroma persist directory. If omitted, uses <data_dir>/chroma or Windows fallback.",
-    )
-    p.add_argument("--collection", default="menu_index", help="Chroma collection name (default: menu_index)")
-
-    # ----------------  Step6 passthrough ----------------
+    # ---------------- Step6 passthrough ----------------
     p.add_argument("--run-step6", action="store_true", help="Run step6 (default: on)")
     p.add_argument("--no-step6", action="store_true", help="Skip step6")
 
@@ -771,9 +647,7 @@ if __name__ == "__main__":
 
     args = p.parse_args()
 
-    # ------------------------------------------------------------
-    # Resolve image path (Docker-friendly)
-    # ------------------------------------------------------------
+    # Resolve image path
     image_base = _default_image_base()
     resolved_image = _resolve_image_arg(args.image, image_base)
     args.image = str(resolved_image)
@@ -808,42 +682,17 @@ if __name__ == "__main__":
         det_box_thresh=args.det_box_thresh,
         det_thresh=args.det_thresh,
         det_unclip_ratio=args.det_unclip_ratio,
-        # ✅ NEW
-        ocr_device = args.ocr_device,
-        ocr_gpu_mem = args.ocr_gpu_mem,
-        cuda_visible_devices = args.cuda_visible_devices,
+        ocr_device=args.ocr_device,
+        ocr_gpu_mem=args.ocr_gpu_mem,
+        cuda_visible_devices=args.cuda_visible_devices,
     )
 
     step3 = Step3Options(
         min_len=args.min_len,
-        line_y_tol=args.line_y_tol,
-        merge_gap_px=args.merge_gap_px,
         min_score=args.min_score,
-
-        # NEW
-        aggressive_merge=args.aggressive_merge,
-        merge_gap_ratio=0.75,
-        pass2_gap_px=14,
-        pass2_gap_ratio=0.45,
     )
 
-    use_rerank = True
-    if args.no_rerank:
-        use_rerank = False
-    if args.use_rerank:
-        use_rerank = True
-
     step4 = Step4Options(
-        top_k=args.top_k,
-        embed_ambiguous=args.embed_ambiguous,
-        jamo_threshold=args.jamo_threshold,
-        score_threshold=args.score_threshold,
-        save_top_n=args.save_top_n,
-
-        rerank_top_k=args.rerank_top_k,
-        use_rerank=use_rerank,
-
-        include_debug=args.rag_debug,
         chroma_dir=args.chroma_dir,
         collection=args.collection,
     )
@@ -867,7 +716,6 @@ if __name__ == "__main__":
     if args.run_step5:
         run_step5 = True
 
-    #  Step6 wiring
     step6 = Step6Options(
         model=args.step6_model,
         api_key_env=args.step6_api_key_env,

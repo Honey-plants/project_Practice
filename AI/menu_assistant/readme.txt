@@ -24,7 +24,7 @@ python -m menu_assistant.worker.worker_app.pipeline.steps.step_03_normalize --ru
 
 # 4) rag match 메뉴명만 선매칭
 python -m menu_assistant.worker.worker_app.pipeline.steps.step_04_rag_match ^
-  --run_id 20260113_121958 ^
+  --run_id 7242a839300e4f3a8c8dd99a8509b48d ^
   --top_k 20 ^
   --rerank_top_k 5 ^
   --use_rerank
