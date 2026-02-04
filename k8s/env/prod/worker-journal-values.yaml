@@ -1,10 +1,7 @@
 image:
-    repository: ghcr.io/mingoo684/cicdex2-worker
-    tag: prod-002
+    repository: 690641653744.dkr.ecr.ap-northeast-2.amazonaws.com/haenet-worker-gpu
+    tag: prod-001
     pullPolicy: IfNotPresent
-
-imagePullSecrets:
-    - name: ghcr-pull2
 
 worker:
     args: ["-m", "AI.journal.worker.worker_app.main"]
@@ -14,23 +11,20 @@ env:
 
 queue:
     type: redis
-    redisUrl: redis://:PROD_REDIS_PASSWORD_CHANGE_ME@redis-master.app-prod.svc.cluster.local:6379/0
+    redisUrl: redis://redis.app-prod.svc.cluster.local:6379/0
 config:
     LOG_LEVEL: INFO
-    S3_BUCKET: prod-bucket-name
+    S3_BUCKET: haenet-s3-project
     S3_PREFIX: uploads/
+    S3_REGION: ap-northeast-2
     name: "cicdex:jobs:journal"
     processingName: "cicdex:jobs:journal:processing"
 
 secrets:
     enabled: false
-    OPENAI_API_KEY: PROD_OPENAI_API_KEY_CHANGE_ME
+    GEMINI_API_KEY: PROD_GEMINI_API_KEY_CHANGE_ME
     DB_PASSWORD: PROD_DB_PASSWORD_CHANGE_ME
     JWT_SECRET_KEY: PROD_JWT_CHANGE_ME
-
-secretMount:
-    enabled: true
-    mountPath: /run/app-secrets
 
 autoscaling:
     enabled: true

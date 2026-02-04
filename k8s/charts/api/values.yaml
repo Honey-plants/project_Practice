@@ -29,6 +29,7 @@ ingress:
   host: app.local
   path: /api(/|$)(.*)
   pathType: ImplementationSpecific
+  annotations: {}
 
 httpRoute:
   enabled: false
@@ -56,13 +57,7 @@ secret:
 
 # NOTE:
 # - When using External Secrets, keep secret.enabled=false
-# - secretsMount.* controls *_FILE envs in the deployment
-
-secretsMount:
-  enabled: true
-  mountPath: /run/app-secrets
-  dbPasswordKey: DB_PASSWORD
-  jwtSecretKeyKey: JWT_SECRET_KEY
+# - Secrets are injected via envFrom secretRef in the deployment
 
 probes:
   readinessPath: /health

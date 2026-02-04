@@ -24,8 +24,8 @@ API chart fullname:
 => Secret name must be api-dev-secrets / api-prod-secrets
 
 Worker chart fullname:
-- Does NOT include release name (worker.fullname = "worker")
-=> Secret name is always worker-secrets within each namespace
+- Includes release name by default (worker.fullname)
+=> Resource names are per-release; Secret is shared via secretRefName=worker-secrets
 
 ArgoCD apps (namespaces/values):
 - app-dev: api-dev, frontend-dev, platform-dev, redis-dev, worker-menu-assistant-dev, worker-journal-dev, worker-review-dev
@@ -36,7 +36,9 @@ ArgoCD apps (namespaces/values):
 Secret (ESO-managed):
 - DB_PASSWORD
 - JWT_SECRET_KEY
-- OPENAI_API_KEY
+- GEMINI_API_KEY
+- NAVER_API_KEY
+- NAVER_CLIENT_ID
 
 ConfigMap (non-secret):
 - REDIS_URL
@@ -49,9 +51,9 @@ Disable in-chart Secret creation:
 - k8s/charts/api/values.yaml: secret.enabled = false
 - k8s/charts/worker/values.yaml: secrets.enabled = false
 
-Secret mount key mapping (must match ExternalSecret output keys):
-- API: secretsMount.dbPasswordKey = DB_PASSWORD, jwtSecretKeyKey = JWT_SECRET_KEY
-- Worker: secretMount.openaiApiKeyKey = OPENAI_API_KEY, dbPasswordKey = DB_PASSWORD, jwtSecretKeyKey = JWT_SECRET_KEY
+Secret injection (envFrom secretRef):
+- API: envFrom secretRef -> api-<env>-secrets
+- Worker: envFrom secretRef -> worker-secrets
 
 ## External Secrets Manifests
 Location:
@@ -66,19 +68,18 @@ Files:
 ## Checklist
 1) AWS Secrets Manager
    - app-dev-secrets/app-prod-secrets exist
-   - keys: DB_PASSWORD, JWT_SECRET_KEY, OPENAI_API_KEY
+   - keys: DB_PASSWORD, JWT_SECRET_KEY, GEMINI_API_KEY
 2) ESO manifests applied in each namespace
 3) api-* and worker-secrets created by ESO
 4) ArgoCD sync api/worker apps
-5) Pods read *_FILE envs successfully
+5) Pods read secret envs successfully
 
 ## Pre/Post Deployment Checklist
 Pre:
 - ExternalSecret target names match Helm fullnames
-- secretMount keys align with ExternalSecret data keys
 - in-chart Secret creation disabled
 
 Post:
 - K8s Secrets exist in app-dev/app-prod
-- Pods show *_FILE envs and can read mounted files
+- Pods show secret envs from ESO
 - API/worker pods can connect to DB and Redis

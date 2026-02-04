@@ -8,7 +8,8 @@ Deployment env keys:
 - QUEUE_NAME_MENU_ASSISTANT
 - QUEUE_NAME_JOURNAL
 - QUEUE_NAME_REVIEW
-- DB_PASSWORD_FILE, JWT_SECRET_KEY_FILE (when secretsMount.enabled=true)
+- DB_PASSWORD, JWT_SECRET_KEY
+- GEMINI_API_KEY, NAVER_API_KEY, NAVER_CLIENT_ID, NAVER_CLIENT_SECRET
 
 Values sources:
 - k8s/env/dev/api-values.yaml
@@ -21,8 +22,8 @@ ConfigMap keys (envFrom):
 - AWS_REGION, SQS_QUEUE_URL
 - S3_BUCKET, S3_PREFIX
 
-Secret-mounted keys:
-- OPENAI_API_KEY_FILE, DB_PASSWORD_FILE, JWT_SECRET_KEY_FILE
+Secret env keys (envFrom secretRef):
+- GEMINI_API_KEY, DB_PASSWORD, JWT_SECRET_KEY
 
 Values sources:
 - k8s/env/dev/worker-menu-assistant-values.yaml

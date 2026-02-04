@@ -1,5 +1,5 @@
 {
-  "proxy": "http://localhost:8000",
+  "proxy": "https://api.foodray.net",
   "name": "final_project",
   "version": "0.1.0",
   "private": true,

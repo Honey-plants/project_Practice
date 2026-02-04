@@ -2,7 +2,12 @@ import axios from "axios";
 
 // ✅ 개발환경(CRA proxy 사용): baseURL을 "/"로 두면 package.json의 proxy를 탄다.
 // ✅ 배포/특정 환경: REACT_APP_API_BASE_URL이 있으면 기존처럼 그 값을 그대로 사용
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || "/";
+// ✅ 안전가드: http(s) 또는 / 로 시작하지 않으면 "/"로 강제
+const RAW_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const isValidBaseUrl =
+  typeof RAW_BASE_URL === "string" &&
+  (RAW_BASE_URL.startsWith("/") || /^https?:\/\//i.test(RAW_BASE_URL));
+const BASE_URL = isValidBaseUrl ? RAW_BASE_URL : "/";
 
 const api = axios.create({
   baseURL: BASE_URL,

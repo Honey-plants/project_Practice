@@ -6,15 +6,14 @@ while preserving prod-specific endpoints, credentials, and domains.
 ## Core Rules (Prod Overrides)
 - APP_ENV: prod
 - Ingress host: app.example.com
-- Redis URL (prod): redis://:PROD_REDIS_PASSWORD_CHANGE_ME@redis-master.app-prod.svc.cluster.local:6379/0
+- Redis URL (prod): redis://redis.app-prod.svc.cluster.local:6379/0
 - S3 bucket: prod-bucket-name
-- Secrets placeholders: PROD_* (OPENAI_API_KEY / DB_PASSWORD / JWT_SECRET_KEY)
+- Secrets placeholders: PROD_* (GEMINI_API_KEY / DB_PASSWORD / JWT_SECRET_KEY)
 
 ## File-Specific Rules
 ### k8s/env/prod/api-values.yaml
 - DB_HOST: database-1.c7oeqq6c6a58.ap-northeast-2.rds.amazonaws.com
-- REDIS_URL: redis://redis-master.app-prod.svc.cluster.local:6379/0
-- secretsMount.dbPasswordKey/jwtSecretKeyKey: DB_PASSWORD / JWT_SECRET_KEY
+- REDIS_URL: redis://redis.app-prod.svc.cluster.local:6379/0
 - secret.dbPassword/secret.jwtSecretKey: PROD_DB_PASSWORD_CHANGE_ME / PROD_JWT_CHANGE_ME
 - ingress.host: app.example.com
 
@@ -28,9 +27,9 @@ while preserving prod-specific endpoints, credentials, and domains.
 
 ### k8s/env/prod/worker-*-values.yaml
 - APP_ENV: prod
-- redisUrl: redis://:PROD_REDIS_PASSWORD_CHANGE_ME@redis-master.app-prod.svc.cluster.local:6379/0
+- redisUrl: redis://redis.app-prod.svc.cluster.local:6379/0
 - S3_BUCKET: prod-bucket-name
-- OPENAI_API_KEY / DB_PASSWORD / JWT_SECRET_KEY: PROD_* placeholders
+- GEMINI_API_KEY / DB_PASSWORD / JWT_SECRET_KEY: PROD_* placeholders
 
 ## Notes
 - prod 최신 파일(platform/redis/worker-menu-assistant)은 그대로 두고,

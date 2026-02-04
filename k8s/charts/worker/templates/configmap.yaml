@@ -15,3 +15,4 @@ data:
   SQS_QUEUE_URL: {{ .Values.queue.sqsQueueUrl | quote }}
   S3_BUCKET: {{ .Values.config.S3_BUCKET | quote }}
   S3_PREFIX: {{ .Values.config.S3_PREFIX | quote }}
+  S3_REGION: {{ .Values.config.S3_REGION | quote }}

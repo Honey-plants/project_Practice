@@ -1,4 +1,4 @@
-# backend/Dockerfile
+# docker/backend.Dockerfile
 # requirements.txt 없이: pyproject.toml 기반으로 설치 (PEP 517/518)
 
 FROM python:3.11-slim AS builder
@@ -34,9 +34,10 @@ RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
 COPY --from=builder /app /app
 
 # --- backend.* import 호환 레이어 (symlink) ---
-RUN mkdir -p /app/backend && \
+RUN mkdir -p /app/backend /app/_work /app/uploads && \
     ln -s /app/app /app/backend/app && \
-    touch /app/backend/__init__.py
+    touch /app/backend/__init__.py && \
+    chown -R appuser:appuser /app/_work /app/uploads
 ENV PYTHONPATH=/app
 # --------------------------------------------
 
