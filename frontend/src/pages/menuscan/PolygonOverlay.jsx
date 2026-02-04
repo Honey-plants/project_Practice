@@ -128,10 +128,11 @@ export default function PolygonOverlay({ items, imgSize, onSelectItem }) {
 
         const lineH = fs * 1.1;
         const startY = lines.length <= 1 ? cy : cy - (lineH * (lines.length - 1)) / 2;
+        const color = item?.ui?.color || (["exact","close"].includes((item?.match?.status || "").toLowerCase()) ? "red" : "orange");
 
         return (
           <g key={idx} className="ms-po__group" onClick={() => onSelectItem?.(item)}>
-            <polygon className="ms-po__poly" points={points} />
+            <polygon className={`ms-po__poly ms-po__poly--${color}`} points={points} />
 
             {lines.length > 0 && (
               <text

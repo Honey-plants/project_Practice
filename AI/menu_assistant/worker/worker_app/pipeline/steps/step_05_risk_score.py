@@ -211,47 +211,157 @@ def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, An
     """
     Ensure LLM input item has:
       - item_id
-      - menu_name (exact: menu, close: decided_menu)
+      - status
+      - menu_name
       - poly
       - evidence (optional): ingredients_ko, alg_tags, menu_id
-    The LLM is instructed to COPY item_id/menu_name/poly exactly.
+    This function is intentionally defensive to support multiple upstream shapes.
     """
+    def _pick_status(it: Dict[str, Any]) -> str:
+        # preferred
+        s = it.get("status")
+        if isinstance(s, str) and s.strip():
+            return s.strip()
+
+        # legacy / alternative shapes
+        m = it.get("match")
+        if isinstance(m, dict):
+            s2 = m.get("status")
+            if isinstance(s2, str) and s2.strip():
+                return s2.strip()
+
+        rm = it.get("rag_match")
+        if isinstance(rm, dict):
+            s3 = rm.get("status")
+            if isinstance(s3, str) and s3.strip():
+                return s3.strip()
+
+        # step04 also had match_status sometimes
+        s4 = it.get("match_status")
+        if isinstance(s4, str) and s4.strip():
+            return s4.strip()
+
+        return ""
+
+    def _pick_menu_name(it: Dict[str, Any], status: str) -> str:
+        # preferred
+        for k in ("menu_name", "menu"):
+            v = it.get(k)
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+
+        # close/other candidates
+        for k in ("decided_menu", "menu_final", "raw_menu_main", "raw_menu", "menu_norm"):
+            v = it.get(k)
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+
+        # nested (legacy)
+        m = it.get("match")
+        if isinstance(m, dict):
+            for k in ("decided_menu", "menu", "menu_name"):
+                v = m.get(k)
+                if isinstance(v, str) and v.strip():
+                    return v.strip()
+
+        rm = it.get("rag_match")
+        if isinstance(rm, dict):
+            for k in ("decided_menu", "used_query"):
+                v = rm.get(k)
+                if isinstance(v, str) and v.strip():
+                    return v.strip()
+
+        return ""
+
+    def _pick_poly(it: Dict[str, Any]) -> Any:
+        # preferred
+        p = it.get("poly")
+        if p is not None:
+            return p
+
+        # normalize 단계에서 poly_menu로 들어오는 경우가 많음
+        p2 = it.get("poly_menu")
+        if p2 is not None:
+            return p2
+
+        # nested
+        m = it.get("match")
+        if isinstance(m, dict) and m.get("poly") is not None:
+            return m.get("poly")
+
+        rm = it.get("rag_match")
+        if isinstance(rm, dict) and rm.get("poly") is not None:
+            return rm.get("poly")
+
+        return None
+
+    def _pick_evidence(it: Dict[str, Any]) -> Dict[str, Any]:
+        ev = it.get("evidence")
+        if isinstance(ev, dict):
+            # keep as-is
+            out = dict(ev)
+        else:
+            out = {}
+
+        # common top-level fields
+        if "menu_id" not in out:
+            mid = it.get("menu_id")
+            if mid is not None:
+                out["menu_id"] = mid
+
+        if "ingredients_ko" not in out:
+            ing = it.get("ingredients_ko")
+            if isinstance(ing, list):
+                out["ingredients_ko"] = ing
+
+        if "alg_tags" not in out:
+            tags = it.get("alg_tags")
+            if isinstance(tags, list):
+                out["alg_tags"] = tags
+
+        # nested candidates from rag_match structure
+        rm = it.get("rag_match")
+        if isinstance(rm, dict):
+            bm = rm.get("best_match")
+            if isinstance(bm, dict):
+                if "menu_id" not in out and bm.get("id") is not None:
+                    out["menu_id"] = bm.get("id")
+                if "ingredients_ko" not in out and isinstance(bm.get("ingredients_ko"), list):
+                    out["ingredients_ko"] = bm.get("ingredients_ko")
+                if "alg_tags" not in out and isinstance(bm.get("alg_tags"), list):
+                    out["alg_tags"] = bm.get("alg_tags")
+
+        return out
+
     out: List[Dict[str, Any]] = []
     for it in items:
-        status = str(it.get("status", "")).lower().strip()
+        if not isinstance(it, dict):
+            continue
+
         item_id = it.get("item_id")
-        poly = it.get("poly")
-
-        if status == "exact":
-            menu_name = it.get("menu") or it.get("menu_name")
-            evidence = {
-                "menu_id": it.get("menu_id"),
-                "ingredients_ko": it.get("ingredients_ko") or [],
-                "alg_tags": it.get("alg_tags") or [],
-            }
-        elif status == "close":
-            menu_name = it.get("decided_menu") or it.get("menu_name")
-            evidence = {
-                "menu_id": None,
-                "ingredients_ko": [],
-                "alg_tags": [],
-            }
-        else:
+        if not isinstance(item_id, str) or not item_id.strip():
+            # can't use it
             continue
 
-        if not item_id or not menu_name or poly is None:
+        status = _pick_status(it)
+        menu_name = _pick_menu_name(it, status)
+        poly = _pick_poly(it)
+        evidence = _pick_evidence(it)
+
+        # 최소 요건(이것 때문에 items가 통째로 0이 됐을 확률이 큼)
+        if not menu_name or poly is None:
             continue
 
-        out.append(
-            {
-                "item_id": item_id,
-                "status": status,
-                "menu_name": str(menu_name),
-                "poly": poly,
-                "evidence": evidence,
-            }
-        )
+        out.append({
+            "item_id": item_id.strip(),
+            "status": status or "unknown",
+            "menu_name": menu_name,
+            "poly": poly,
+            "evidence": evidence,
+        })
+
     return out
+
 
 
 def parse_args() -> argparse.Namespace:
@@ -306,6 +416,7 @@ def main() -> None:
 
     rules = DecisionRules(require_poly=require_poly)
     raw_items, rules_meta = rules.build_llm_items(rag_match_json)
+    print("[DEBUG] rules_meta:", rules_meta, "raw_items_len:", len(raw_items))
 
     # Normalize to LLM-input friendly shape (menu_name + poly always present)
     llm_items = _normalize_llm_input_items(raw_items)

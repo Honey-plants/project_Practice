@@ -154,6 +154,11 @@ class LLMItemOutputV1:
     confidence: float = 0.0
     # NOTE: dataclass level typing is optional; validator handles runtime checks
     matched_constraints: Optional[Dict[str, Any]] = None
+    # EXTENDED OPTIONAL (LLM matching 보강용)
+    match_status: Optional[str] = None           # "llm_match" | "unknown" | null
+    selected_candidate_id: Optional[str] = None  # "rep_XXXX" | null
+    comment_en: Optional[str] = None             # 영어 질문(선택)
+
 
 
 @dataclass
@@ -210,6 +215,7 @@ def validate_llm_output_v1(obj: Dict[str, Any]) -> Tuple[bool, str]:
     for i, it in enumerate(obj["items"]):
         if not isinstance(it, dict):
             return False, f"items[{i}] must be dict"
+
 
         # REQUIRED 6 fields
         ok, msg = _require_nonempty_str(it, "item_id", f"items[{i}]")
@@ -296,6 +302,18 @@ def validate_llm_output_v1(obj: Dict[str, Any]) -> Tuple[bool, str]:
                         for x in v:
                             if not isinstance(x, str):
                                 return False, f"items[{i}].matched_constraints.avoid_foods must be list[str]"
+    # OPTIONAL: match_status / selected_candidate_id / comment_en
+    if "match_status" in it and it["match_status"] is not None:
+        if it["match_status"] not in ("llm_match", "unknown"):
+            return False, f"items[{i}].match_status must be llm_match|unknown or null"
+
+    if "selected_candidate_id" in it and it["selected_candidate_id"] is not None:
+        if not isinstance(it["selected_candidate_id"], str) or not it["selected_candidate_id"].strip():
+            return False, f"items[{i}].selected_candidate_id must be non-empty string or null"
+
+    if "comment_en" in it and it["comment_en"] is not None:
+        if not isinstance(it["comment_en"], str):
+            return False, f"items[{i}].comment_en must be string or null"
 
     return True, ""
 

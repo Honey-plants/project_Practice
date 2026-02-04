@@ -22,3 +22,17 @@
   stroke: white;
   paint-order: stroke;
 }
+.ms-po__poly--red {
+  fill: rgba(255, 0, 0, 0.2);
+  stroke: red;
+}
+
+.ms-po__poly--orange {
+  fill: rgba(255, 165, 0, 0.2);
+  stroke: orange;
+}
+
+.ms-po__poly--gray {
+  fill: rgba(120, 120, 120, 0.2);
+  stroke: #888;
+}

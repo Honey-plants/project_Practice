@@ -20,7 +20,7 @@ python -m menu_assistant.worker.worker_app.pipeline.steps.step_02_ocr ^
   --vis   menu_assistant/data/runs/20260112_181356/ocr/ocr_vis.jpg
 
 # 3) normalize 실행
-python -m menu_assistant.worker.worker_app.pipeline.steps.step_03_normalize --runs-root "C:\Users\201\Desktop\PGHfolder\Final_project\AI\menu_assistant\data\runs" --run-id 20260112_181356
+python -m menu_assistant.worker.worker_app.pipeline.steps.step_03_normalize --runs-root "C:\Users\201\Desktop\PGHfolder\haenet\uploads\tmp\menu\7242a839300e4f3a8c8dd99a8509b48d\ai_runs" --run-id 7242a839300e4f3a8c8dd99a8509b48d
 
 # 4) rag match 메뉴명만 선매칭
 python -m menu_assistant.worker.worker_app.pipeline.steps.step_04_rag_match ^

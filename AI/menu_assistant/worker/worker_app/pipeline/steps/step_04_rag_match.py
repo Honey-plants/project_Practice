@@ -8,6 +8,25 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from menu_assistant.worker.worker_app.rag.retrieval import match_menu_norm
 
+
+def _canon_status(status_raw: str) -> str:
+    """Normalize detailed/raw statuses into canonical statuses for downstream.
+
+    Canonical: exact | close | ambiguous | not_found
+    Raw examples kept for analytics: EXACT, CLOSE, NOT_FOUND_BELOW_THRESHOLD, ...
+    """
+    s = (status_raw or "").strip().lower()
+    if "exact" in s:
+        return "exact"
+    if "close" in s:
+        return "close"
+    if "ambiguous" in s:
+        return "ambiguous"
+    if "not_found" in s:
+        return "not_found"
+    return "not_found"
+
+
 # ============================================================
 # Exact precheck (STRING EXACT) before embedding search
 # - Optional and backward compatible
@@ -16,24 +35,12 @@ from menu_assistant.worker.worker_app.rag.retrieval import match_menu_norm
 # - This prevents cases where an exact menu exists in the index
 #   but is not retrieved by embedding top_k candidates.
 # ============================================================
-menu_index_json='AI/menu_assistant/data/datasets/raw/menu_seed_with_alg_tags_variants_v3.json'
+menu_index_json = "AI/menu_assistant/data/datasets/raw/menu_seed_with_alg_tags_variants_v3.json"
+
+
 def _load_menu_index_for_exact(path_str: Optional[str]) -> Optional[Dict[str, Dict[str, Any]]]:
-    """Load a menu index json (list of entries) and build variant->record map.
-
-    Expected entry schema (minimal):
-      {
-        "id": "rep_...",
-        "menu": "냉모밀",
-        "variants": ["냉모밀", "..."],
-        "ingredients_ko": [...],
-        "alg_tags": [...]
-      }
-
-    Returns:
-      dict mapping variant string -> entry dict
-    """
-    # Priority: CLI arg > ENV
-    p = (path_str or os.environ.get("MENU_ASSISTANT_MENU_INDEX_JSON") or '').strip()
+    """Load a menu index json (list of entries) and build variant->record map."""
+    p = (path_str or os.environ.get("MENU_ASSISTANT_MENU_INDEX_JSON") or "").strip()
     if not p:
         return None
     path = Path(p).expanduser()
@@ -85,7 +92,7 @@ def _exact_precheck(menu_norm: str, vmap: Optional[Dict[str, Dict[str, Any]]]) -
     hit = vmap.get(q)
     if not isinstance(hit, dict):
         return None
-    # Build a rag-like response compatible with downstream logic
+
     best_match = {
         "id": hit.get("id"),
         "menu": hit.get("menu"),
@@ -124,7 +131,6 @@ def _resolve_run_dir(data_dir: Path, run_id: str) -> Path:
 
 
 def _extract_items(normalized: Any) -> List[Dict[str, Any]]:
-    # Step03 standard schema: {"items": [...]}
     if isinstance(normalized, dict):
         if isinstance(normalized.get("items"), list):
             return normalized["items"]
@@ -160,9 +166,7 @@ def run_step_04_rag_match(
     normalized = _read_json(normalize_path)
     items = _extract_items(normalized)
 
-    # Optional: build exact-precheck variant map (does not change behavior if not provided)
     exact_vmap = _load_menu_index_for_exact(menu_index_json)
-
 
     out_items: List[Dict[str, Any]] = []
     stats: Dict[str, int] = {
@@ -191,35 +195,40 @@ def run_step_04_rag_match(
             or ""
         ).strip()
 
-        # ----------------------------------------------------
-        # EXACT precheck: if menu_norm exactly matches a known variant,
-        # return EXACT without embedding search.
-        # ----------------------------------------------------
         exact_rag = _exact_precheck(menu_norm, exact_vmap)
         if exact_rag is not None:
             rag = exact_rag
         else:
             rag = match_menu_norm(
-            menu_norm=menu_norm,
-            raw_menu=raw_menu,
-            top_k=int(top_k),
-            save_top_n=int(save_top_n),
-            embed_ambiguous=float(embed_ambiguous),  # reserved / compat
-            jamo_threshold=float(jamo_threshold),
-            score_threshold=float(score_threshold),
-            include_debug=include_debug,
-        )
+                menu_norm=menu_norm,
+                raw_menu=raw_menu,
+                top_k=int(top_k),
+                save_top_n=int(save_top_n),
+                embed_ambiguous=float(embed_ambiguous),
+                jamo_threshold=float(jamo_threshold),
+                score_threshold=float(score_threshold),
+                include_debug=include_debug,
+            )
+
+        # ------------------------------
+        # Canonicalize status for downstream rules/UI.
+        # Keep raw for debug/analytics.
+        # This supports both retrieval.py (status/status_raw) and legacy outputs.
+        # ------------------------------
+        raw_status = rag.get("status_raw") or rag.get("status")
+        canon_status = _canon_status(str(raw_status or ""))
+        rag["status_raw"] = raw_status
+        rag["status"] = canon_status
 
         merged = dict(it)
 
-        # Top-level convenience fields (stable contract for downstream LLM/service)
         merged["raw_menu"] = raw_menu or merged.get("raw_menu")
         merged["menu_norm"] = menu_norm or merged.get("menu_norm")
         merged["menu_final"] = rag.get("decided_menu")
-        merged["match_status"] = rag.get("status")
+        merged["match_status"] = canon_status
+        merged["match_status_raw"] = raw_status
         merged["match_decision_method"] = rag.get("decision_method")
 
-        # Match evidence (keep candidates/thresholds for LLM reasoning)
         bm = rag.get("best_match") or {}
         signals = rag.get("signals") or {}
         merged["match"] = {
@@ -238,7 +247,7 @@ def run_step_04_rag_match(
         }
 
         # Confirmed payload: ONLY when EXACT
-        if rag.get("status") == "EXACT" and isinstance(bm, dict):
+        if canon_status == "exact" and isinstance(bm, dict):
             merged["confirmed"] = {
                 "menu_id": bm.get("id"),
                 "menu": bm.get("menu"),
@@ -248,14 +257,14 @@ def run_step_04_rag_match(
         else:
             merged["confirmed"] = None
 
-        # Backward-compat: keep raw rag output under rag_match if you still need it
         merged["rag_match"] = rag
 
         out_items.append(merged)
 
         stats["TOTAL"] += 1
-        st = str(rag.get("status") or "")
-        stats[st] = stats.get(st, 0) + 1
+        # stats keeps raw statuses (backward-compat)
+        st_raw = str(raw_status or "")
+        stats[st_raw] = stats.get(st_raw, 0) + 1
 
     out_path = run_dir / "rag_match" / "rag_match.json"
     payload = {
@@ -300,7 +309,6 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--jamo_confirmed", type=float, default=0.95)
     p.add_argument("--score_threshold", type=float, default=0.55)
 
-    # Backward-compatible CLI (orchestrator may still pass these)
     p.add_argument("--rerank_top_k", type=int, default=0)
     p.add_argument("--use_rerank", action="store_true")
     p.add_argument("--no_rerank", action="store_true")

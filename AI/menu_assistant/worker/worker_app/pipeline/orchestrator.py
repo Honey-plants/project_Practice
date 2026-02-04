@@ -200,16 +200,10 @@ class Step2Options:
 
 @dataclass
 class Step3Options:
-    min_len: int = 2
-    line_y_tol: int = 20
-    merge_gap_px: int = 25
+    # Step03 (Normalize) options
+    min_len: int = 1
     min_score: float = 0.0
 
-    # NEW: stabilized merge controls (pass2 is OFF by default)
-    aggressive_merge: bool = False
-    merge_gap_ratio: float = 0.75
-    pass2_gap_px: int = 14
-    pass2_gap_ratio: float = 0.45
 
 
 @dataclass
@@ -419,7 +413,7 @@ class PipelineOrchestrator:
         ensure_exists(ocr_json_check, "Step02 expected output missing (ocr json)")
 
         # ----------------------------------------------------
-        # Step 03: Normalize
+        # Step 03: Normalize (NO-MERGE version)
         # ----------------------------------------------------
         cmd3 = [
             sys.executable,
@@ -431,27 +425,9 @@ class PipelineOrchestrator:
             run_id,
             "--min-len",
             str(step3.min_len),
-            "--line-y-tol",
-            str(step3.line_y_tol),
-            "--merge-gap-px",
-            str(step3.merge_gap_px),
             "--min-score",
             str(step3.min_score),
-
-            # NEW: pass1 stabilization (always on)
-            "--merge-gap-ratio",
-            str(step3.merge_gap_ratio),
         ]
-
-        # NEW: pass2 only when requested
-        if step3.aggressive_merge:
-            cmd3 += [
-                "--enable-merge-pass2",
-                "--pass2-gap-px",
-                str(step3.pass2_gap_px),
-                "--pass2-gap-ratio",
-                str(step3.pass2_gap_ratio),
-            ]
 
         run_cmd(cmd3, cwd=self.ai_root)
 

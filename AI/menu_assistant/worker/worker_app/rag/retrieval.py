@@ -51,6 +51,30 @@ ENV_EMBED_MODEL = "MENU_ASSISTANT_EMBED_MODEL"
 _WS_RE = re.compile(r"\s+")
 
 
+def _canon_status(status_raw: str) -> str:
+    """Normalize detailed/raw statuses into a small canonical set.
+
+    Canonical statuses used by downstream rules/UI:
+      - exact
+      - close
+      - ambiguous
+      - not_found
+
+    Keep the original value in `status_raw` for debugging/analytics.
+    """
+    s = (status_raw or "").strip().lower()
+    if "exact" in s:
+        return "exact"
+    if "close" in s:
+        return "close"
+    if "ambiguous" in s:
+        return "ambiguous"
+    if "not_found" in s:
+        return "not_found"
+    # Default to not_found to keep pipeline fail-open for LLM assist.
+    return "not_found"
+
+
 def _get_env_path(name: str) -> Optional[Path]:
     v = os.environ.get(name)
     if not v:
@@ -258,40 +282,43 @@ class ChromaMenuRetriever:
             ids = [f"idx_{i}" for i in range(len(metadatas))]
 
         out: List[Candidate] = []
-        for _id, md, dist in zip(ids, metadatas, distances):
-            meta = _parse_metadata(md or {})
-            cand = Candidate(
-                id=str(_id),
-                embed_score=float(_to_similarity(dist)),
-                menu=str(meta.get("menu", "")),
-                variants=list(meta.get("variants") or []),
-                ingredients_ko=list(meta.get("ingredients_ko") or []),
-                alg_tags=list(meta.get("alg_tags") or []),
-                source=str(meta.get("source", "")),
-            )
+        for idx, md in enumerate(metadatas):
+            try:
+                cid = str(ids[idx]) if idx < len(ids) else f"idx_{idx}"
+                dist = float(distances[idx]) if idx < len(distances) else None
+                sim = _to_similarity(dist)
 
-            # Variant-aware jamo (A-plan)
-            variants = [cand.menu] + cand.variants
-            best_jamo = 0.0
-            best_v = cand.menu
-            for v in variants:
-                js = jamo_similarity(q, v)
-                if js > best_jamo:
-                    best_jamo = js
-                    best_v = v
-            cand.jamo_score = best_jamo
-            cand.best_variant = best_v
+                meta = _parse_metadata(md or {})
+                menu = meta["menu"]
+                variants = meta["variants"]
 
-            # Default final score (caller can recompute with different weights later)
-            cand.final_score = (
-                DEFAULT_FINAL_W_EMBED * float(cand.embed_score)
-                + DEFAULT_FINAL_W_JAMO * float(cand.jamo_score)
-            )
+                # best jamo over menu + variants
+                best_variant = None
+                best_j = jamo_similarity(q, menu) if menu else 0.0
+                best_variant = menu if menu else None
+                for v in (variants or []):
+                    j = jamo_similarity(q, v)
+                    if j > best_j:
+                        best_j = j
+                        best_variant = v
 
-            out.append(cand)
+                out.append(
+                    Candidate(
+                        id=cid,
+                        embed_score=float(sim),
+                        menu=menu,
+                        ingredients_ko=meta["ingredients_ko"],
+                        alg_tags=meta["alg_tags"],
+                        source=meta.get("source") or "",
+                        variants=variants or [],
+                        jamo_score=float(best_j),
+                        best_variant=best_variant,
+                    )
+                )
+            except Exception:
+                continue
 
-        out.sort(key=lambda x: x.final_score, reverse=True)
-        return q, out, {"mode": "embed", "top_k": int(top_k)}
+        return q, out, {"reason": "ok", "top_k": int(top_k), "count": len(out)}
 
 
 _DEFAULT_RETRIEVER: Optional[ChromaMenuRetriever] = None
@@ -326,8 +353,10 @@ def match_menu_norm(
     used_query, cands, dbg = retriever.query(menu_norm=menu_norm, top_k=int(top_k))
 
     if not used_query:
+        status_raw = "NOT_FOUND_EMPTY_QUERY"
         return {
-            "status": "NOT_FOUND_EMPTY_QUERY",
+            "status": _canon_status(status_raw),
+            "status_raw": status_raw,
             "used_query": None,
             "decided_menu": raw_menu if raw_menu else None,
             "decision_method": "EMPTY_QUERY",
@@ -338,8 +367,10 @@ def match_menu_norm(
         }
 
     if not cands:
+        status_raw = "NOT_FOUND_NO_CANDIDATES"
         return {
-            "status": "NOT_FOUND_NO_CANDIDATES",
+            "status": _canon_status(status_raw),
+            "status_raw": status_raw,
             "used_query": used_query,
             "decided_menu": raw_menu if raw_menu else None,
             "decision_method": "NO_CANDIDATES",
@@ -360,8 +391,10 @@ def match_menu_norm(
 
     # Hard cutoff: if even best jamo is too low, treat as NOT_FOUND
     if float(best_jamo.jamo_score) < JAMO_HARD_CUTOFF:
+        status_raw = "NOT_FOUND_BELOW_THRESHOLD"
         return {
-            "status": "NOT_FOUND_BELOW_THRESHOLD",
+            "status": _canon_status(status_raw),
+            "status_raw": status_raw,
             "used_query": used_query,
             "decided_menu": raw_menu if raw_menu else None,
             "decision_method": "JAMO_HARD_CUTOFF",
@@ -394,7 +427,7 @@ def match_menu_norm(
     close_ok = True
 
     if qn and qn in variant_norms:
-        status = "EXACT"
+        status_raw = "EXACT"
         decided_menu = top1.menu
         decision_method = "EXACT_VARIANT_MATCH" if qn != top1_menu_norm else "EXACT"
     else:
@@ -403,11 +436,11 @@ def match_menu_norm(
         close_ok = float(top1.final_score) >= float(final_close_threshold)
 
         if embed_ok and jamo_ok and close_ok:
-            status = "CLOSE"
+            status_raw = "CLOSE"
             decided_menu = raw_menu if raw_menu else None
             decision_method = "CLOSE_BY_FINAL_SCORE"
         else:
-            status = "NOT_FOUND_BELOW_THRESHOLD"
+            status_raw = "NOT_FOUND_BELOW_THRESHOLD"
             decided_menu = raw_menu if raw_menu else None
             decision_method = "GATED_OUT"
 
@@ -474,7 +507,8 @@ def match_menu_norm(
         )
 
     return {
-        "status": status,
+        "status": _canon_status(status_raw),
+        "status_raw": status_raw,
         "used_query": used_query,
         "decided_menu": decided_menu,
         "decision_method": decision_method,
