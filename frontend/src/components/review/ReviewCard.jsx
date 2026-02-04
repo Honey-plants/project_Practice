@@ -1,4 +1,4 @@
-import './ReviewCard.css';
+import styles from './ReviewCard.module.css';
 import { useNavigate } from "react-router-dom";
 import { useContext, useMemo, useState } from "react";
 import { MetaContext } from "../../context/MetaContext";
@@ -61,7 +61,7 @@ function ReviewItem({ review }) {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       stars.push(
-        <span key={i} style={{ color: i <= rating ? "#ffc107" : "#ddd", fontSize: "16px" }}>
+        <span key={i} className={i <= rating ? styles.starActive : styles.starInactive}>
           ★
         </span>
       );
@@ -70,62 +70,62 @@ function ReviewItem({ review }) {
   };
 
   return (
-    <div onClick={handleClick} className="review-card">
+    <div onClick={handleClick} className={styles.reviewCard}>
       {imageUrls.length > 0 ? (
-        <div className="review-card-image-container">
+        <div className={styles.reviewCardImageContainer}>
           <img
             src={imageUrls[currentImageIndex]}
             alt={title}
-            className="review-card-image"
+            className={styles.reviewCardImage}
           />
           {imageUrls.length > 1 && (
             <>
               <button
                 onClick={handlePrevImage}
-                className="image-nav-btn prev"
+                className={`${styles.imageNavBtn} ${styles.prev}`}
               >
                 ‹
               </button>
               <button
                 onClick={handleNextImage}
-                className="image-nav-btn next"
+                className={`${styles.imageNavBtn} ${styles.next}`}
               >
                 ›
               </button>
-              <div className="image-indicator">
+              <div className={styles.imageIndicator}>
                 {currentImageIndex + 1} / {imageUrls.length}
               </div>
             </>
           )}
         </div>
       ) : (
-        <div className="review-card-no-image">
+        <div className={styles.reviewCardNoImage}>
           🍽️
         </div>
       )}
 
-      <div className="review-card-content">
+      <div className={styles.reviewCardContent}>
         {/* 메뉴 이름 */}
-        {menuName && (
-          <div className="menu-names-container">
+        {/* {menuName && (
+          <div className={styles.menuNamesContainer}>
             {menuName.split(',').map((menu, idx) => (
-              <div key={idx} className="menu-name-tag">
+              <div key={idx} className={styles.menuNameTag}>
                 🍽️ {menu.replace(/["[\]]/g, '').trim()}
               </div>
             ))}
           </div>
-        )}
+        )} */}
 
         {/* 제목 */}
-        <h3 className="review-card-title">
+        <h3 className={styles.reviewCardTitle}>
           {title}
         </h3>
 
         {/* 별점 */}
         {rating > 0 && (
-          <div className="review-card-rating">
+          <div className={styles.reviewCardRating}>
             {renderStars(rating)}
-            <span className="rating-text">
+            <span className={styles.ratingText}>
               ({rating}.0)
             </span>
           </div>
@@ -133,16 +133,16 @@ function ReviewItem({ review }) {
 
         {/* 내용 미리보기 */}
         {content && (
-          <p className="review-card-preview">
+          <p className={styles.reviewCardPreview}>
             {content}
           </p>
         )}
 
         {/* 제한사항 아이템 태그 */}
         {itemLabels.length > 0 && (
-          <div className="item-labels-container">
+          <div className={styles.itemLabelsContainer}>
             {itemLabels.map((label, idx) => (
-              <span key={idx} className="item-label-tag">
+              <span key={idx} className={styles.itemLabelTag}>
                 ⚠️ {label}
               </span>
             ))}
@@ -151,7 +151,7 @@ function ReviewItem({ review }) {
 
         {/* 작성일 */}
         {createdAt && (
-          <div className="review-card-date">
+          <div className={styles.reviewCardDate}>
             {new Date(createdAt).toLocaleDateString('ko-KR')}
           </div>
         )}

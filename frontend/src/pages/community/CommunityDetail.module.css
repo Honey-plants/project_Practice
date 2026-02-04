@@ -1,0 +1,130 @@
+/* ===== Community Detail Container ===== */
+.container {
+  padding: 30px;
+  max-width: 850px;
+  margin: 0 auto;
+  background: #FFFFFF; /* 흰색 배경 */
+  border: 1px solid #DDDDDD;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Header Section ===== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #DDDDDD;
+}
+
+.header h2 {
+  margin: 0;
+  color: #333333; /* 다크 그레이 */
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* ===== Actions ===== */
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.editLink {
+  padding: 8px 16px;
+  background: #81C784; /* 라이트 그린 */
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.editLink:hover {
+  background: #66BB6A;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(129, 199, 132, 0.3);
+}
+
+.deleteButton {
+  padding: 8px 16px;
+  background: #FFFFFF;
+  color: #D32F2F; /* 레드 */
+  border: 1px solid #D32F2F;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.deleteButton:hover {
+  background: #D32F2F;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
+}
+
+/* ===== Content Section ===== */
+.content {
+  background: #F5F5F5; /* 아주 연한 웜그레이 */
+  border: 1px solid #DDDDDD;
+  border-radius: 12px;
+  padding: 20px;
+  font-family: monospace;
+  font-size: 14px;
+  color: #333333; /* 다크 그레이 */
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* ===== Error State ===== */
+.errorBox {
+  padding: 16px;
+  background: #FFFFFF;
+  border: 1px solid #D32F2F; /* 레드 */
+  border-radius: 10px;
+  color: #D32F2F;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+/* ===== Loading State ===== */
+.loading {
+  text-align: center;
+  padding: 60px;
+  color: #666666; /* 미디엄 그레이 */
+  font-size: 16px;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header h2 {
+    font-size: 20px;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .editLink,
+  .deleteButton {
+    flex: 1;
+    text-align: center;
+  }
+}

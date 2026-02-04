@@ -6,6 +6,7 @@ from AI.review.app.domain.schemas import PipelineContext
 def run_step4_enrich(ctx: PipelineContext, *, naver_cfg: Dict, gemini_api_key: str) -> PipelineContext:
     result = enrich_data(
         phone=ctx.extracted.phone,
+        lines=ctx.normalize.lines,
         menu_ko=ctx.extracted.menu_ko,
         naver_cfg=naver_cfg,
         gemini_api_key=gemini_api_key,

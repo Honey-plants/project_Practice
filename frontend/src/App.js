@@ -3,9 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import AppProviders from "./app/AppProviders";
 import Header from "./components/layout/Header";
+import BottomNav from "./components/layout/BottomNav";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
 import Home from "./pages/Home";
+import ResultPage from "./pages/menuscan/ResultPage";
 import Login from "./pages/auth/Login";
 
 import Profile from "./pages/member/Profile";
@@ -24,7 +26,7 @@ import ReviewEdit from "./pages/review/ReviewEdit";
 
 // test
 import UploadTest from "./pages/upload/UploadTest";
-
+import CameraUploadPage from "./pages/menuscan/CameraUploadPage";
 import Register from "./pages/auth/Register";
 
 // admin 추가
@@ -39,6 +41,7 @@ export default function App() {
         <Routes>
           {/* 공개 페이지 (로그인 불필요) */}
           <Route path="/" element={<Home />} />
+          <Route path="/result" element={<ResultPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
@@ -172,13 +175,15 @@ export default function App() {
             path="/menu/upload"
             element={
               <ProtectedRoute>
-                {/* <CameraUploadPage /> */}
+                <CameraUploadPage />
               </ProtectedRoute>
             }
           />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+
+        <BottomNav />
       </BrowserRouter>
     </AppProviders>
   );

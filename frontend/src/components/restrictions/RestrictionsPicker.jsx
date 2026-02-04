@@ -38,7 +38,7 @@ export default function RestrictionsPicker({
   if (filtered.length === 0) {
     return (
       <div className="restrictions-picker-empty">
-        표시할 항목이 없습니다.
+        There are no items to display.
       </div>
     );
   }

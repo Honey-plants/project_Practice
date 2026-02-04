@@ -24,7 +24,7 @@ def normalize_lines(items: List[Dict[str, Any]], y_threshold: int = 10) -> List[
 
     lines: List[str] = []
     current: List[Dict[str, Any]] = [items[0]]
-    current_y = _y_key(items[0])  # ❗ 라인 시작 기준 (고정)
+    current_y = _y_key(items[0])  #  라인 시작 기준 (고정)
 
     for it in items[1:]:
         y = _y_key(it)
@@ -40,7 +40,7 @@ def normalize_lines(items: List[Dict[str, Any]], y_threshold: int = 10) -> List[
 
             # 새 줄 시작
             current = [it]
-            current_y = y  # ❗ 기준 갱신은 줄이 바뀔 때만 (기존 그대로)
+            current_y = y  #  기준 갱신은 줄이 바뀔 때만 (기존 그대로)
 
     # 마지막 줄
     current.sort(key=lambda z: z["bbox"][0])

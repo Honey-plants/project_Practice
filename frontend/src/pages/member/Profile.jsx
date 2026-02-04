@@ -53,7 +53,7 @@ export default function Profile() {
 
   // 내가 작성한 커뮤니티 글만 필터링
   const myCommunities = useMemo(
-    () => stateCommunity.list.filter((community) => community.member_id === me?.member_id),
+    () => stateCommunity.list.filter((community) => Number(community.member_id) === Number(me?.member_id)),
     [stateCommunity.list, me?.member_id]
   );
 

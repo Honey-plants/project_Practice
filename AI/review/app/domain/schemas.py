@@ -61,6 +61,9 @@ class OcrCtx(BaseModel):
     n_items: int = 0
     overlay_path: Optional[str] = None
 
+class NormalizeState(BaseModel):
+    lines: List[str] = []
+    store_name_candidates: List[str] = []
 
 class NormalizeCtx(BaseModel):
     lines: List[str] = Field(default_factory=list)

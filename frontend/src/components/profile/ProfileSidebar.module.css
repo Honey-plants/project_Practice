@@ -1,11 +1,10 @@
 /* ===== Profile Sidebar ===== */
 .sidebar {
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: #FFFFFF; /* 흰색 배경 */
+  border: 1px solid #DDDDDD;
   border-radius: 16px;
   padding: 32px 24px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 20px;
 }
@@ -18,13 +17,13 @@
 }
 
 .loading {
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: #FFFFFF;
+  border: 1px solid #DDDDDD;
   border-radius: 16px;
   padding: 32px 24px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
-  color: rgba(255, 255, 255, 0.7);
+  color: #333333; /* 다크 그레이 */
 }
 
 /* ===== Profile Section ===== */
@@ -37,7 +36,7 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #2E7D32; /* 딥 그린 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,7 +44,7 @@
   color: white;
   margin: 0 auto 16px;
   font-weight: 600;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
 }
 
 @media (max-width: 1024px) {
@@ -61,7 +60,7 @@
   margin: 0 0 8px 0;
   font-size: 24px;
   font-weight: 700;
-  color: #fff;
+  color: #333333; /* 다크 그레이 */
 }
 
 @media (max-width: 1024px) {
@@ -72,7 +71,7 @@
 
 .email {
   margin: 0;
-  color: #a0aec0;
+  color: #666666; /* 미디엄 그레이 */
   font-size: 14px;
 }
 
@@ -84,7 +83,7 @@
 
 /* ===== Info Section ===== */
 .infoSection {
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid #DDDDDD;
   padding-top: 20px;
   margin-bottom: 20px;
 }
@@ -113,13 +112,13 @@
 .infoLabel {
   margin: 0 0 4px 0;
   font-size: 12px;
-  color: #a0aec0;
+  color: #666666; /* 미디엄 그레이 */
 }
 
 .infoValue {
   margin: 0;
   font-size: 14px;
-  color: #e0e0e0;
+  color: #333333; /* 다크 그레이 */
   font-weight: 500;
 }
 
@@ -135,7 +134,7 @@
 
 /* ===== Actions ===== */
 .actions {
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid #DDDDDD;
   padding-top: 20px;
   display: flex;
   flex-direction: column;
@@ -152,7 +151,7 @@
 .editButton {
   display: block;
   padding: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #2E7D32; /* 딥 그린 */
   color: white;
   text-decoration: none;
   border-radius: 8px;
@@ -160,12 +159,13 @@
   font-weight: 600;
   font-size: 14px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
 }
 
 .editButton:hover {
+  background: #1B5E20; /* 더 진한 그린 */
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.4);
 }
 
 @media (max-width: 1024px) {
@@ -177,9 +177,9 @@
 
 .deleteButton {
   padding: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #ffbcbc;
-  border: 1px solid rgba(245, 87, 108, 0.4);
+  background: #FFFFFF;
+  color: #D32F2F; /* 레드 - 위험 */
+  border: 1px solid #D32F2F;
   border-radius: 8px;
   font-weight: 600;
   font-size: 14px;
@@ -188,11 +188,10 @@
 }
 
 .deleteButton:hover {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  border-color: transparent;
+  background: #D32F2F; /* 레드 배경 */
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+  box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
 }
 
 @media (max-width: 1024px) {
@@ -213,12 +212,12 @@
 .dislikeTag {
   display: inline-block;
   padding: 4px 10px;
-  background: rgba(102, 126, 234, 0.2);
-  color: #a0c4ff;
+  background: #E8F5E9; /* 연한 그린 배경 */
+  color: #2E7D32; /* 딥 그린 텍스트 */
   border-radius: 12px;
   font-size: 12px;
   font-weight: 500;
-  border: 1px solid rgba(102, 126, 234, 0.3);
+  border: 1px solid #81C784; /* 라이트 그린 */
 }
 
 @media (max-width: 1024px) {
