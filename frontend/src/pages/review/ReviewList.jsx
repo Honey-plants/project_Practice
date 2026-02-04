@@ -65,12 +65,12 @@ export default function ReviewList() {
       }
 
       // 아이템이 선택되지 않고 카테고리만 선택되었으면 해당 카테고리의 아이템 중 하나라도 포함된 리뷰 표시
-      if (selectedCategory) {
-        const categoryItems = selectedCategory.items || [];
-        return categoryItems.some(catItem =>
-          reviewItemIds.includes(catItem.item_id)
-        );
-      }
+      // if (selectedCategory) {
+      //   const categoryItems = selectedCategory.items || [];
+      //   return categoryItems.some(catItem =>
+      //     reviewItemIds.includes(catItem.item_id)
+      //   );
+      // }
 
       // 필터가 없으면 전체 표시
       return true;
@@ -125,7 +125,7 @@ export default function ReviewList() {
           </div>
 
           {/* 선택된 아이템 표시 (다른 카테고리에서 선택한 것들) */}
-          {selectedItemIds.length > 0 && (
+          {/* {selectedItemIds.length > 0 && (
             <div className={styles.itemSection}>
               <div className={styles.itemLabel}>Selected ({selectedItemIds.length})</div>
               <div className={styles.itemButtons}>
@@ -142,7 +142,7 @@ export default function ReviewList() {
                   ))}
               </div>
             </div>
-          )}
+          )} */}
 
           {/* 아이템 선택 (카테고리가 선택되었을 때만 표시) */}
           {selectedCategory && selectedCategory.items && selectedCategory.items.length > 0 && (
