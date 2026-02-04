@@ -162,30 +162,32 @@ export default function EditProfile() {
       </div>
 
       {/* Restricted */}
-      <div className={styles.sectionHeader}>
-        <h3 className={styles.sectionTitle}>Restricted information</h3>
-        <div className={styles.selectedCount}>
-          Choice:
-          <span className={styles.selectedCountNumber}>
-            {form.item_ids.length}
-          </span>
+      <div className={styles.restrictedSection}>
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>Restricted information</h3>
+          <div className={styles.selectedCount}>
+            Choice:
+            <span className={styles.selectedCountNumber}>
+              {form.item_ids.length}
+            </span>
+          </div>
         </div>
+
+        {stateMeta?.loading && (
+          <div className={styles.loading}>Category Loading...</div>
+        )}
+        {stateMeta?.error && (
+          <div className={styles.errorBox}>{stateMeta.error}</div>
+        )}
+
+        <RestrictionsPicker
+          categories={categories}
+          selectedIds={form.item_ids}
+          onToggle={handleToggleItem}
+          mode="select"
+          onlyActive={true}
+        />
       </div>
-
-      {stateMeta?.loading && (
-        <div className={styles.loading}>Category Loading...</div>
-      )}
-      {stateMeta?.error && (
-        <div className={styles.errorBox}>{stateMeta.error}</div>
-      )}
-
-      <RestrictionsPicker
-        categories={categories}
-        selectedIds={form.item_ids}
-        onToggle={handleToggleItem}
-        mode="select"
-        onlyActive={true}
-      />
 
       {/* Dislike */}
       <div className={styles.dislikeSection}>

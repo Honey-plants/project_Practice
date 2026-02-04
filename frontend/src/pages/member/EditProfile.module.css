@@ -74,7 +74,7 @@
 
 .label {
   display: block;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   color: #333333;
 }
@@ -111,6 +111,10 @@
   background-color: #FFFFFF;
   border: 1px solid #DDDDDD;
   border-radius: 10px;
+}
+
+.sectionHeader + div {
+  margin-top: -12px;
 }
 
 .sectionTitle {
@@ -188,7 +192,7 @@
 
 /* ===== Dislike Section ===== */
 .dislikeSection {
-  margin-top: 32px;
+  margin-top: 30px;
 }
 
 .dislikeSection .sectionHeader {
@@ -251,6 +255,11 @@
   cursor: not-allowed;
 }
 
+.dislikeCounter {
+  font-size: 14px;
+  color: #333333;
+  padding: 5px ;
+}
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {

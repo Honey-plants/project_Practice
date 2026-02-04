@@ -1,28 +1,54 @@
-import MenuUpload from "../components/menu/MenuUpload";
 import React, { useState, useRef } from "react";
-import { MenuAPI } from "../api/menuApi";
-import ResultPage from "./menuscan/ResultPage";
+import { useNavigate } from "react-router-dom";
 import "./Home.css";
 
+const LOGO_SRC = "/food_ray_logo.png";
+
+/* ── SVG 아이콘 ── */
+const CameraIcon = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="12" cy="13" r="4"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const ImageIcon = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="8.5" cy="8.5" r="1.5"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <polyline points="21,15 16,10 5,21"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const AnalyzeIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="11" cy="11" r="8"
+      stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"
+      stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
+  </svg>
+);
+
 export default function Home() {
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [logoSrc, setLogoSrc] = useState(LOGO_SRC);
   const fileInputRef = useRef(null);
 
   const handleImageSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
-      setMessage("");
+      setLogoSrc(URL.createObjectURL(file));
     }
   };
 
   const handleCameraClick = () => {
-    // 카메라 기능은 모바일에서 input[type=file] capture 속성 사용
     if (fileInputRef.current) {
       fileInputRef.current.setAttribute("capture", "environment");
       fileInputRef.current.click();
@@ -36,58 +62,20 @@ export default function Home() {
     }
   };
 
-  const handleAnalyze = async () => {
-    if (!selectedImage) {
-      setMessage("이미지를 먼저 선택해주세요.");
-      return;
-    }
-
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const response = await MenuAPI.uploadMenu(selectedImage);
-      setResult(response);
-      setMessage("분석 완료!");
-    } catch (error) {
-      setMessage(`분석 실패: ${error?.response?.data?.detail || error?.message || "알 수 없는 오류"}`);
-    } finally {
-      setLoading(false);
-    }
+  const handleAnalyze = () => {
+    if (!selectedImage) return;
+    window.__menuFile = selectedImage;
+    navigate("/result");
   };
-
-  const handleReset = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-    setResult(null);
-    setMessage("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  if (result) {
-    return (
-      <div className="home-result-container">
-        <button
-          onClick={handleReset}
-          className="home-button-reset"
-        >
-          다시 분석하기
-        </button>
-        <ResultPage result={result?.data ?? result} />
-      </div>
-    );
-  }
 
   return (
     <div className="home-container">
-      <div className="home-title">
-        <p>
-          Please take a picture or choose an image
-        </p>
+      {/* 로고 영역 (화면의 ~75%) */}
+      <div className="home-logo-wrap">
+        <img src={logoSrc} alt="로고" className="home-logo" />
       </div>
 
+      {/* 숨겨진 파일 입력 */}
       <input
         ref={fileInputRef}
         type="file"
@@ -96,44 +84,32 @@ export default function Home() {
         style={{ display: "none" }}
       />
 
-      {imagePreview && (
-        <div className="home-image-preview">
-          <img
-            src={imagePreview}
-            alt="선택된 이미지"
-          />
+      {/* 하단 영역 (~25%): 카메라·파일 바 + 분석 버튼 */}
+      <div className="home-bottom-area">
+
+        {/* 카메라 / 이미지 파일 → 바 형태 */}
+        <div className="home-pick-bar">
+          <button onClick={handleCameraClick} className="home-pick-btn">
+            <CameraIcon />
+            <span>카메라</span>
+          </button>
+          <div className="home-pick-divider" />
+          <button onClick={handleFileSelectClick} className="home-pick-btn">
+            <ImageIcon />
+            <span>이미지 파일</span>
+          </button>
         </div>
-      )}
 
-      <div className="home-button-container">
-        <button
-          onClick={handleCameraClick}
-          className="home-button home-button-camera"
-        >
-          사진 찍기
-        </button>
-
-        <button
-          onClick={handleFileSelectClick}
-          className="home-button home-button-file"
-        >
-          이미지 선택하기
-        </button>
-
+        {/* 메뉴판 분석 버튼 */}
         <button
           onClick={handleAnalyze}
-          disabled={loading || !selectedImage}
-          className="home-button home-button-analyze"
+          disabled={!selectedImage}
+          className="home-analyze-btn"
         >
-          {loading ? "분석 중..." : "이미지 분석"}
+          <AnalyzeIcon />
+          <span>메뉴판 분석</span>
         </button>
       </div>
-
-      {message && (
-        <div className={`home-message ${message.includes("실패") ? "home-message-error" : "home-message-success"}`}>
-          {message}
-        </div>
-      )}
     </div>
   );
 }

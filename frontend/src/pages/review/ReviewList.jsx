@@ -105,7 +105,6 @@ export default function ReviewList() {
 
           {/* 카테고리 선택 */}
           <div className={styles.categorySection}>
-            <div className={styles.categoryLabel}>Category</div>
             <div className={styles.categoryButtons}>
               <button
                 onClick={() => setSelectedCategory(null)}

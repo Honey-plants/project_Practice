@@ -31,41 +31,18 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
 }
 
-/* ===== Left Navigation ===== */
-.nav {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.nav a {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333333; /* 다크 그레이 */
+/* ===== Left Logo ===== */
+.logo {
+  font-size: 20px;
+  font-weight: 800;
+  color: #2E7D32;
   text-decoration: none;
-  position: relative;
+  letter-spacing: -0.5px;
   transition: color 0.2s ease;
-  white-space: nowrap;
 }
 
-.nav a:hover {
-  color: #2E7D32; /* 딥 그린 */
-}
-
-/* underline hover effect */
-.nav a::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -6px;
-  width: 0%;
-  height: 2px;
-  background: #2E7D32; /* 딥 그린 */
-  transition: width 0.25s ease;
-}
-
-.nav a:hover::after {
-  width: 100%;
+.logo:hover {
+  color: #1B5E20;
 }
 
 /* ===== Right Auth Area ===== */
@@ -113,27 +90,50 @@
   box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
 }
 
-/* ===== Logout Button ===== */
-.auth button {
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #FFFFFF;
+/* ===== Logout Button (원형 도형 아이콘) ===== */
+.logoutBtn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  background: #81C784; /* 라이트 그린 */
-  border: none;
-  border-radius: 8px;
+  border: 1.5px solid #E0E0E0;
+  border-radius: 50%;
+  background: #FFFFFF;
+  color: #777777;
   cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
 
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 6px rgba(129, 199, 132, 0.3);
+.logoutBtn:hover {
+  border-color: #D32F2F;
+  color: #D32F2F;
+  background: #FFF5F5;
+}
+
+.logoutBtn:active {
+  transform: scale(0.92);
+}
+
+/* ===== Login Link ===== */
+.loginLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2E7D32;
+  text-decoration: none;
+  padding: 6px 14px;
+  border: 1.5px solid #2E7D32;
+  border-radius: 8px;
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
 
-.auth button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(129, 199, 132, 0.4);
-  background: #66BB6A; /* 약간 더 진한 라이트 그린 */
+.loginLink:hover {
+  background: #2E7D32;
+  color: #FFFFFF;
 }
 
 /* ===== Responsive ===== */
@@ -144,27 +144,23 @@
     gap: 12px;
   }
 
-  .nav {
-    gap: 12px;
-  }
-
-  .nav a {
-    font-size: 13px;
-  }
-
-  .auth {
-    gap: 10px;
-  }
-
-  .auth a,
-  .auth button {
-    font-size: 11px;
-    padding: 5px 8px;
+  .logo {
+    font-size: 18px;
   }
 
   .meLink {
     font-size: 12px;
     padding: 5px 10px;
     max-width: 80px;
+  }
+
+  .loginLink {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .logoutBtn {
+    width: 30px;
+    height: 30px;
   }
 }

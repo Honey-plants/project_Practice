@@ -159,7 +159,7 @@ export default function ReviewCreateInline({ onCreated }) {
               className={styles.fileInput}
             />
             <button onClick={verify} disabled={loadingVerify} className={styles.btnPrimary}>
-              {loadingVerify ? "인증중..." : "영수증 인증"}
+              {loadingVerify ? "⏳" : "✔"}
             </button>
           </div>
         </div>
