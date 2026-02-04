@@ -165,6 +165,17 @@
   box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
 }
 
+.pageButton.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pageButton.disabled:hover {
+  border-color: #DDDDDD;
+  background-color: #FFFFFF;
+  color: #333333;
+}
+
 .communityItem:hover {
   border-color: #81C784; /* 라이트 그린 */
   background-color: #F1F8E9; /* 아주 연한 그린 */

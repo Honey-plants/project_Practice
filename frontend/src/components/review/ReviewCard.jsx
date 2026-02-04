@@ -61,7 +61,7 @@ function ReviewItem({ review }) {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       stars.push(
-        <span key={i} style={{ color: i <= rating ? "#ffc107" : "#ddd", fontSize: "16px" }}>
+        <span key={i} className={i <= rating ? styles.starActive : styles.starInactive}>
           ★
         </span>
       );
@@ -106,7 +106,7 @@ function ReviewItem({ review }) {
 
       <div className={styles.reviewCardContent}>
         {/* 메뉴 이름 */}
-        {menuName && (
+        {/* {menuName && (
           <div className={styles.menuNamesContainer}>
             {menuName.split(',').map((menu, idx) => (
               <div key={idx} className={styles.menuNameTag}>
@@ -114,7 +114,7 @@ function ReviewItem({ review }) {
               </div>
             ))}
           </div>
-        )}
+        )} */}
 
         {/* 제목 */}
         <h3 className={styles.reviewCardTitle}>

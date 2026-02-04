@@ -183,3 +183,14 @@
   padding-top: 8px;
   border-top: 1px solid #F0F0F0;
 }
+
+/* ===== 별점 스타일 ===== */
+.starActive {
+  color: #ffc107;
+  font-size: 16px;
+}
+
+.starInactive {
+  color: #ddd;
+  font-size: 16px;
+}

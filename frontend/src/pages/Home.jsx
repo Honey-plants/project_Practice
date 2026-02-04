@@ -84,7 +84,7 @@ export default function Home() {
     <div className="home-container">
       <div className="home-title">
         <p>
-          사진을 찍어주시거나, 이미지를 선택해주세요
+          Please take a picture or choose an image
         </p>
       </div>
 

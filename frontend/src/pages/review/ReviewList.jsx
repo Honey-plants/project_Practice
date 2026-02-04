@@ -84,9 +84,9 @@ export default function ReviewList() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>리뷰 목록</h1>
+        <h1 className={styles.title}>Review List</h1>
         <Link to="/review/new" className={styles.createButton}>
-          + 새 리뷰 작성
+          + New Review
         </Link>
       </div>
 
@@ -95,17 +95,17 @@ export default function ReviewList() {
         <div className={styles.filterSection}>
           {/* 헤더 */}
           <div className={styles.filterHeader}>
-            <div className={styles.filterTitle}>필터</div>
+            <div className={styles.filterTitle}>Filter</div>
             {(selectedCategory || selectedItemIds.length > 0) && (
               <button onClick={clearFilters} className={styles.clearButton}>
-                필터 초기화
+                Filter reset
               </button>
             )}
           </div>
 
           {/* 카테고리 선택 */}
           <div className={styles.categorySection}>
-            <div className={styles.categoryLabel}>카테고리</div>
+            <div className={styles.categoryLabel}>Category</div>
             <div className={styles.categoryButtons}>
               <button
                 onClick={() => setSelectedCategory(null)}
@@ -128,7 +128,7 @@ export default function ReviewList() {
           {/* 선택된 아이템 표시 (다른 카테고리에서 선택한 것들) */}
           {selectedItemIds.length > 0 && (
             <div className={styles.itemSection}>
-              <div className={styles.itemLabel}>선택된 항목 ({selectedItemIds.length}개)</div>
+              <div className={styles.itemLabel}>Selected ({selectedItemIds.length})</div>
               <div className={styles.itemButtons}>
                 {categories.flatMap(cat => cat.items || [])
                   .filter(item => selectedItemIds.includes(item.item_id))
@@ -174,11 +174,11 @@ export default function ReviewList() {
             <div className={styles.filterStatus}>
               {selectedItemIds.length > 0 ? (
                 <>
-                  <strong>{selectedItemIds.length}개 항목</strong>이 선택된 리뷰를 표시 중
+                  <strong>{selectedItemIds.length} </strong> Displaying selected Details
                 </>
               ) : selectedCategory ? (
                 <>
-                  "<strong>{selectedCategory.category_label_ko || selectedCategory.category_label_en}</strong>" 카테고리의 리뷰를 표시 중
+                  "<strong>{selectedCategory.category_label_ko || selectedCategory.category_label_en}</strong>" Displaying a review of a category
                 </>
               ) : null}
             </div>

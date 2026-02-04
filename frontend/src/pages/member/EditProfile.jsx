@@ -17,7 +17,10 @@ export default function EditProfile() {
   const { stateMeta, metaActions } = useContext(MetaContext);
 
   const me = stateMember.me;
-  const categories = useMemo(() => stateMeta?.restrictions || [], [stateMeta?.restrictions]);
+  const categories = useMemo(
+    () => stateMeta?.restrictions || [],
+    [stateMeta?.restrictions]
+  );
 
   // Form state
   const [form, setForm] = useState({
@@ -31,7 +34,7 @@ export default function EditProfile() {
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState(""); // "success" or "error"
 
-  // me 데이터가 로드되면 form 초기화
+  // me 데이터 로드 → form 초기화
   useEffect(() => {
     if (!me) return;
     setForm({
@@ -49,25 +52,19 @@ export default function EditProfile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 닉네임 변경 핸들러
+  // 핸들러들
   const handleNicknameChange = (e) => {
     setForm((prev) => ({ ...prev, nickname: e.target.value }));
   };
 
-  // 제한 아이템 토글 핸들러
   const handleToggleItem = (id) => {
     setForm((prev) => {
       const itemSet = new Set(prev.item_ids || []);
-      if (itemSet.has(id)) {
-        itemSet.delete(id);
-      } else {
-        itemSet.add(id);
-      }
+      itemSet.has(id) ? itemSet.delete(id) : itemSet.add(id);
       return { ...prev, item_ids: Array.from(itemSet) };
     });
   };
 
-  // Dislike 관련 핸들러
   const addDislike = () => {
     const trimmed = dislikeInput.trim();
     if (!trimmed) return;
@@ -97,7 +94,6 @@ export default function EditProfile() {
     }
   };
 
-  // 저장 핸들러
   const handleSave = async () => {
     setMsg("");
     setMsgType("");
@@ -112,11 +108,12 @@ export default function EditProfile() {
 
       await MemberAPI.updateMe(payload);
       await memberActions.loadMe();
-
-      // 즉시 이동 (로딩 없이)
       nav("/member/profile");
     } catch (error) {
-      const errorMsg = error?.response?.data?.detail || error?.message || "저장에 실패했습니다";
+      const errorMsg =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "저장에 실패했습니다";
       setMsg(errorMsg);
       setMsgType("error");
     } finally {
@@ -124,7 +121,6 @@ export default function EditProfile() {
     }
   };
 
-  // 취소 핸들러
   const handleCancel = () => {
     nav("/member/profile");
   };
@@ -138,18 +134,24 @@ export default function EditProfile() {
       <h2 className={styles.title}>Profile Edit</h2>
 
       {msg && (
-        <div className={`${styles.message} ${msgType === "success" ? styles.messageSuccess : styles.messageError}`}>
+        <div
+          className={`${styles.message} ${
+            msgType === "success"
+              ? styles.messageSuccess
+              : styles.messageError
+          }`}
+        >
           {msg}
         </div>
       )}
 
+      {/* Nickname */}
       <div className={styles.card}>
         <div className={styles.formGroup}>
           <div className={styles.inputWrapper}>
             <label className={styles.label}>Nickname</label>
             <input
               type="text"
-              name="nickname"
               value={form.nickname}
               onChange={handleNicknameChange}
               className={styles.input}
@@ -159,15 +161,23 @@ export default function EditProfile() {
         </div>
       </div>
 
+      {/* Restricted */}
       <div className={styles.sectionHeader}>
         <h3 className={styles.sectionTitle}>Restricted information</h3>
         <div className={styles.selectedCount}>
-          선택: <span className={styles.selectedCountNumber}>{form.item_ids.length}</span>개
+          Choice:
+          <span className={styles.selectedCountNumber}>
+            {form.item_ids.length}
+          </span>
         </div>
       </div>
 
-      {stateMeta?.loading && <div className={styles.loading}>Category Loading...</div>}
-      {stateMeta?.error && <div className={styles.errorBox}>{stateMeta.error}</div>}
+      {stateMeta?.loading && (
+        <div className={styles.loading}>Category Loading...</div>
+      )}
+      {stateMeta?.error && (
+        <div className={styles.errorBox}>{stateMeta.error}</div>
+      )}
 
       <RestrictionsPicker
         categories={categories}
@@ -177,34 +187,40 @@ export default function EditProfile() {
         onlyActive={true}
       />
 
-      <div className={styles.sectionHeader}>
-        <h3 className={styles.sectionTitle}>Dislike Ingredients (최대 3개)</h3>
-      </div>
+      {/* Dislike */}
+      <div className={styles.dislikeSection}>
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>
+            Dislike Ingredients (Max 3)
+          </h3>
+        </div>
 
-      <div className={styles.card}>
-        <div className={styles.formGroup}>
-          <div className={styles.inputWrapper}>
-            <label className={styles.label}>재료 추가</label>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input
-                type="text"
-                value={dislikeInput}
-                onChange={(e) => setDislikeInput(e.target.value)}
-                onKeyDown={handleDislikeKeyDown}
-                placeholder="e.g. 고수 (Enter 또는 추가 버튼 클릭)"
-                maxLength={50}
-                disabled={dislikes.length >= 3}
-                className={styles.input}
-                style={{ flex: 1 }}
-              />
-              <button
-                type="button"
-                onClick={addDislike}
-                disabled={!dislikeInput.trim() || dislikes.length >= 3}
-                className={`${styles.button} ${styles.buttonSecondary}`}
-              >
-                추가
-              </button>
+        <div className={styles.card}>
+          <div className={styles.formGroup}>
+            <div className={styles.inputWrapper}>
+              <label className={styles.label}>Add ingredients</label>
+
+              <div className={styles.inputRow}>
+                <input
+                  type="text"
+                  value={dislikeInput}
+                  onChange={(e) => setDislikeInput(e.target.value)}
+                  onKeyDown={handleDislikeKeyDown}
+                  placeholder="e.g. coriander (click Enter or Add button)"
+                  maxLength={50}
+                  disabled={dislikes.length >= 3}
+                  className={`${styles.input} ${styles.dislikeInput}`}
+                />
+
+                <button
+                  type="button"
+                  onClick={addDislike}
+                  disabled={!dislikeInput.trim() || dislikes.length >= 3}
+                  className={styles.dislikeAddButton}
+                >
+                  Add
+                </button>
+              </div>
             </div>
           </div>
 
@@ -217,7 +233,6 @@ export default function EditProfile() {
                     type="button"
                     className={styles.dislikeRemoveBtn}
                     onClick={() => removeDislike(index)}
-                    aria-label="Remove"
                   >
                     ×
                   </button>
@@ -227,25 +242,26 @@ export default function EditProfile() {
           )}
 
           <div className={styles.dislikeCounter}>
-            {dislikes.length} / 3 재료 추가됨
+            {dislikes.length} / 3 ingredients added
           </div>
         </div>
       </div>
 
+      {/* Buttons */}
       <div className={styles.buttonWrapper}>
         <button
           onClick={handleCancel}
           className={`${styles.button} ${styles.buttonSecondary}`}
           disabled={saving}
         >
-          취소
+          Cancel
         </button>
         <button
           onClick={handleSave}
           className={`${styles.button} ${styles.buttonPrimary}`}
           disabled={saving}
         >
-          {saving ? "저장 중..." : "저장"}
+          {saving ? "Saving..." : "Save"}
         </button>
       </div>
     </div>

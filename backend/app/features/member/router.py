@@ -31,7 +31,7 @@ def get_member(current: Member = Depends(get_current_member), db: Session = Depe
 @router.patch("/me", response_model=schemas.MemberRead)
 def update_member(payload: schemas.MemberUpdate, current: Member = Depends(get_current_member), db: Session = Depends(get_db)):
     m = service.update_member(db, current.member_id, payload)
-
+    print("adasdasdAS ::", current.member_id)
     # DB 기준으로 재조회
     item_ids = db.execute(
         select(MemberRestrictions.item_id).where(MemberRestrictions.member_id == m.member_id)
