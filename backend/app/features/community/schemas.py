@@ -1,13 +1,21 @@
-# from typing import Optional
-# from pydantic import BaseModel
-#
-# from app.models import ORMBase
-#
-# class CommunityCreate(BaseModel):
-#     field: Optional[str] = None
-#     member_id: int
-#
-# class CommunityRead(ORMBase):
-#     community_id: int
-#     field: Optional[str] = None
-#     member_id: int
+from typing import Optional, List
+from pydantic import BaseModel, Field
+
+
+class CommunityCreate(BaseModel):
+    review_ids: List[int] = Field(default_factory=list)
+    template_id: int
+
+class CommunityUpdate(BaseModel):
+    recommend: Optional[int] = Field(default=None)
+    community_active: Optional[bool] = Field(default=None)
+
+class CommunityRead(BaseModel):
+    community_id: int
+    community_content: str
+    recommend: int
+    community_active: bool
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    image_urls: List[str] = Field(default_factory=list)
+
