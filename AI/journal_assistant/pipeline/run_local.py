@@ -5,7 +5,7 @@ from typing import Optional, Dict, Any
 from AI.journal_assistant.pipeline.orchestrator import run_orchestrator
 
 def main():
-    payload = json.loads(Path("AI/journal_assistant/pipeline/mock_request_journal.json").read_text(encoding="utf-8"))
+    payload = json.loads(Path("AI/journal_assistant/pipeline/mock_request.json").read_text(encoding="utf-8"))
 
     img_bytes = run_orchestrator(payload)
 

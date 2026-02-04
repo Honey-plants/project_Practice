@@ -16,4 +16,4 @@ def assess_ocr_quality(items: List[Dict[str, Any]], *, low_cut: float = 0.6) -> 
 
 def is_bad_quality(q: Dict[str, float]) -> bool:
     # 실무 기본 게이트 (너 상황에 맞게 조절)
-    return (q["avg"] < 0.70) or (q["low_ratio"] > 0.30) or (q["n"] < 10)
+    return (q["avg"] < 0.97) or (q["low_ratio"] > 0.20) or (q["n"] < 18)

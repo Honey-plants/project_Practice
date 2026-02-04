@@ -66,3 +66,4 @@ AI/review/tmp_receipt/
 
 # uploads
 /uploads
+.vercel

@@ -26,7 +26,7 @@ import ReviewEdit from "./pages/review/ReviewEdit";
 
 // test
 import UploadTest from "./pages/upload/UploadTest";
-
+import CameraUploadPage from "./pages/menuscan/CameraUploadPage";
 import Register from "./pages/auth/Register";
 
 // admin 추가
@@ -175,7 +175,7 @@ export default function App() {
             path="/menu/upload"
             element={
               <ProtectedRoute>
-                {/* <CameraUploadPage /> */}
+                <CameraUploadPage />
               </ProtectedRoute>
             }
           />

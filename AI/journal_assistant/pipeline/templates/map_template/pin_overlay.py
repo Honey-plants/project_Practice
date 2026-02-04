@@ -92,11 +92,15 @@ def render_pinned_map_bytes(
     center_lon = float(calib["center_lon"])
     scale = float(calib["scale"])
 
-    # ✅ icon load once
+    # icon load once
     icon_base = load_pin_icon(pin_icon_path, width_px=pin_width_px)
 
     for idx, p in enumerate(places_raw):
-        lat, lon = naver_xy_to_latlon(p["coords"]["x"], p["coords"]["y"])
+
+        if isinstance(p.get("location"), list) and len(p["location"]) >= 2:
+            x_raw, y_raw = p["location"][0], p["location"][1]
+
+        lat, lon = naver_xy_to_latlon(str(x_raw), str(y_raw))
         x, y = latlon_to_image_px_calibrated(lat, lon, center_lat, center_lon, scale, bw, bh)
 
         color = PIN_COLORS[idx % len(PIN_COLORS)]

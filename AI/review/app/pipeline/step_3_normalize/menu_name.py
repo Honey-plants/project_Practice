@@ -4,8 +4,8 @@ from typing import List
 
 PRICE_RE = re.compile(r"\d{1,3}(?:,\d{3})+|\d{4,}")
 
-START_KEYWORDS = ["메뉴", "단가", "금액", "수량", "품명"]
-STOP_KEYWORDS = ["부가세", "합계", "결제", "신용", "카드", "총액", "판매", "금 액"]
+START_KEYWORDS = ["메뉴", "단가", "금액", "수량", "품명", "리뷰"]
+STOP_KEYWORDS = ["부가세", "합계", "결제", "신용", "카드", "총액", "판매", "금 액", "현금", "공급"]
 
 BANNED_MENU = set(START_KEYWORDS + STOP_KEYWORDS)
 
@@ -13,21 +13,28 @@ BANNED_MENU = set(START_KEYWORDS + STOP_KEYWORDS)
 REMOVE_GAE_RE = re.compile(r"\b개\b")          # 토큰 '개'
 REMOVE_QTY_GAE_RE = re.compile(r"\d+\s*개")    # '1개', '2 개' 등
 
+CUT_TAIL_KEYWORDS = [
+    "리뷰", "영수증", "작성", "작성시", "이벤트", "쿠폰", "증정", "할인", "적립", "서비스",
+]
 
 def _clean_menu_name(s: str) -> str:
     # 숫자+개 먼저 제거
     s = REMOVE_QTY_GAE_RE.sub("", s)
-
-    # '개' 토큰 제거 (예: "명이나물 개")
     s = REMOVE_GAE_RE.sub("", s)
 
     # 공백 정리
     s = re.sub(r"\s+", " ", s).strip()
-
-    # 혹시 "xxx개"처럼 붙어있는 접미사도 제거 (공백 없는 케이스)
     s = re.sub(r"개$", "", s).strip()
 
-    return s
+    # "리뷰/영수증/작성시..." 같은 문구가 나오면 그 지점부터 잘라버리기
+    for kw in CUT_TAIL_KEYWORDS:
+        idx = s.find(kw)
+        if idx != -1:
+            s = s[:idx].strip()
+            break
+
+    # 혹시 잘라서 너무 짧아진 경우 방어
+    return s.strip()
 
 
 def extract_menu_items(lines: List[str]) -> List[str]:
