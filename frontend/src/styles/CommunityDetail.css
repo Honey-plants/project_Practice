@@ -1,0 +1,61 @@
+.communityDetail {
+  max-width: 480px;
+  margin: 0 auto;
+  background: white;
+  border: 1px solid #ddd;
+}
+
+.detailHeader {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  font-weight: 600;
+}
+
+.detailHeader .actions {
+  display: flex;
+  gap: 8px;
+}
+
+.imageBox img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.contentBox {
+  padding: 12px;
+}
+
+.contentText {
+  margin-bottom: 8px;
+}
+
+.meta {
+  font-size: 12px;
+  color: #888;
+}
+
+.commentBox {
+  border-top: 1px solid #eee;
+  padding: 12px;
+}
+
+.comment {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.comment b {
+  margin-right: 6px;
+}
+
+.commentInput {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #eee;
+  padding: 10px 0;
+  outline: none;
+  font-size: 14px;
+  color: #aaa;
+}
