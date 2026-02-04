@@ -89,7 +89,7 @@ export default function Home() {
 
         {/* 카메라 / 이미지 파일 → 바 형태 */}
         <div className="home-pick-bar">
-          <button onClick={handleCameraClick} className="home-pick-btn">
+          <button onClick={()=> navigate('menu/upload')}>
             <CameraIcon />
             <span>카메라</span>
           </button>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Modal from "../common/Modal";
-import styles from "../../styles/CreateModal.css";
+import styles from "../../styles/CreateModal.module.css";
 
 export default function CreateModal({
   isOpen,

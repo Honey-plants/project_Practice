@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import '../../styles/Community.css';
+import '../../styles/Community.module.css';
 import CommunityList from "./CommunityList";
 
 
