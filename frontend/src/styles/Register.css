@@ -4,20 +4,18 @@
   min-height: 100vh;
   padding: 40px 20px;
   box-sizing: border-box;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+  background: #F5F5F5 !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   max-width: 700px;
   margin: 0 auto;
   position: relative;
 }
 
-/* ===== Full Page Background Override ===== */
 body:has(.RegisterPage) {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+  background: #F5F5F5 !important;
   min-height: 100vh;
 }
 
-/* ===== Header ===== */
 .RegisterHeader {
   display: flex;
   justify-content: space-between;
@@ -29,12 +27,11 @@ body:has(.RegisterPage) {
   margin: 0;
   font-size: 32px;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: #333333;
 }
 
 .RegisterLinks a {
-  color: #a0d4ff;
+  color: #2E7D32;
   text-decoration: none;
   font-weight: 600;
   font-size: 14px;
@@ -42,39 +39,36 @@ body:has(.RegisterPage) {
 }
 
 .RegisterLinks a:hover {
-  color: #667eea;
+  color: #1b5e20;
   text-decoration: underline;
 }
 
-/* ===== Messages ===== */
 .RegisterMsg {
   padding: 14px 18px;
   margin-bottom: 20px;
   border-radius: 8px;
   font-weight: 600;
   font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .RegisterMsg.ok {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
-  border: 1px solid rgba(102, 126, 234, 0.4);
-  color: #a0d4ff;
+  background: #E8F5E9;
+  border: 1px solid #81C784;
+  color: #2E7D32;
 }
 
 .RegisterMsg.err {
-  background: linear-gradient(135deg, rgba(245, 87, 108, 0.15) 0%, rgba(240, 93, 251, 0.15) 100%);
-  border: 1px solid rgba(245, 87, 108, 0.4);
-  color: #ffbcbc;
+  background: #FFEBEE;
+  border: 1px solid #dc3545;
+  color: #dc3545;
 }
 
-/* ===== Form Card ===== */
 .card {
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: #FFFFFF;
+  border: 1px solid #DDDDDD;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .RegisterForm {
@@ -84,7 +78,6 @@ body:has(.RegisterPage) {
   padding: 32px;
 }
 
-/* ===== Form Row ===== */
 .RegisterForm .row {
   display: flex;
   flex-direction: column;
@@ -94,105 +87,103 @@ body:has(.RegisterPage) {
 .RegisterForm .row label {
   font-weight: 600;
   font-size: 14px;
-  color: #cbd5e0;
+  color: #333333;
 }
 
 .RegisterForm .row input,
 .RegisterForm .row select {
   padding: 12px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid #DDDDDD;
   border-radius: 8px;
   font-size: 14px;
-  color: #fff !important;
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #333333 !important;
+  background-color: #FFFFFF !important;
   transition: all 0.3s ease;
   outline: none;
 }
 
 .RegisterForm .row input::placeholder {
-  color: rgba(255, 255, 255, 0.5) !important;
+  color: #999999 !important;
 }
 
 .RegisterForm .row input:focus,
 .RegisterForm .row select:focus {
-  background-color: rgba(255, 255, 255, 0.15) !important;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  background-color: #FFFFFF !important;
+  border-color: #2E7D32;
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
 }
 
 .RegisterForm .row input:disabled {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+  background-color: #F5F5F5 !important;
   cursor: not-allowed;
-  opacity: 0.5;
-  color: rgba(255, 255, 255, 0.4) !important;
+  opacity: 0.6;
+  color: #999999 !important;
 }
 
 .RegisterForm .row select {
   cursor: pointer;
-  color: #fff !important;
+  color: #333333 !important;
 }
 
 .RegisterForm .row select option {
-  background-color: #1a1a2e;
-  color: #fff;
+  background-color: #FFFFFF;
+  color: #333333;
   padding: 10px;
 }
 
 .RegisterForm .row select option:disabled {
-  color: rgba(255, 255, 255, 0.5);
+  color: #999999;
 }
 
-/* ===== Error & Success Text ===== */
 .errorText {
-  color: #ffbcbc;
+  color: #dc3545;
   font-size: 13px;
   margin-top: 4px;
   font-weight: 500;
 }
 
 .successText {
-  color: #a0d4ff;
+  color: #2E7D32;
   font-size: 13px;
   margin-top: 4px;
   font-weight: 500;
 }
 
-/* ===== Check Button ===== */
 .checkBtn {
   padding: 12px 20px;
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: #FFFFFF !important;
+  border: 1px solid #2E7D32;
   border-radius: 8px;
   font-weight: 600;
   font-size: 14px;
-  color: #e0e0e0 !important;
+  color: #2E7D32 !important;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
 }
 
 .checkBtn:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  border-color: rgba(102, 126, 234, 0.6);
+  background-color: #2E7D32 !important;
+  border-color: #2E7D32;
   transform: translateY(-1px);
-  color: #fff !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
 }
 
 .checkBtn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  color: rgba(255, 255, 255, 0.3) !important;
+  background-color: #F5F5F5 !important;
+  color: #999999 !important;
+  border-color: #DDDDDD;
 }
 
-/* ===== Divider ===== */
 .RegisterDivider {
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, #DDDDDD 50%, transparent 100%);
   margin: 24px 0;
 }
 
-/* ===== Section Title ===== */
 .RegisterSectionTitle {
   margin-bottom: 16px;
 }
@@ -201,16 +192,15 @@ body:has(.RegisterPage) {
   margin: 0 0 6px 0;
   font-size: 20px;
   font-weight: 700;
-  color: #fff;
+  color: #333333;
 }
 
 .RegisterSectionTitle .sub {
   font-size: 13px;
-  color: #a0aec0;
+  color: #666666;
   font-weight: 400;
 }
 
-/* ===== Dislikes Section ===== */
 .dislikesSection {
   display: flex;
   flex-direction: column;
@@ -222,8 +212,8 @@ body:has(.RegisterPage) {
   flex-wrap: wrap;
   gap: 10px;
   padding: 16px;
-  background-color: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: #FAFAFA;
+  border: 1px solid #DDDDDD;
   border-radius: 8px;
   min-height: 60px;
 }
@@ -233,11 +223,11 @@ body:has(.RegisterPage) {
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
-  border: 1px solid rgba(102, 126, 234, 0.3);
+  background: #E8F5E9;
+  border: 1px solid #81C784;
   border-radius: 20px;
   font-size: 14px;
-  color: #e0e0e0;
+  color: #2E7D32;
   font-weight: 500;
 }
 
@@ -252,7 +242,7 @@ body:has(.RegisterPage) {
   width: 20px;
   height: 20px;
   padding: 0;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #dc3545;
   color: white;
   border: none;
   border-radius: 50%;
@@ -265,17 +255,17 @@ body:has(.RegisterPage) {
 
 .dislikeRemoveBtn:hover {
   transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(245, 87, 108, 0.4);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+  background: #c82333;
 }
 
 .dislikeCounter {
   font-size: 13px;
-  color: #a0aec0;
+  color: #666666;
   text-align: right;
   font-weight: 500;
 }
 
-/* ===== Actions ===== */
 .RegisterActions {
   margin-top: 16px;
   display: flex;
@@ -291,43 +281,44 @@ body:has(.RegisterPage) {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .RegisterActions button[type="button"]:first-child {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e0e0e0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #FFFFFF;
+  color: #666666;
+  border: 1px solid #DDDDDD;
 }
 
 .RegisterActions button[type="button"]:first-child:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: #F5F5F5;
+  border-color: #BBBBBB;
   transform: translateY(-2px);
 }
 
 .RegisterActions button[type="button"]:last-of-type,
 .RegisterActions button[type="submit"] {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: #2E7D32;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
 }
 
 .RegisterActions button[type="button"]:last-of-type:hover:not(:disabled),
 .RegisterActions button[type="submit"]:hover:not(:disabled) {
+  background: #1b5e20;
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.4);
 }
 
 .RegisterActions button[type="button"]:last-of-type:disabled,
 .RegisterActions button[type="submit"]:disabled {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.4) 100%);
+  background: #E0E0E0;
+  color: #999999;
   cursor: not-allowed;
   opacity: 0.6;
   transform: none;
 }
 
-/* ===== Info & Error Boxes ===== */
 .infoBox,
 .errorBox {
   padding: 14px 18px;
@@ -338,37 +329,37 @@ body:has(.RegisterPage) {
 }
 
 .infoBox {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  border: 1px solid rgba(102, 126, 234, 0.3);
-  color: #a0d4ff;
+  background: #E8F5E9;
+  border: 1px solid #81C784;
+  color: #2E7D32;
 }
 
 .errorBox {
-  background: linear-gradient(135deg, rgba(245, 87, 108, 0.15) 0%, rgba(240, 93, 251, 0.15) 100%);
-  border: 1px solid rgba(245, 87, 108, 0.4);
-  color: #ffbcbc;
+  background: #FFEBEE;
+  border: 1px solid #dc3545;
+  color: #dc3545;
 }
 
-/* ===== Mini Button ===== */
 .miniBtn {
   padding: 8px 16px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: #FFFFFF;
+  border: 1px solid #2E7D32;
   border-radius: 6px;
   font-size: 13px;
-  color: #e0e0e0;
+  color: #2E7D32;
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 500;
 }
 
 .miniBtn:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-color: rgba(102, 126, 234, 0.4);
+  background-color: #2E7D32;
+  color: #FFFFFF;
+  border-color: #2E7D32;
   transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
 }
 
-/* ===== Responsive Design ===== */
 @media (max-width: 768px) {
   .RegisterPage {
     padding: 24px 16px;

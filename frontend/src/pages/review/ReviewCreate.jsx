@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ReviewAPI } from "../../api/reviewApi";
 import { useNavigate } from "react-router-dom";
-import "./ReviewCreate.css";
+import styles from "./ReviewCreate.module.css";
 
 export default function ReviewCreateInline({ onCreated }) {
   const navigate = useNavigate();
@@ -144,22 +144,22 @@ export default function ReviewCreateInline({ onCreated }) {
   };
 
   return (
-  <div className="review-create-container">
-      <h2 className="review-create-title">리뷰 등록</h2>
- 
+  <div className={styles.reviewCreateContainer}>
+      <h2 className={styles.reviewCreateTitle}>리뷰 등록</h2>
+
       {/* Step 1: 영수증 인증 */}
       {!receiptId && (
-        <div className="step-section">
-          <div className="step-header">1) 영수증 인증</div>
-          <div className="receipt-upload">
+        <div className={styles.stepSection}>
+          <div className={styles.stepHeader}>1) 영수증 인증</div>
+          <div className={styles.receiptUpload}>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
-              className="file-input"
+              className={styles.fileInput}
             />
-            <button onClick={verify} disabled={loadingVerify} className="btn-primary">
-              {loadingVerify ? "인증중..." : "영수증 인증"}
+            <button onClick={verify} disabled={loadingVerify} className={styles.btnPrimary}>
+              {loadingVerify ? "⏳" : "✔"}
             </button>
           </div>
         </div>
@@ -167,35 +167,33 @@ export default function ReviewCreateInline({ onCreated }) {
  
       {/* Step 2: 메뉴 확인 */}
       {receiptId && extracted && (
-        <div className="step-section">
-          <div className="step-header">2) 메뉴 확인</div>
-          <div className="menu-confirm-section">
-            {!menuConfirmed && <p className="menu-confirm-text">Confirm your receipt</p>}
-            <div className="menu-list">
-              <p>Store name</p>
-              <p>{extracted.store_name}/{extracted.store_name_en}</p>
+        <div className={styles.stepSection}>
+          <div className={styles.stepHeader}>2) 메뉴 확인</div>
+          <div className={styles.menuConfirmSection}>
+            {!menuConfirmed && <p className={styles.menuConfirmText}>다음 메뉴들이 맞나요?</p>}
+            <div className={styles.menuList}>
               {extracted.menu_en && (
                 Array.isArray(extracted.menu_en)
                   ? extracted.menu_en.map((menu, idx) => (
-                      <div key={idx} className="menu-item">
-                        <span className="menu-icon">🍽️</span>
-                        <span className="menu-name">{String(menu).replace(/["[\]]/g, '').trim()}</span>
+                      <div key={idx} className={styles.menuItem}>
+                        <span className={styles.menuIcon}>🍽️</span>
+                        <span className={styles.menuName}>{String(menu).replace(/["[\]]/g, '').trim()}</span>
                       </div>
                     ))
                   : extracted.menu_en.split(',').map((menu, idx) => (
-                      <div key={idx} className="menu-item">
-                        <span className="menu-icon">🍽️</span>
-                        <span className="menu-name">{menu.replace(/["[\]]/g, '').trim()}</span>
+                      <div key={idx} className={styles.menuItem}>
+                        <span className={styles.menuIcon}>🍽️</span>
+                        <span className={styles.menuName}>{menu.replace(/["[\]]/g, '').trim()}</span>
                       </div>
                     ))
               )}
             </div>
             {!menuConfirmed && (
-              <div className="menu-confirm-buttons">
-                <button onClick={confirmMenu} className="btn-confirm">
+              <div className={styles.menuConfirmButtons}>
+                <button onClick={confirmMenu} className={styles.btnConfirm}>
                   확인
                 </button>
-                <button onClick={cancelMenu} className="btn-cancel">
+                <button onClick={cancelMenu} className={styles.btnCancel}>
                   취소
                 </button>
               </div>
@@ -206,39 +204,39 @@ export default function ReviewCreateInline({ onCreated }) {
  
       {/* Step 3: 리뷰 작성 */}
       {receiptId && menuConfirmed && (
-        <div className="step-section">
-          <div className="step-header">3) 리뷰 작성</div>
- 
-          <div className="review-form">
-            <div className="form-group">
-              <label className="form-label">제목</label>
+        <div className={styles.stepSection}>
+          <div className={styles.stepHeader}>3) 리뷰 작성</div>
+
+          <div className={styles.reviewForm}>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>제목</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="리뷰 제목을 입력해주세요"
-                className="form-input"
+                className={styles.formInput}
               />
             </div>
- 
-            <div className="form-group">
-              <label className="form-label">내용</label>
+
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>내용</label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="리뷰 내용을 입력해주세요"
                 rows={6}
-                className="form-textarea"
+                className={styles.formTextarea}
               />
             </div>
- 
-            <div className="form-group">
-              <label className="form-label">별점</label>
-              <div className="rating-select">
+
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>별점</label>
+              <div className={styles.ratingSelect}>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <span
                     key={n}
                     onClick={() => setRating(n)}
-                    className={`star ${n <= rating ? 'active' : ''}`}
+                    className={`${styles.star} ${n <= rating ? styles.active : ''}`}
                   >
                     ★
                   </span>
@@ -246,8 +244,8 @@ export default function ReviewCreateInline({ onCreated }) {
               </div>
             </div>
  
-            <div className="form-group">
-              <label className="form-label">추가 이미지 (최대 3장)</label>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>추가 이미지 (최대 3장)</label>
               <input
                 ref={imageInputRef}
                 type="file"
@@ -255,25 +253,25 @@ export default function ReviewCreateInline({ onCreated }) {
                 multiple
                 onChange={onPickImages}
                 disabled={images.length >= 3}
-                className="file-input"
+                className={styles.fileInput}
               />
-              <div className="image-count">
+              <div className={styles.imageCount}>
                 추가 이미지 {images.length}/3
               </div>
- 
+
               {previewUrls.length > 0 && (
-                <div className="image-preview-list">
+                <div className={styles.imagePreviewList}>
                   {previewUrls.map((url, idx) => (
-                    <div key={idx} className="image-preview-item">
+                    <div key={idx} className={styles.imagePreviewItem}>
                       <img
                         src={url}
                         alt={`preview-${idx}`}
-                        className="preview-image"
+                        className={styles.previewImage}
                       />
                       <button
                         type="button"
                         onClick={() => removeImage(idx)}
-                        className="btn-remove-image"
+                        className={styles.btnRemoveImage}
                         title="삭제"
                       >
                         ×
@@ -283,16 +281,16 @@ export default function ReviewCreateInline({ onCreated }) {
                 </div>
               )}
             </div>
- 
-            <button onClick={create} disabled={loadingCreate} className="btn-submit">
+
+            <button onClick={create} disabled={loadingCreate} className={styles.btnSubmit}>
               {loadingCreate ? "생성중..." : "리뷰 생성"}
             </button>
           </div>
         </div>
       )}
- 
-      {msg && <div className="message success">{msg}</div>}
-      {err && <div className="message error">{err}</div>}
+
+      {msg && <div className={`${styles.message} ${styles.success}`}>{msg}</div>}
+      {err && <div className={`${styles.message} ${styles.error}`}>{err}</div>}
     </div>
   );
 }

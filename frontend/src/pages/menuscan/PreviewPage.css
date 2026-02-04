@@ -1,0 +1,38 @@
+.ms-pp__root {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.ms-pp__image {
+  max-width: 100%;
+  display: block;
+  border-radius: 14px;
+  border: 1px solid #eee;
+}
+
+.ms-pp__actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.ms-pp__btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+}
+
+.ms-pp__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ms-pp__error {
+  margin-top: 12px;
+  color: #b00020;
+  font-size: 14px;
+}

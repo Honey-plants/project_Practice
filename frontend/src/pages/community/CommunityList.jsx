@@ -1,6 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { CommunityContext } from "../../context/CommunityContext";
+import styles from "./CommunityList.module.css";
 
 export default function CommunityList() {
   const { stateCommunity, communityActions } = useContext(CommunityContext);
@@ -10,20 +11,22 @@ export default function CommunityList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (stateCommunity.error) return <div className="errorBox">{stateCommunity.error}</div>;
-  if (stateCommunity.loading) return <div>Loading...</div>;
+  if (stateCommunity.error) return <div className={styles.errorBox}>{stateCommunity.error}</div>;
+  if (stateCommunity.loading) return <div className={styles.loading}>Loading...</div>;
 
   return (
-    <ul>
-      {stateCommunity.list.map((row) => {
-        const id = row.id ?? row.community_id;
-        const title = row.title ?? row.subject ?? "(no title)";
-        return (
-          <li key={id}>
-            <Link to={`/community/${id}`}>{title}</Link>
-          </li>
-        );
-      })}
-    </ul>
+    <div className={styles.listContainer}>
+      <ul className={styles.list}>
+        {stateCommunity.list.map((row) => {
+          const id = row.id ?? row.community_id;
+          const title = row.title ?? row.subject ?? "(no title)";
+          return (
+            <li key={id} className={styles.listItem}>
+              <Link to={`/community/${id}`} className={styles.listLink}>{title}</Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

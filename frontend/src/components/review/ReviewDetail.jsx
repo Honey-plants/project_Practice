@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { MetaAPI } from "../../api/metaApi";
+import styles from "./ReviewDetail.module.css";
 
 function formatDate(v) {
   if (!v) return "-";
@@ -15,7 +16,7 @@ function renderStars(rating) {
   return "★".repeat(clamped) + "☆".repeat(5 - clamped);
 }
 
-export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent = false }) {
+export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent = false, currentMemberId = null }) {
   const [categories, setCategories] = useState([]);
 
   console.log("review :: ", review)
@@ -38,6 +39,18 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
   if (!review) return null;
 
   const { title, content, rating, createdAt, images, location, itemIds, menuName } = review;
+
+  // 현재 로그인한 사용자와 리뷰 작성자가 일치하는지 확인
+  // 타입을 숫자로 통일해서 비교 (백엔드에서 숫자로 오지만 혹시 모를 타입 불일치 방지)
+  const reviewMemberId = Number(review.raw?.member_id);
+  const loginMemberId = Number(currentMemberId);
+  const isOwner = loginMemberId > 0 && reviewMemberId > 0 && loginMemberId === reviewMemberId;
+
+  console.log("=== Owner Check Debug ===");
+  console.log("currentMemberId:", currentMemberId, typeof currentMemberId);
+  console.log("review.raw?.member_id:", review.raw?.member_id, typeof review.raw?.member_id);
+  console.log("isOwner:", isOwner);
+
 
   // review_items를 배열로 변환
   const reviewItemIds = (() => {
@@ -63,100 +76,62 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
     .filter(Boolean);
 
   return (
-    <div
-      style={{
-        border: "1px solid #eee",
-        borderRadius: 12,
-        padding: 24,
-        display: "grid",
-        gap: 20,
-        background: "white"
-      }}
-    >
+    <div className={styles.container}>
       {/* 헤더: 제목과 수정 버튼 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#212529" }}>
+      <div className={styles.header}>
+        <div className={styles.headerContent}>
+          <h1 className={styles.title}>
             {title || "(제목 없음)"}
           </h1>
-          <div style={{ marginTop: 8, fontSize: 14, color: "#6c757d" }}>
+          <div className={styles.meta}>
             <span>작성일: {formatDate(createdAt)}</span>
-            {location ? <span style={{ marginLeft: 16 }}>📍 {location}</span> : null}
+            {location ? <span className={styles.location}>📍 {location}</span> : null}
           </div>
         </div>
 
         {/* 수정 버튼 */}
-        {canEdit && !isUsedInContent && onEdit && (
-          <button
-            onClick={onEdit}
-            style={{
-              padding: "8px 16px",
-              background: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: "600"
-            }}
-          >
+        {canEdit && !isUsedInContent && onEdit && isOwner && (
+          <button onClick={onEdit} className={styles.editButton}>
             수정
           </button>
         )}
 
         {/* 컨텐츠에 사용 중일 때 수정 불가 메시지 */}
         {isUsedInContent && (
-          <div style={{
-            padding: "8px 16px",
-            background: "#ffc107",
-            color: "#856404",
-            border: "1px solid #ffc107",
-            borderRadius: "6px",
-            fontSize: "13px",
-            fontWeight: "600"
-          }}>
+          <div className={styles.usedInContentBadge}>
             컨텐츠에 사용 중 (수정 불가)
           </div>
         )}
       </div>
 
       {/* 별점 */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <strong style={{ fontSize: 15, color: "#495057" }}>별점:</strong>
-        <span style={{ fontSize: 20, color: "#ffc107" }}>{renderStars(rating)}</span>
+      <div className={styles.ratingSection}>
+        <strong className={styles.ratingLabel}>별점:</strong>
+        <span className={styles.stars}>{renderStars(rating)}</span>
         {rating != null ? (
-          <span style={{ fontSize: 14, color: "#6c757d" }}>({rating}/5)</span>
+          <span className={styles.ratingValue}>({rating}/5)</span>
         ) : null}
       </div>
 
       {/* 이미지 */}
       {images?.length > 0 && (
-        <div>
-          <strong style={{ fontSize: 15, color: "#495057", display: "block", marginBottom: 12 }}>
+        <div className={styles.imagesSection}>
+          <strong className={styles.sectionTitle}>
             사진
           </strong>
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: images.length === 1 ? "1fr" : images.length === 2 ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
-              gap: 12,
-            }}
+            className={`${styles.imageGrid} ${
+              images.length === 1 ? styles.single :
+              images.length === 2 ? styles.double :
+              styles.triple
+            }`}
           >
             {images.slice(0, 3).map((src, idx) => (
-              <div
-                key={`${src}-${idx}`}
-                style={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  aspectRatio: "1 / 1",
-                  background: "#f8f9fa",
-                }}
-              >
+              <div key={`${src}-${idx}`} className={styles.imageWrapper}>
                 <img
                   src={src}
                   alt={`review-${idx}`}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  className={styles.image}
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
                   }}
@@ -169,38 +144,19 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
 
       {/* 카테고리 및 아이템 정보 */}
       {reviewCategories.length > 0 && (
-        <div>
-          <strong style={{ fontSize: 15, color: "#495057", display: "block", marginBottom: 12 }}>
+        <div className={styles.categoriesSection}>
+          <strong className={styles.sectionTitle}>
             제한 사항 / 알레르기 정보
           </strong>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className={styles.categoryList}>
             {reviewCategories.map((cat) => (
-              <div
-                key={cat.category_id}
-                style={{
-                  padding: "12px",
-                  background: "#f8f9fa",
-                  borderRadius: "8px",
-                  border: "1px solid #e0e0e0"
-                }}
-              >
-                <div style={{ fontWeight: 600, marginBottom: 8, color: "#495057", fontSize: 14 }}>
+              <div key={cat.category_id} className={styles.categoryCard}>
+                <div className={styles.categoryLabel}>
                   {cat.category_label_ko || cat.category_label_en || `Category #${cat.category_id}`}
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <div className={styles.itemTags}>
                   {cat.matchedItems.map((item) => (
-                    <span
-                      key={item.item_id}
-                      style={{
-                        padding: "6px 12px",
-                        background: "#fff3cd",
-                        color: "#856404",
-                        borderRadius: 16,
-                        fontSize: 13,
-                        fontWeight: 500,
-                        border: "1px solid #ffeaa7"
-                      }}
-                    >
+                    <span key={item.item_id} className={styles.itemTag}>
                       {item.item_label_ko || item.item_label_en || `Item #${item.item_id}`}
                     </span>
                   ))}
@@ -213,26 +169,16 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
 
       {/* 메뉴명(영수증 디텍트 결과) */}
       {menuName && (
-        <div>
-          <strong style={{ fontSize: 15, color: "#495057", display: "block", marginBottom: 12 }}>
+        <div className={styles.menuSection}>
+          <strong className={styles.sectionTitle}>
             영수증 메뉴
           </strong>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <div className={styles.menuTags}>
             {(Array.isArray(menuName)
               ? menuName
               : menuName.split(',')
             ).map((m, idx) => (
-              <span
-                key={`${m}-${idx}`}
-                style={{
-                  padding: "6px 12px",
-                  border: "1px solid #dee2e6",
-                  borderRadius: 16,
-                  fontSize: 13,
-                  background: "#e9ecef",
-                  color: "#495057"
-                }}
-              >
+              <span key={`${m}-${idx}`} className={styles.menuTag}>
                 🍽️ {String(m).replace(/["[\]]/g, '').trim()}
               </span>
             ))}
@@ -241,23 +187,11 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
       )}
 
       {/* 리뷰 내용 */}
-      <div>
-        <strong style={{ fontSize: 15, color: "#495057", display: "block", marginBottom: 12 }}>
+      <div className={styles.contentSection}>
+        <strong className={styles.sectionTitle}>
           리뷰 내용
         </strong>
-        <div
-          style={{
-            marginTop: 8,
-            whiteSpace: "pre-wrap",
-            lineHeight: 1.7,
-            fontSize: 15,
-            color: "#212529",
-            padding: "16px",
-            background: "#f8f9fa",
-            borderRadius: "8px",
-            border: "1px solid #e0e0e0"
-          }}
-        >
+        <div className={styles.contentBox}>
           {content || "-"}
         </div>
       </div>

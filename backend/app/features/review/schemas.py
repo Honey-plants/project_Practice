@@ -23,6 +23,7 @@ class ReviewCreatePayload(BaseModel):
     review_items: List[str] = Field(default_factory=list)
 
 class ReviewRead(BaseModel):
+    member_id: int
     review_id: int
     review_title: str
     review_content: str

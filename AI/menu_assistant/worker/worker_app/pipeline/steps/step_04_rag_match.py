@@ -2,10 +2,110 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 from menu_assistant.worker.worker_app.rag.retrieval import match_menu_norm
+
+# ============================================================
+# Exact precheck (STRING EXACT) before embedding search
+# - Optional and backward compatible
+# - Enabled when --menu_index_json is provided OR env var
+#   MENU_ASSISTANT_MENU_INDEX_JSON is set.
+# - This prevents cases where an exact menu exists in the index
+#   but is not retrieved by embedding top_k candidates.
+# ============================================================
+menu_index_json='AI/menu_assistant/data/datasets/raw/menu_seed_with_alg_tags_variants_v3.json'
+def _load_menu_index_for_exact(path_str: Optional[str]) -> Optional[Dict[str, Dict[str, Any]]]:
+    """Load a menu index json (list of entries) and build variant->record map.
+
+    Expected entry schema (minimal):
+      {
+        "id": "rep_...",
+        "menu": "냉모밀",
+        "variants": ["냉모밀", "..."],
+        "ingredients_ko": [...],
+        "alg_tags": [...]
+      }
+
+    Returns:
+      dict mapping variant string -> entry dict
+    """
+    # Priority: CLI arg > ENV
+    p = (path_str or os.environ.get("MENU_ASSISTANT_MENU_INDEX_JSON") or '').strip()
+    if not p:
+        return None
+    path = Path(p).expanduser()
+    if not path.exists():
+        print(f"[WARN] menu_index_json not found: {path}")
+        return None
+    try:
+        obj = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"[WARN] failed to read menu_index_json: {path} ({type(e).__name__}: {e})")
+        return None
+
+    entries: List[Dict[str, Any]] = []
+    if isinstance(obj, dict) and isinstance(obj.get("items"), list):
+        entries = obj["items"]
+    elif isinstance(obj, list):
+        entries = obj
+    else:
+        print(f"[WARN] menu_index_json schema unsupported: {type(obj)}")
+        return None
+
+    vmap: Dict[str, Dict[str, Any]] = {}
+    for it in entries:
+        if not isinstance(it, dict):
+            continue
+        menu = str(it.get("menu") or "").strip()
+        if menu:
+            vmap.setdefault(menu, it)
+        variants = it.get("variants")
+        if isinstance(variants, list):
+            for v in variants:
+                if isinstance(v, str):
+                    vv = v.strip()
+                    if vv:
+                        vmap.setdefault(vv, it)
+    if not vmap:
+        print(f"[WARN] menu_index_json loaded but empty: {path}")
+        return None
+    print(f"[INFO] exact-precheck index loaded: {path} (variants={len(vmap)})")
+    return vmap
+
+
+def _exact_precheck(menu_norm: str, vmap: Optional[Dict[str, Dict[str, Any]]]) -> Optional[Dict[str, Any]]:
+    if not vmap:
+        return None
+    q = (menu_norm or "").strip()
+    if not q:
+        return None
+    hit = vmap.get(q)
+    if not isinstance(hit, dict):
+        return None
+    # Build a rag-like response compatible with downstream logic
+    best_match = {
+        "id": hit.get("id"),
+        "menu": hit.get("menu"),
+        "best_variant": q,
+        "embed_score": 1.0,
+        "jamo_score": 1.0,
+        "final_score": 1.0,
+        "ingredients_ko": hit.get("ingredients_ko") or [],
+        "alg_tags": hit.get("alg_tags") or [],
+    }
+    return {
+        "status": "EXACT",
+        "decision_method": "STRING_EXACT_PRECHECK",
+        "used_query": q,
+        "best_match": best_match,
+        "candidates": [],
+        "signals": {"thresholds": {}},
+        "debug": None,
+        "decided_menu": hit.get("menu"),
+    }
 
 
 def _read_json(path: Path) -> Any:
@@ -47,6 +147,7 @@ def run_step_04_rag_match(
     jamo_confirmed: float = 0.95,
     score_threshold: float = 0.55,
     include_debug: bool = False,
+    menu_index_json: Optional[str] = None,
 ) -> Path:
     normalize_path = run_dir / "normalize" / "normalize.json"
     if not normalize_path.exists():
@@ -58,6 +159,10 @@ def run_step_04_rag_match(
 
     normalized = _read_json(normalize_path)
     items = _extract_items(normalized)
+
+    # Optional: build exact-precheck variant map (does not change behavior if not provided)
+    exact_vmap = _load_menu_index_for_exact(menu_index_json)
+
 
     out_items: List[Dict[str, Any]] = []
     stats: Dict[str, int] = {
@@ -86,7 +191,15 @@ def run_step_04_rag_match(
             or ""
         ).strip()
 
-        rag = match_menu_norm(
+        # ----------------------------------------------------
+        # EXACT precheck: if menu_norm exactly matches a known variant,
+        # return EXACT without embedding search.
+        # ----------------------------------------------------
+        exact_rag = _exact_precheck(menu_norm, exact_vmap)
+        if exact_rag is not None:
+            rag = exact_rag
+        else:
+            rag = match_menu_norm(
             menu_norm=menu_norm,
             raw_menu=raw_menu,
             top_k=int(top_k),
@@ -158,6 +271,10 @@ def run_step_04_rag_match(
                 "jamo_confirmed": float(jamo_confirmed),
             },
             "score_threshold": float(score_threshold),
+            "exact_precheck": {
+                "enabled": bool(exact_vmap is not None),
+                "menu_index_json": (menu_index_json or os.environ.get("MENU_ASSISTANT_MENU_INDEX_JSON") or None),
+            },
         },
         "stats": stats,
         "items": out_items,
@@ -189,6 +306,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--no_rerank", action="store_true")
 
     p.add_argument("--include_debug", action="store_true")
+    p.add_argument(
+        "--menu_index_json",
+        type=str,
+        default=menu_index_json,
+        help="Optional menu index json for STRING EXACT precheck. If omitted, uses env MENU_ASSISTANT_MENU_INDEX_JSON.",
+    )
     return p
 
 
@@ -216,6 +339,7 @@ def main() -> None:
         jamo_confirmed=args.jamo_confirmed,
         score_threshold=args.score_threshold,
         include_debug=args.include_debug,
+        menu_index_json=args.menu_index_json,
     )
     print(f"[Step04] wrote: {out_path}")
 

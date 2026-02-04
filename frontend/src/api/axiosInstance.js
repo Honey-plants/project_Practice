@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const BASE_URL = "";
+// ✅ 개발환경(CRA proxy 사용): baseURL을 "/"로 두면 package.json의 proxy를 탄다.
+// ✅ 배포/특정 환경: REACT_APP_API_BASE_URL이 있으면 기존처럼 그 값을 그대로 사용
+const BASE_URL = process.env.REACT_APP_API_BASE_URL || "/";
 
 const api = axios.create({
   baseURL: BASE_URL,

@@ -1,0 +1,167 @@
+/* ===== Description Text ===== */
+.desc {
+  margin: 0 0 12px 0;
+  color: #666666; /* 미디엄 그레이 */
+  font-size: 14px;
+}
+
+/* ===== Template Grid ===== */
+.templateGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .templateGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Checkbox Row ===== */
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* ===== Section Container ===== */
+.section {
+  margin-top: 16px;
+}
+
+.sectionTitle {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #333333; /* 다크 그레이 */
+}
+
+/* ===== Loading & Empty States ===== */
+.loading {
+  font-size: 14px;
+  color: #666666; /* 미디엄 그레이 */
+  padding: 20px;
+  text-align: center;
+}
+
+.empty {
+  font-size: 14px;
+  color: #999999; /* 라이트 그레이 */
+  padding: 20px;
+  text-align: center;
+}
+
+/* ===== Review List ===== */
+.reviewList {
+  list-style: none;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.reviewItem {
+  display: flex;
+  list-style: none;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #333333; /* 다크 그레이 */
+}
+
+.reviewTitle {
+  font-weight: 600;
+  color: #333333; /* 다크 그레이 */
+}
+
+/* ===== Badges ===== */
+.badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.badgeActive {
+  background: #E8F5E9; /* 연한 그린 배경 */
+  color: #2E7D32; /* 딥 그린 텍스트 */
+}
+
+.badgeInactive {
+  background: #F5F5F5; /* 아주 연한 웜그레이 */
+  color: #666666; /* 미디엄 그레이 */
+}
+
+/* ===== Actions ===== */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* ===== Buttons ===== */
+.btnGhost {
+  background: transparent;
+  border: 1px solid #DDDDDD;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #333333; /* 다크 그레이 */
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btnGhost:hover {
+  background: #F5F5F5; /* 아주 연한 웜그레이 */
+  border-color: #BBBBBB;
+}
+
+.btnPrimary {
+  background: #2E7D32; /* 딥 그린 */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btnPrimary:hover {
+  background: #1B5E20; /* 더 진한 그린 */
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+}
+
+.btnPrimary:disabled {
+  background: #E0E0E0;
+  color: #999999;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ===== Hint & Error Messages ===== */
+.hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #D32F2F; /* 레드 - 주의 */
+}
+
+/* ===== Inactive State ===== */
+.inactive {
+  opacity: 0.5;
+}
+
+.inactive input {
+  cursor: not-allowed;
+}
+
+.inactiveTag {
+  margin-left: 6px;
+  font-size: 12px;
+  color: #999999; /* 라이트 그레이 */
+}

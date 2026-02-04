@@ -1,7 +1,9 @@
 import { useContext, useEffect, useMemo } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ReviewContext } from "../../context/ReviewContext";
-import { ReviewDetail } from "../../components/review/ReviewDetail"
+import { MemberContext } from "../../context/MemberContext";
+import { ReviewDetail } from "../../components/review/ReviewDetail";
+import styles from "./ReviewDetailPage.module.css";
 
 function normalizeReview(raw) {
   if (!raw) return null;
@@ -59,6 +61,7 @@ export default function ReviewDetailPage() {
   const { id } = useParams();
   const nav = useNavigate();
   const { stateReview, reviewActions } = useContext(ReviewContext);
+  const { stateMember } = useContext(MemberContext);
 
   useEffect(() => {
     if (!id) return;
@@ -80,54 +83,23 @@ export default function ReviewDetailPage() {
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "24px"
-        }}
-      >
-        <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "700" }}>리뷰 상세</h2>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>리뷰 상세</h2>
 
-        <button
-          onClick={() => nav("/review")}
-          style={{
-            padding: "8px 16px",
-            background: "#6c757d",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "14px",
-            fontWeight: "600"
-          }}
-        >
+        <button onClick={() => nav("/review")} className={styles.backButton}>
           목록으로
         </button>
       </div>
 
       {stateReview.error && (
-        <div style={{
-          padding: "12px",
-          background: "#f8d7da",
-          color: "#721c24",
-          borderRadius: "6px",
-          marginBottom: "16px",
-          border: "1px solid #f5c6cb"
-        }}>
+        <div className={styles.error}>
           {stateReview.error}
         </div>
       )}
 
       {stateReview.loading && (
-        <div style={{
-          textAlign: "center",
-          padding: "40px",
-          fontSize: "16px",
-          color: "#666"
-        }}>
+        <div className={styles.loading}>
           로딩 중...
         </div>
       )}
@@ -138,6 +110,7 @@ export default function ReviewDetailPage() {
           onEdit={handleEdit}
           canEdit={true}
           isUsedInContent={isUsedInContent}
+          currentMemberId={stateMember.me?.member_id}
         />
       )}
     </div>

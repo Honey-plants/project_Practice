@@ -1,70 +1,166 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { MenuAPI } from "../../api/menuApi";
 import PolygonOverlay from "./PolygonOverlay";
 import MenuDetailModal from "./MenuDetailModal";
+import "./ResultPage.css";
 
-export default function ResultPage({ result }) {
-  const [selectedItem, setSelectedItem] = useState(null);
+/**
+ * 백엔드 응답 형태 방어적 표준화
+ */
+function normalizeBackendPayload(raw) {
+  const root = raw?.data ?? raw;
+  const payload = root?.result ?? root;
+  const finalObj = payload?.final ?? payload?.final_obj ?? payload?.final_json ?? payload;
 
-  /**
-   * AI 연동 전에도 깨지지 않도록 방어
-   */
-  const items = result?.items || [];
-  const imageUrl = result?.result_image_url;
+  const rectified = payload?.rectified_image ?? payload?.rectified ?? null;
+  const base64 = rectified?.base64 ?? null;
+  const mime = rectified?.mime ?? "image/jpeg";
+  const imageDataUrl = base64 ? `data:${mime};base64,${base64}` : null;
 
-  // ✅ 테스트 표시용: JSON 텍스트로만 보기
-  const jsonText = (() => {
-    try {
-      return JSON.stringify(result ?? {}, null, 2);
-    } catch (e) {
-      return String(result);
+  return { raw: root, payload, final: finalObj, imageDataUrl };
+}
+
+export default function ResultPage() {
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  // 페이지 진입 시 OCR 실행
+  useEffect(() => {
+    const file = window.__menuFile;
+    window.__menuFile = null; // 사용 후 즉시 클리어
+
+    if (!file) {
+      navigate("/", { replace: true });
+      return;
     }
+
+    let cancelled = false;
+
+    MenuAPI.uploadMenu(file)
+      .then((response) => {
+        if (!cancelled) {
+          setResult(response?.data ?? response);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err?.response?.data?.detail || err?.message || "분석 실패");
+          setLoading(false);
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, [navigate]);
+
+  // -------- 로딩 중 전체화면 오버레이 --------
+  if (loading) {
+    return (
+      <div className="rp-loading-overlay">
+        <div className="rp-loading-box">
+          <div className="rp-spinner" />
+          <p className="rp-loading-text">Analyzing the menu...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // -------- 오류 상태 --------
+  if (error) {
+    return (
+      <div className="rp-error-wrap">
+        <p className="rp-error-text">{error}</p>
+        <button className="rp-back-btn" onClick={() => navigate("/")}>홈으로 돌아가기</button>
+      </div>
+    );
+  }
+
+  // -------- 결과 렌더 --------
+  return <ResultContent result={result} />;
+}
+
+/* =========================================================
+   결과 내용 컴포넌트 (기존 로직 유지)
+   ========================================================= */
+function ResultContent({ result }) {
+  const navigate = useNavigate();
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [imgSize, setImgSize] = useState({ w: 0, h: 0 });
+  const [imgBroken, setImgBroken] = useState(false);
+
+  const normalized = useMemo(() => normalizeBackendPayload(result), [result]);
+  const items = result?.items || normalized?.final?.items || [];
+
+  const imageUrl = result?.result_image_url || normalized?.imageDataUrl;
+  const resolvedImageSrc = !imgBroken ? imageUrl : (normalized?.imageDataUrl || imageUrl);
+
+  const jsonText = (() => {
+    try { return JSON.stringify(result ?? {}, null, 2); }
+    catch (e) { return String(result); }
   })();
 
-  // ✅ 테스트 모드: 현재는 "이미지 + JSON 텍스트만" 표시
-  const TEST_TEXT_ONLY = true;
+  const getItemLabel = (item) =>
+    item?.menu?.menu_name_en || item?.menu?.menu_name_ko || item?.menu_name_en || item?.menu_name_ko || "(no name)";
 
   return (
-    <div className="result-page" style={{ position: "relative" }}>
-      {imageUrl ? (
-        <img src={imageUrl} alt="result" style={{ width: "100%" }} />
-      ) : (
-        <p>AI result image will appear here.</p>
-      )}
+    <div className="rp-container">
+      {/* 다시 분석하기 버튼 */}
+      <button className="rp-back-btn" onClick={() => navigate("/")}>다시 분석하기</button>
 
-      {/* ✅ JSON 결과를 텍스트로만 표시 (테스트용) */}
-      <div style={{ marginTop: 16 }}>
-        <h3 style={{ margin: "8px 0" }}>Result JSON (text only)</h3>
-        <pre
-          style={{
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            background: "#f6f8fa",
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            padding: 12,
-            margin: 0,
-          }}
-        >
-          {jsonText}
-        </pre>
+      {/* 결과 이미지 + PolygonOverlay */}
+      <div className="rp-image-wrap">
+        {resolvedImageSrc ? (
+          <img
+            src={resolvedImageSrc}
+            alt="result"
+            className="rp-image"
+            onLoad={(e) => {
+              setImgSize({ w: e.currentTarget.naturalWidth || 0, h: e.currentTarget.naturalHeight || 0 });
+            }}
+            onError={() => setImgBroken(true)}
+          />
+        ) : (
+          <p className="rp-empty">결과 이미지가 없습니다.</p>
+        )}
+
+        <PolygonOverlay
+          items={items}
+          imgSize={imgSize}
+          onSelectItem={(item) => setSelectedItem(item)}
+        />
       </div>
 
-      {/* 기존 UI는 테스트 동안 비활성화 (변수명/경로 유지) */}
-      {!TEST_TEXT_ONLY && (
-        <>
-          <PolygonOverlay
-            items={items}
-            onSelectItem={(item) => setSelectedItem(item)}
-          />
-
-          {selectedItem && (
-            <MenuDetailModal
-              item={selectedItem}
-              onClose={() => setSelectedItem(null)}
-            />
-          )}
-        </>
+      {/* MenuDetailModal */}
+      {selectedItem && (
+        <MenuDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
       )}
+
+      {/* 감지된 메뉴 목록 */}
+      {Array.isArray(items) && items.length > 0 && (
+        <div className="rp-menu-section">
+          <h3 className="rp-menu-title">Detected menus</h3>
+          <div className="rp-menu-grid">
+            {items.map((it, idx) => (
+              <div key={it?.id || it?.item_id || idx} className="rp-menu-card">
+                <div className="rp-menu-name">{getItemLabel(it)}</div>
+                <button className="rp-menu-btn" onClick={() => setSelectedItem(it)}>
+                  View English details
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Result JSON */}
+      <div className="rp-json-wrap">
+        <h3 className="rp-json-title">Result JSON</h3>
+        <pre className="rp-json-pre">{jsonText}</pre>
+      </div>
     </div>
   );
 }

@@ -94,7 +94,8 @@ def make_run_id() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-def run_cmd(cmd: list, env=None, cwd=None):
+def run_cmd(cmd: List[str], env: Optional[dict] = None, cwd: Optional[Path] = None) -> None:
+    """Run a command and raise on failure (with captured stdout/stderr)."""
     print("\n[RUN]", " ".join(cmd))
 
     p = subprocess.run(
@@ -102,16 +103,24 @@ def run_cmd(cmd: list, env=None, cwd=None):
         shell=False,
         env=env,
         cwd=str(cwd) if cwd else None,
-        stdout=subprocess.PIPE,          # ✅ 핵심
-        stderr=subprocess.STDOUT,        # ✅ stderr도 stdout으로 합침
-        text=True,                       # ✅ 문자열로 받기
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
     )
+
+    if p.stdout:
+        print(p.stdout)
+    if p.stderr:
+        print(p.stderr)
 
     if p.returncode != 0:
         raise RuntimeError(
-            f"Command failed (exit={p.returncode}): {' '.join(cmd)}\n\n"
-            f"--- subprocess output ---\n{p.stdout}"
+            f"Command failed (exit={p.returncode}): {' '.join(cmd)}\n"
+            f"--- stdout ---\n{(p.stdout or '').strip()}\n"
+            f"--- stderr ---\n{(p.stderr or '').strip()}\n"
         )
+
 
 
 
@@ -183,6 +192,10 @@ class Step2Options:
     dump_raw: bool = False
     out: Optional[str] = None
     vis: Optional[str] = None
+    # ✅ NEW: PaddleOCR device control
+    ocr_device: str = "auto"  # auto|cpu|gpu
+    ocr_gpu_mem: Optional[int] = None
+    cuda_visible_devices: Optional[str] = None  # for EKS / multi-GPU routing
 
 
 @dataclass
@@ -352,6 +365,11 @@ class PipelineOrchestrator:
             "--det_limit_type",
             step2.det_limit_type,
         ]
+        # ✅ NEW: device routing
+        cmd2 += ["--device", step2.ocr_device]
+
+        if step2.ocr_gpu_mem is not None:
+            cmd2 += ["--gpu_mem", str(step2.ocr_gpu_mem)]
 
         if step2.use_doc_unwarping:
             cmd2 += ["--use_doc_unwarping"]
@@ -389,6 +407,11 @@ class PipelineOrchestrator:
         step2_env["FLAGS_use_onednn"] = "0"  # 일부 버전에서 사용
         step2_env["FLAGS_enable_pir_api"] = "0"  # PIR 경로 차단(버전별로 효과)
         step2_env["FLAGS_enable_pir_in_executor"] = "0"
+
+        # ✅ NEW: GPU selection (useful on EKS / multi-GPU)
+
+        if step2.cuda_visible_devices:
+            step2_env["CUDA_VISIBLE_DEVICES"] = str(step2.cuda_visible_devices)
 
         run_cmd(cmd2, env=step2_env, cwd=self.ai_root)
 
@@ -487,6 +510,8 @@ class PipelineOrchestrator:
                 # (호환용: step_04는 받기만 함)
                 "--rerank_top_k",
                 str(step4.rerank_top_k),
+                "--menu_index_json",
+                str('AI/menu_assistant/data/datasets/raw/menu_seed_with_alg_tags_variants_v3.json')
             ]
 
             if step4.use_rerank:
@@ -577,6 +602,22 @@ class PipelineOrchestrator:
                 llm_input_items=llm_input_items,
                 llm_output_items=llm_output_items,
             )
+            # --- NEW: 최종 결과물에 user_profile 메타 포함 (Step05 단계에서 확정) ---
+            profile_source = "default"
+            if step5.user_profile_json:
+                try:
+                    if Path(step5.user_profile_json).exists():
+                        profile_source = "provided"
+                    else:
+                        profile_source = "missing_file"
+                except Exception:
+                    profile_source = "invalid_path"
+
+            final_obj.setdefault("meta", {})
+            final_obj["meta"]["user_profile"] = user_profile
+            final_obj["meta"]["profile_source"] = profile_source
+            # (선택) 디버깅용으로 경로까지 넣고 싶으면:
+            # final_obj["meta"]["user_profile_json"] = step5.user_profile_json
 
             final_json.parent.mkdir(parents=True, exist_ok=True)
             final_json.write_text(json.dumps(final_obj, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -684,6 +725,11 @@ if __name__ == "__main__":
     p.add_argument("--ocr-out", default=None, help="Override step2 --out path (default: <run>/ocr/ocr.json)")
     p.add_argument("--ocr-vis", default=None, help="Override step2 --vis path (default: <run>/ocr/ocr_vis.jpg)")
 
+    # ✅ NEW: Step2 GPU/CPU control
+    p.add_argument("--ocr-device", default="auto", choices=["auto", "cpu", "gpu"])
+    p.add_argument("--ocr-gpu-mem", type=int, default=None)
+    p.add_argument("--cuda-visible-devices", default=None)
+
     # ---------------- Step3 passthrough ----------------
     p.add_argument("--min-len", type=int, default=2)
     p.add_argument("--line-y-tol", type=int, default=20)
@@ -706,7 +752,12 @@ if __name__ == "__main__":
     p.add_argument("--use-rerank", action="store_true")
     p.add_argument("--no-rerank", action="store_true")
     p.add_argument("--rag-debug", action="store_true")
-
+    p.add_argument(
+        "--menu_index_json",
+        type=str,
+        default='AI/menu_assistant/data/datasets/raw/menu_seed_with_alg_tags_variants_v3.json',
+        help="Optional menu index json for STRING EXACT precheck. If omitted, uses env MENU_ASSISTANT_MENU_INDEX_JSON.",
+    )
     # ---------------- Step5 passthrough ----------------
     p.add_argument("--run-step5", action="store_true", help="Run step5 (default: on)")
     p.add_argument("--no-step5", action="store_true", help="Skip step5")
@@ -781,6 +832,10 @@ if __name__ == "__main__":
         det_box_thresh=args.det_box_thresh,
         det_thresh=args.det_thresh,
         det_unclip_ratio=args.det_unclip_ratio,
+        # ✅ NEW
+        ocr_device = args.ocr_device,
+        ocr_gpu_mem = args.ocr_gpu_mem,
+        cuda_visible_devices = args.cuda_visible_devices,
     )
 
     step3 = Step3Options(
