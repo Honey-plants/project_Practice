@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { MemberContext } from "../../context/MemberContext";
 import "../../styles/Register.css";
@@ -8,6 +8,11 @@ export default function Login() {
   const { authActions } = useContext(AuthContext);
   const { memberActions } = useContext(MemberContext);
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // URL param으로 전달된 안내 메시지 처리
+  const paramMsg = searchParams.get("msg");
+  const guideMsg = paramMsg === "login_required" ? "로그인을 해주세요" : null;
 
   const [form, setForm] = useState({
     email: "",
@@ -56,6 +61,7 @@ export default function Login() {
         <h2>Login</h2>
       </div>
 
+      {guideMsg && <div className="RegisterMsg ok">{guideMsg}</div>}
       {error && <div className="RegisterMsg err">{error}</div>}
 
       <form className="card RegisterForm" onSubmit={onSubmit}>
@@ -83,6 +89,9 @@ export default function Login() {
         </div>
 
         <div className="RegisterActions">
+          <button type="button" className="loginActionBtn" onClick={() => nav("/register")}>
+            회원가입
+          </button>
           <button type="submit" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>

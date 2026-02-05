@@ -122,8 +122,8 @@ export default function ReviewCreateInline({ onCreated }) {
 
       setMsg("리뷰 생성 완료");
 
-      // 리뷰 페이지로 이동
-      navigate("/review");
+      // 리뷰 페이지로 이동 (내 리뷰만 필터 활성화)
+      navigate("/review?mine=true");
 
       onCreated?.(r.data);
 

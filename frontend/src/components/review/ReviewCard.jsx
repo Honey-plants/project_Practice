@@ -2,10 +2,12 @@ import styles from './ReviewCard.module.css';
 import { useNavigate } from "react-router-dom";
 import { useContext, useMemo, useState } from "react";
 import { MetaContext } from "../../context/MetaContext";
+import { MemberContext } from "../../context/MemberContext";
 
 function ReviewItem({ review }) {
   const nav = useNavigate();
   const { stateMeta } = useContext(MetaContext);
+  const { stateMember } = useContext(MemberContext);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // 데이터 정규화 (API 응답 형식이 다를 수 있으므로)
@@ -22,7 +24,23 @@ function ReviewItem({ review }) {
 
   const createdAt = review.created_at || review.create_at || "";
 
-  // 아이템 ID에 해당하는 라벨 찾기
+  // 작성자 닉네임 결정:
+  // 1) API 응답에 nickname 필드가 있으면 사용
+  // 2) 없으면 본인 리뷰일 때만 현재 로그인 유저의 닉네임 사용
+  const authorNickname = useMemo(() => {
+    if (review.nickname || review.author_nickname || review.member_nickname) {
+      return review.nickname || review.author_nickname || review.member_nickname;
+    }
+    // 본인 리뷰 체크: member_id 비교
+    const reviewMemberId = Number(review.member_id);
+    const myMemberId = Number(stateMember?.me?.member_id);
+    if (reviewMemberId > 0 && myMemberId > 0 && reviewMemberId === myMemberId) {
+      return stateMember.me.nickname || null;
+    }
+    return null;
+  }, [review.nickname, review.author_nickname, review.member_nickname, review.member_id, stateMember?.me]);
+
+  // 아이템 ID → 라벨 리스트 (카테고리 구분 없이 flat)
   const itemLabels = useMemo(() => {
     const reviewItems = review.review_items || [];
     const itemIds = typeof reviewItems === 'string'
@@ -36,9 +54,10 @@ function ReviewItem({ review }) {
     const allItems = stateMeta.restrictions.flatMap(cat => cat.items || []);
     return itemIds
       .map(id => {
-        const item = allItems.find(item => item.item_id === id);
-        return item ? (item.item_label_ko || item.item_label_en || `Item #${id}`) : `Item #${id}`;
-      });
+        const item = allItems.find(it => it.item_id === id);
+        return item ? (item.item_label_ko || item.item_label_en || `Item #${id}`) : null;
+      })
+      .filter(Boolean);
   }, [review.review_items, stateMeta.restrictions]);
 
   const handleClick = () => {
@@ -71,6 +90,24 @@ function ReviewItem({ review }) {
 
   return (
     <div onClick={handleClick} className={styles.reviewCard}>
+        {/* 작성자의 식습관 영역 */}
+        {(authorNickname || itemLabels.length > 0) && (
+          <div className={styles.habitHeader}>
+            {authorNickname && (
+              <div className={styles.habitTitle}>
+                <span className={styles.habitNickname}>{authorNickname}</span>님의 식습관
+              </div>
+            )}
+            {itemLabels.length > 0 && (
+              <div className={styles.habitItemTags}>
+                {itemLabels.map((label, idx) => (
+                  <span key={idx} className={styles.habitItemTag}>{label}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
       {imageUrls.length > 0 ? (
         <div className={styles.reviewCardImageContainer}>
           <img
@@ -138,16 +175,6 @@ function ReviewItem({ review }) {
           </p>
         )}
 
-        {/* 제한사항 아이템 태그 */}
-        {itemLabels.length > 0 && (
-          <div className={styles.itemLabelsContainer}>
-            {itemLabels.map((label, idx) => (
-              <span key={idx} className={styles.itemLabelTag}>
-                ⚠️ {label}
-              </span>
-            ))}
-          </div>
-        )}
 
         {/* 작성일 */}
         {createdAt && (

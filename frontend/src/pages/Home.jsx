@@ -1,8 +1,9 @@
-import React, { useState, useRef } from "react";
+import React, { useContext, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import "./Home.css";
 
-const LOGO_SRC = "/food_ray_logo.png";
+const LOGO_SRC = "/example_logo.png";
 
 /* ── SVG 아이콘 ── */
 const CameraIcon = () => (
@@ -36,6 +37,7 @@ const AnalyzeIcon = () => (
 
 export default function Home() {
   const navigate = useNavigate();
+  const { stateAuth } = useContext(AuthContext);
   const [selectedImage, setSelectedImage] = useState(null);
   const [logoSrc, setLogoSrc] = useState(LOGO_SRC);
   const fileInputRef = useRef(null);
@@ -62,8 +64,19 @@ export default function Home() {
     }
   };
 
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setLogoSrc(LOGO_SRC);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleAnalyze = () => {
     if (!selectedImage) return;
+    // 로그인 안된 경우 로그인 페이지로 안내
+    if (!stateAuth.accessToken) {
+      navigate("/login?msg=login_required");
+      return;
+    }
     window.__menuFile = selectedImage;
     navigate("/result");
   };
@@ -73,6 +86,11 @@ export default function Home() {
       {/* 로고 영역 (화면의 ~75%) */}
       <div className="home-logo-wrap">
         <img src={logoSrc} alt="로고" className="home-logo" />
+        {selectedImage && (
+          <button onClick={handleRemoveImage} className="home-remove-btn" aria-label="이미지 삭제">
+            ×
+          </button>
+        )}
       </div>
 
       {/* 숨겨진 파일 입력 */}
@@ -89,14 +107,14 @@ export default function Home() {
 
         {/* 카메라 / 이미지 파일 → 바 형태 */}
         <div className="home-pick-bar">
-          <button onClick={()=> navigate('menu/upload')}>
+          <button onClick={()=> navigate('menu/upload')} className="home-pick-btn">
             <CameraIcon />
-            <span>카메라</span>
+            <span>Camera</span>
           </button>
           <div className="home-pick-divider" />
           <button onClick={handleFileSelectClick} className="home-pick-btn">
             <ImageIcon />
-            <span>이미지 파일</span>
+            <span>Menu Image</span>
           </button>
         </div>
 
@@ -107,7 +125,7 @@ export default function Home() {
           className="home-analyze-btn"
         >
           <AnalyzeIcon />
-          <span>메뉴판 분석</span>
+          <span>Menu analysis</span>
         </button>
       </div>
     </div>
