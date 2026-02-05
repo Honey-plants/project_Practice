@@ -40,3 +40,11 @@ python menu_assistant/data/datasets/raw/reduce_Dataset.py ^
   --target_n 250
 """
 
+python -m menu_assistant.worker.worker_app.pipeline.steps.step_05_risk_score ^
+  --run_id 20260204_174345 ^
+  --data_dir C:\Users\201\Desktop\PGHfolder\haenet\AI\menu_assistant\data ^
+  --run_dir C:\Users\201\Desktop\PGHfolder\haenet\AI\menu_assistant\data\runs\20260204_174345 ^
+  --user_profile_json C:\Users\201\Desktop\PGHfolder\haenet\upload\user_profile_mock.json ^
+  --require_poly
+
+

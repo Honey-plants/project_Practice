@@ -8,18 +8,17 @@ Step 05 (Runner):
     <run_dir>/llm/llm_prompt.txt              (optional debug)
     <run_dir>/llm/llm_raw.txt                 (optional debug)
     <run_dir>/llm/llm_output.json             (validated JSON)
+    <run_dir>/final/final.json                ✅ NEW: finalizer merge 결과
 
 Flow:
   rag_match.json
-    -> llm/services/decision_rules.py   (EXACT/CLOSE only, poly required, item_id assigned)
-    -> llm/services/finalizer.py        (payload normalization for LLM)
-    -> llm/prompt_builder.py            (build system+user prompt with "final JSON structure")
-    -> llm/client.py                    (Gemini 2.5 Flash call)
-    -> llm/parsers.py                   (extract JSON + schema validation; retry loop here)
+    -> llm/services/decision_rules.py
+    -> llm/prompt_builder.py
+    -> llm/client.py
+    -> llm/parsers.py
     -> save llm_output.json
-
-LLM Output Required fields per item:
-  item_id, menu_name, poly, menu_description_ko, risk_description_ko
+    -> llm/services/finalizer.py  ✅ NEW: merge_llm_output_to_final()
+    -> save final.json
 """
 
 from __future__ import annotations
@@ -27,7 +26,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 
 def _read_json(path: Path) -> Any:
@@ -52,26 +51,10 @@ def _resolve_run_dir(data_dir: Path, run_id: str) -> Path:
 
 
 def _profile_categories_to_minimal(obj: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Convert "categories-based" profile schema to the minimal schema consumed by Step05/LLM.
-
-    Supports both:
-      - category_label_en: allergy/religion/dislike/vegan
-      - category_label_ko: 알러지/종교/싫어하는 음식/비건
-
-    Output (minimal):
-      {
-        "allergy_tags": ["ALG_PEANUT", ...],
-        "avoid_foods": ["돼지고기", ...],   # union of blocked_ingredients_ko across relevant categories
-        "religion": "islam_halal" | None
-      }
-    """
     categories = obj.get("categories")
     if not isinstance(categories, list):
-        # Not categories schema
         return {}
 
-    # Use sets for stable de-dup
     allergy_tags_set: set[str] = set()
     avoid_foods_set: set[str] = set()
     religion: Any = None
@@ -122,24 +105,19 @@ def _profile_categories_to_minimal(obj: Dict[str, Any]) -> Dict[str, Any]:
             for it in items:
                 if not isinstance(it, dict):
                     continue
-                # Primary: alg_tags
                 _add_values(allergy_tags_set, it.get("alg_tags"))
-                # Fallback: item_label_en (when it is an ALG_* tag)
                 ile = it.get("item_label_en")
                 if isinstance(ile, str) and ile.strip().upper().startswith("ALG_"):
                     allergy_tags_set.add(ile.strip().upper())
-                # Some profiles might store blocked_ingredients_ko even for allergies
                 _add_values(avoid_foods_set, it.get("blocked_ingredients_ko"))
 
         elif label_en == "religion":
-            # Use the first item as the active religion (MVP)
             if religion is None and items:
                 first = items[0]
                 if isinstance(first, dict):
                     religion = first.get("item_label_en") or first.get("item_label_ko") or None
                     if isinstance(religion, str):
                         religion = religion.strip() or None
-            # For safety, also include blocked ingredients as avoid_foods
             for it in items:
                 if not isinstance(it, dict):
                     continue
@@ -151,31 +129,14 @@ def _profile_categories_to_minimal(obj: Dict[str, Any]) -> Dict[str, Any]:
                     continue
                 _add_values(avoid_foods_set, it.get("blocked_ingredients_ko"))
 
-        else:
-            # Unknown category: ignore
-            continue
-
     return {
         "allergy_tags": sorted(allergy_tags_set),
         "avoid_foods": sorted(avoid_foods_set),
         "religion": religion,
     }
 
+
 def _load_user_profile(user_profile_json: str) -> Dict[str, Any]:
-    # """
-    # Step05 consumes a minimal user profile schema:
-    #
-    #   {
-    #     "allergy_tags": [...],   # e.g. ["ALG_PEANUT", "ALG_CRUSTACEANS"]
-    #     "avoid_foods": [...],    # ingredient/food tokens in Korean (or consistent tokens)
-    #     "religion": "..." | None
-    #   }
-    #
-    # However, your project also uses a richer "categories" schema.
-    # This loader supports BOTH shapes:
-    #   - If the JSON already has allergy_tags/avoid_foods/religion, it is used as-is (with defaults).
-    #   - If the JSON has a "categories" list, it is converted into the minimal schema above.
-    # """
     if not user_profile_json:
         return {"allergy_tags": [], "avoid_foods": [], "religion": None}
 
@@ -186,124 +147,86 @@ def _load_user_profile(user_profile_json: str) -> Dict[str, Any]:
     if not isinstance(obj, dict):
         raise ValueError("user_profile_json must be a JSON object (dict).")
 
-    # Common wrapper keys (front/back-end payloads often wrap the profile)
     for wrap_key in ("user_profile", "profile", "data"):
         if isinstance(obj.get(wrap_key), dict):
             obj = obj[wrap_key]
             break
 
-    # 1) If it is already minimal schema, keep it.
     if any(k in obj for k in ("allergy_tags", "avoid_foods", "religion")):
         obj.setdefault("allergy_tags", [])
         obj.setdefault("avoid_foods", [])
         obj.setdefault("religion", None)
         return obj
 
-    # 2) Convert categories schema -> minimal schema
     converted = _profile_categories_to_minimal(obj)
     if isinstance(converted, dict) and set(converted.keys()) >= {"allergy_tags", "avoid_foods", "religion"}:
         return converted
 
-    # 3) Fallback: return safe defaults
     return {"allergy_tags": [], "avoid_foods": [], "religion": None}
 
+
 def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Ensure LLM input item has:
-      - item_id
-      - status
-      - menu_name
-      - poly
-      - evidence (optional): ingredients_ko, alg_tags, menu_id
-    This function is intentionally defensive to support multiple upstream shapes.
-    """
     def _pick_status(it: Dict[str, Any]) -> str:
-        # preferred
+        s4 = it.get("match_status")
+        if isinstance(s4, str) and s4.strip():
+            return s4.strip()
         s = it.get("status")
         if isinstance(s, str) and s.strip():
             return s.strip()
-
-        # legacy / alternative shapes
         m = it.get("match")
         if isinstance(m, dict):
             s2 = m.get("status")
             if isinstance(s2, str) and s2.strip():
                 return s2.strip()
-
         rm = it.get("rag_match")
         if isinstance(rm, dict):
             s3 = rm.get("status")
             if isinstance(s3, str) and s3.strip():
                 return s3.strip()
-
-        # step04 also had match_status sometimes
-        s4 = it.get("match_status")
-        if isinstance(s4, str) and s4.strip():
-            return s4.strip()
-
         return ""
 
     def _pick_menu_name(it: Dict[str, Any], status: str) -> str:
-        # preferred
         for k in ("menu_name", "menu"):
             v = it.get(k)
             if isinstance(v, str) and v.strip():
                 return v.strip()
-
-        # close/other candidates
         for k in ("decided_menu", "menu_final", "raw_menu_main", "raw_menu", "menu_norm"):
             v = it.get(k)
             if isinstance(v, str) and v.strip():
                 return v.strip()
-
-        # nested (legacy)
         m = it.get("match")
         if isinstance(m, dict):
             for k in ("decided_menu", "menu", "menu_name"):
                 v = m.get(k)
                 if isinstance(v, str) and v.strip():
                     return v.strip()
-
         rm = it.get("rag_match")
         if isinstance(rm, dict):
             for k in ("decided_menu", "used_query"):
                 v = rm.get(k)
                 if isinstance(v, str) and v.strip():
                     return v.strip()
-
         return ""
 
     def _pick_poly(it: Dict[str, Any]) -> Any:
-        # preferred
         p = it.get("poly")
         if p is not None:
             return p
-
-        # normalize 단계에서 poly_menu로 들어오는 경우가 많음
         p2 = it.get("poly_menu")
         if p2 is not None:
             return p2
-
-        # nested
         m = it.get("match")
         if isinstance(m, dict) and m.get("poly") is not None:
             return m.get("poly")
-
         rm = it.get("rag_match")
         if isinstance(rm, dict) and rm.get("poly") is not None:
             return rm.get("poly")
-
         return None
 
     def _pick_evidence(it: Dict[str, Any]) -> Dict[str, Any]:
         ev = it.get("evidence")
-        if isinstance(ev, dict):
-            # keep as-is
-            out = dict(ev)
-        else:
-            out = {}
+        out = dict(ev) if isinstance(ev, dict) else {}
 
-        # common top-level fields
         if "menu_id" not in out:
             mid = it.get("menu_id")
             if mid is not None:
@@ -319,7 +242,6 @@ def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, An
             if isinstance(tags, list):
                 out["alg_tags"] = tags
 
-        # nested candidates from rag_match structure
         rm = it.get("rag_match")
         if isinstance(rm, dict):
             bm = rm.get("best_match")
@@ -340,7 +262,6 @@ def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, An
 
         item_id = it.get("item_id")
         if not isinstance(item_id, str) or not item_id.strip():
-            # can't use it
             continue
 
         status = _pick_status(it)
@@ -348,20 +269,24 @@ def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, An
         poly = _pick_poly(it)
         evidence = _pick_evidence(it)
 
-        # 최소 요건(이것 때문에 items가 통째로 0이 됐을 확률이 큼)
         if not menu_name or poly is None:
             continue
 
-        out.append({
-            "item_id": item_id.strip(),
-            "status": status or "unknown",
-            "menu_name": menu_name,
-            "poly": poly,
-            "evidence": evidence,
-        })
+        out.append(
+            {
+                "item_id": item_id.strip(),
+                "status": status or "unknown",
+                "menu_name": menu_name,
+                "poly": poly,
+                "evidence": evidence,
+                # pass-through
+                "user_risk_match": it.get("user_risk_match") if isinstance(it.get("user_risk_match"), dict) else None,
+                "comment_ko": it.get("comment_ko") if isinstance(it.get("comment_ko"), list) else None,
+                "confirmed": it.get("confirmed") if isinstance(it.get("confirmed"), dict) else None,
+            }
+        )
 
     return out
-
 
 
 def parse_args() -> argparse.Namespace:
@@ -374,10 +299,10 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--run_dir",
-                    default = "",
-                    help = "Optional run directory override (e.g. uploads/tmp/.../ai_runs/<run_id>). "
-                     "If provided, Step05 reads/writes under this directory.",
-        )
+        default="",
+        help="Optional run directory override (e.g. uploads/tmp/.../ai_runs/<run_id>). "
+             "If provided, Step05 reads/writes under this directory.",
+    )
     p.add_argument("--user_profile_json", default="", help="Optional: path to user profile JSON")
     p.add_argument("--include_debug", action="store_true", help="Save prompt/raw snapshots")
     p.add_argument("--max_retries", type=int, default=2, help="Max retries when schema validation fails")
@@ -392,10 +317,9 @@ def main() -> None:
     data_dir = Path(args.data_dir)
     run_dir = Path(args.run_dir) if str(args.run_dir or "").strip() else _resolve_run_dir(data_dir, args.run_id)
     llm_dir = run_dir / "llm"
+    final_dir = run_dir / "final"
+    final_json_path = final_dir / "final.json"
 
-    # -------------------------
-    # Load inputs
-    # -------------------------
     rag_match_path = run_dir / "rag_match" / "rag_match.json"
     if not rag_match_path.exists():
         raise FileNotFoundError(f"rag_match.json not found: {rag_match_path}")
@@ -403,9 +327,8 @@ def main() -> None:
     rag_match_json = _read_json(rag_match_path)
     user_profile = _load_user_profile(args.user_profile_json)
     print("[DEBUG] loaded user_profile:", user_profile)
-    # -------------------------
-    # Decision rules (EXACT/CLOSE only) -> minimal items
-    # -------------------------
+
+    # Decision rules -> minimal items
     from menu_assistant.worker.worker_app.llm.services.decision_rules import DecisionRules
 
     require_poly = True
@@ -414,11 +337,10 @@ def main() -> None:
     elif args.require_poly:
         require_poly = True
 
-    rules = DecisionRules(require_poly=require_poly)
+    rules = DecisionRules(require_poly=require_poly, user_profile=user_profile)
     raw_items, rules_meta = rules.build_llm_items(rag_match_json)
     print("[DEBUG] rules_meta:", rules_meta, "raw_items_len:", len(raw_items))
 
-    # Normalize to LLM-input friendly shape (menu_name + poly always present)
     llm_items = _normalize_llm_input_items(raw_items)
 
     llm_input_payload = {
@@ -437,24 +359,30 @@ def main() -> None:
     _write_json(llm_dir / "llm_input_meta.json", llm_input_meta)
 
     if not llm_items:
-        # Nothing to send to LLM; stop early
         print(f"[STEP05] No items to send to LLM. saved: {llm_dir / 'llm_input.json'}")
+        # ✅ 그래도 final.json은 빈 items로 생성 (후속 step6이 일관되게 동작)
+        from menu_assistant.worker.worker_app.llm.services.finalizer import merge_llm_output_to_final
+
+        final_obj = merge_llm_output_to_final(
+            run_id=args.run_id,
+            user_profile=user_profile,
+            llm_input_items=[],
+            llm_output_items=[],
+        )
+        _write_json(final_json_path, final_obj)
+        print(f"[STEP05] final.json        = {final_json_path}")
         return
 
     expected_ids = [it["item_id"] for it in llm_items]
 
-    # -------------------------
     # Build prompt
-    # -------------------------
     from menu_assistant.worker.worker_app.llm.prompt_builder import build_step05_prompt
 
     prompt = build_step05_prompt(run_id=args.run_id, user_profile=user_profile, items=llm_items)
     system_msg = prompt["system"]
     user_msg_base = prompt["user"]
 
-    # -------------------------
     # LLM call + parse/validate + retry
-    # -------------------------
     from menu_assistant.worker.worker_app.llm.client import Gemini25FlashClient
     from menu_assistant.worker.worker_app.llm.parsers import (
         parse_and_validate_llm_output,
@@ -481,28 +409,54 @@ def main() -> None:
 
         try:
             obj = parse_and_validate_llm_output(raw)
+            items_out = obj.get("items", []) or []
+            for it in items_out:
+                if not isinstance(it, dict):
+                    continue
 
-            # Strong cross-check: output ids must match input ids
+                if not str(it.get("menu_description_ko") or "").strip():
+                    it["menu_description_ko"] = "메뉴 설명 정보가 제한적입니다. 주문 전 구성 재료를 확인하세요."
+
+                if not str(it.get("risk_description_ko") or "").strip():
+                    it["risk_description_ko"] = "사용자 알러지/종교/기피 식품과의 충돌 가능성이 있어 주문 전 재료 확인이 필요합니다."
+
+                if not str(it.get("comment_ko") or "").strip():
+                    it["comment_ko"] = "이 메뉴에 알러지 유발 성분이나 기피 식품이 포함되나요?"
+
             ok_ids, msg_ids = validate_llm_output_against_input_ids(obj, expected_ids)
             if not ok_ids:
                 raise LLMParseError(msg_ids)
 
-            # Success
+            # ✅ save llm_output.json
             out_path = llm_dir / "llm_output.json"
             _write_json(out_path, obj)
+
+            # ✅ NEW: build final.json here
+            from menu_assistant.worker.worker_app.llm.services.finalizer import merge_llm_output_to_final
+
+            llm_output_items = obj.get("items", []) or []
+            final_obj = merge_llm_output_to_final(
+                run_id=args.run_id,
+                user_profile=user_profile,
+                llm_input_items=llm_items,
+                llm_output_items=llm_output_items,
+            )
+            _write_json(final_json_path, final_obj)
 
             print(f"[STEP05] run_id           = {args.run_id}")
             print(f"[STEP05] input            = {rag_match_path}")
             print(f"[STEP05] llm_input.json    = {llm_dir / 'llm_input.json'}")
             print(f"[STEP05] llm_output.json   = {out_path}")
-            print(f"[STEP05] items_out         = {len(obj.get('items', []))}")
+            print(f"[STEP05] final.json        = {final_json_path}")
+            print(f"[STEP05] items_out         = {len(llm_output_items)}")
+            print(f"[STEP05] items_final       = {len(final_obj.get('items', []))}")
+            print(f"[STEP05] dropped_items     = {len(final_obj.get('dropped_items', []))}")
             return
 
         except Exception as e:
             last_err = str(e)
             if attempt >= args.max_retries:
                 break
-            # Append retry instruction (keep same system; add follow-up constraint)
             user_msg = user_msg_base + "\n\n" + build_retry_prompt_from_error(last_err)
 
     raise RuntimeError(f"[STEP05] LLM output invalid after retries. last_error={last_err}")

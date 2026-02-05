@@ -1,146 +1,147 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 
-def build_step05_prompt(*, run_id: str, user_profile: Dict[str, Any], items: list[Dict[str, Any]]) -> Dict[str, str]:
+def build_step05_prompt(*, run_id: str, user_profile: Dict[str, Any], items: List[Dict[str, Any]]) -> Dict[str, str]:
     """
-    Returns { "system": "...", "user": "..." }
+    Step05 Prompt Builder (STRICT SCHEMA-DRIVEN)
 
-    items:
-      - DecisionRules에서 나온 item들
-      - status: exact | close | ambiguous | not_found
-      - evidence: { candidates, ocr_text, ingredients_ko, alg_tags ... }
+    This prompt is strictly aligned with schema.py.
+    The model MUST output ONLY schema-compliant JSON.
+    Any parameter not defined in schema is FORBIDDEN.
     """
 
-    allowed_alg_tags = [
-        "ALG_CELERY",
-        "ALG_CEREALS_GLUTEN",
-        "ALG_CRUSTACEANS",
-        "ALG_EGGS",
-        "ALG_FISH",
-        "ALG_MILK",
-        "ALG_MOLLUSCS",
-        "ALG_MUSTARD",
-        "ALG_SESAME",
-        "ALG_SOY",
-        "ALG_TREE_NUTS",
-    ]
-
-    # ✅ 출력 예시(스키마 기반 + 확장필드 추가)
-    # - schema.py validator는 unknown key reject가 없어서 확장필드 추가해도 깨지지 않음 :contentReference[oaicite:2]{index=2}
+    # -------------------------------------------------
+    # Output schema example (STRICT – schema aligned)
+    # -------------------------------------------------
     output_schema_example = {
         "schema_version": "v1",
         "run_id": run_id,
         "items": [
             {
                 "item_id": "itm_0001",
+                "match_status": "exact",   # "exact" | "unknown"
 
-                # ✅ menu_name: 최종 메뉴명
-                # - exact는 입력 menu_name과 동일 유지
-                # - close/ambiguous/not_found는 candidates 기반으로 선택 가능
-                "menu_name": "예시메뉴",
-
+                "menu_name_ko": "메뉴명",
                 "poly": [[0, 0], [1, 0], [1, 1], [0, 1]],
-                "menu_description_ko": "메뉴 설명 (한국어, 1~2문장)",
+
+                "menu_description_ko": "메뉴에 대한 한국어 설명",
+                "menu_description_en": "",
+
                 "risk_description_ko": (
-                    "위험: CAUTION — 알러지 또는 식이 제한과 일부 충돌 가능성이 있습니다.\n"
-                    "근거: 제공된 evidence와 user_profile 기준으로만 판단했습니다.\n"
-                    "권고: 주문 전 소스/육수/토핑 포함 여부를 매장에 확인하세요."
+                    "위험: CAUTION — 사용자 조건과 일부 충돌 가능성이 있습니다.\n"
+                    "근거: 알러지/종교/기피 식재료 정보를 기반으로 판단했습니다.\n"
+                    "권고: 주문 전 매장에 재료 포함 여부를 확인하세요."
                 ),
+                "risk_description_en": "",
 
-                # ✅ comment는 “직원 확인 질문” (프로필 중심)
-                "comment": "이 메뉴에 사용자 알러지/회피 식품(예: 우유, 참깨 등)이 들어가나요?",
+                "risk_difficulty": 0,      # exact: 0|1|2 / unknown: MUST be 3
 
-                # (선택) 영문 질문도 같이 만들면 프론트에서 활용 가능 (추가 필드라 깨지지 않음)
-                "comment_en": "Does this menu contain any of the user's allergens/avoid foods (e.g., milk, sesame)?",
-
-                "risk_level": "CAUTION",
-                "reason_bullets": [
-                    "사용자 조건(알러지/종교/회피)과 evidence 간 충돌 가능성"
-                ],
-                "confidence": 0.75,
-
-                "matched_constraints": {
-                    "allergy_tags": ["ALG_MILK"],
-                    "religion": None,
-                    "avoid_foods": None,
+                "user_risk_match": {
+                    "allergy_tag_hits": ["ALG_MILK"],
+                    "religion_hit": None,
+                    "avoid_food_hits": None,
+                    "has_any_match": True,
+                    "source": "exact"
                 },
 
-                # ✅ LLM 보강 전용(선택)
-                # - ambiguous/not_found에서 candidates 중 하나를 선택하면:
-                #   match_status = "llm_match"
-                # - 후보가 없거나 확신 없으면:
-                #   match_status = "unknown"
-                "match_status": "llm_match",
-                "selected_candidate_id": "rep_1234",
+                "comment_ko": "이 메뉴에 우유 또는 유제품이 들어가나요?",
+                "comment_en": "",
+
+                "is_menu": None,
+                "drop_reason_ko": None
             }
-        ],
+        ]
     }
 
+    # -------------------------------------------------
+    # SYSTEM PROMPT (STRICT RULES)
+    # -------------------------------------------------
     system = (
         "You are a strict JSON generator.\n"
         "You MUST output ONLY valid JSON.\n"
-        "Do NOT include markdown fences.\n"
-        "Do NOT include any explanatory text outside JSON.\n"
-        "All Korean fields must be written in Korean.\n\n"
+        "Do NOT include markdown, comments, or explanations.\n"
+        "Do NOT include any keys that are not defined in the schema.\n\n"
 
-        "CRITICAL SAFETY RULES:\n"
-        "- Do NOT invent ingredients or allergies.\n"
-        "- For ambiguous/not_found items, you may SELECT a menu_name ONLY from evidence.candidates[*].menu if candidates exist.\n"
-        "- If there are NO candidates or you are not confident, set match_status='unknown' and keep menu_name close to evidence.ocr_text.\n"
-        "- Ingredients/alg_tags must NOT be generated by you; they will be copied from the selected candidate by the system.\n\n"
+        "SCHEMA ENFORCEMENT:\n"
+        "- The output MUST exactly match the provided schema structure.\n"
+        "- Any missing required field or extra field will cause a failure.\n"
+        "- All Korean fields must be written in Korean.\n\n"
+        
+        "NON-EMPTY REQUIRED TEXT FIELDS:\n"
+        "- menu_description_ko MUST be a non-empty Korean string.\n"
+        "- risk_description_ko MUST be a non-empty Korean string.\n"
+        "- comment_ko MUST be a non-empty Korean question ending with '?'.\n"
+        "- If you do not have enough information, you MUST still write a conservative generic description.\n"
+        "  Example fallback for menu_description_ko: '메뉴 설명 정보가 제한적입니다. 주문 전 구성 재료를 확인하세요.'\n"
+        "  Example fallback for risk_description_ko: '사용자 알러지/종교/기피 식품과의 충돌 가능성이 있어 주문 전 재료 확인이 필요합니다.'\n"
 
-        "Risk judgment rules:\n"
-        "- Risk must be determined ONLY using provided user_profile and item evidence (evidence.alg_tags, evidence.ingredients_ko, evidence.ocr_text, evidence.candidates).\n"
-        "- Use the following risk levels ONLY: OK, CAUTION, NO.\n"
-        "- If evidence is insufficient or ambiguous, choose CAUTION.\n\n"
+        
+        "MATCH STATUS RULES:\n"
+        "- match_status MUST be either 'exact' or 'unknown'.\n"
+        "- For match_status='exact':\n"
+        "  - menu_name_ko MUST remain identical to input.menu_name.\n"
+        "  - risk_difficulty MUST be one of 0, 1, or 2.\n"
+        "- For match_status='unknown':\n"
+        "  - risk_difficulty MUST be EXACTLY 3.\n"
+        "  - You MUST decide whether this text is an actual orderable menu item.\n"
+        "  - Set is_menu to 'yes' or 'no'.\n"
+        "  - If is_menu='no', drop_reason_ko MUST be a non-empty Korean string.\n\n"
 
-        "Allowed allergy tag list:\n"
-        f"- matched_constraints.allergy_tags MUST be a subset of: {', '.join(allowed_alg_tags)}\n\n"
+        "RISK_DIFFICULTY RULES (IMPORTANT):\n"
+        "- risk_difficulty meanings:\n"
+        "  0 = No match with allergy/religion/avoid_food.\n"
+        "  1 = Only avoid_food matched.\n"
+        "  2 = allergy_tag or religion matched (at least one).\n"
+        "  3 = Unknown menu (forced, regardless of content).\n"
+        "- You MUST NOT use risk_difficulty=3 for exact items.\n\n"
 
-        "matched_constraints rules:\n"
-        "- matched_constraints must be an object with keys: allergy_tags, religion, avoid_foods\n"
-        "- allergy_tags: list of matching ALG_* tags IF relevant; otherwise null\n"
-        "- religion: string IF relevant; otherwise null\n"
-        "- avoid_foods: list of matching avoid foods IF relevant; otherwise null\n"
-        "- Do NOT put empty list; use null when there is no relevant match.\n\n"
+        "USER_RISK_MATCH RULES:\n"
+        "- user_risk_match MUST be present for ALL items.\n"
+        "- user_risk_match.source MUST be 'exact' or 'unknown'.\n"
+        "- allergy_tag_hits / avoid_food_hits MUST be list[str] or null.\n"
+        "- religion_hit MUST be string or null.\n"
+        "- has_any_match MUST be boolean.\n\n"
 
-        "Risk description writing rules:\n"
-        "- risk_description_ko MUST consist of EXACTLY 3 sentences, in the following order:\n"
-        "  1) '위험: <OK|CAUTION|NO> — 한 줄 요약'\n"
-        "  2) '근거: 판단 근거 설명 (알러지 태그/회피 식품/종교/조리 특성 등)'\n"
-        "  3) '권고: 사용자 행동 지침 (주문 전 확인, 주의, 대체 제안 등)'\n"
-        "- Keep tone calm, practical, and suitable for a food safety assistant.\n\n"
+        "SAFETY CONSTRAINTS:\n"
+        "- You MUST NOT invent ingredients, alg_tags, or religion matches.\n"
+        "- Use ONLY the provided user_profile and item evidence.\n"
+        "- If information is insufficient, be conservative.\n\n"
 
-        "COMMENT RULES (VERY IMPORTANT):\n"
-        "- comment must be a SINGLE Korean question ending with '?'.\n"
-        "- comment MUST be profile-centric: it should ask about the user's allergy_tags / avoid_foods / religion-related restrictions.\n"
-        "- If status is close/ambiguous/not_found OR match_status is 'unknown', you MUST ask to confirm the menu name first, then ask the ingredient/allergen question (combined into ONE question).\n"
+        "COMMENT RULES:\n"
+        "- comment_ko MUST be a SINGLE Korean question ending with '?'.\n"
+        "- The question MUST be based on user's allergy/religion/avoid_food.\n"
+        "- comment_en MUST be an empty string at this step.\n\n"
+        "- If you are uncertain, comment_ko should ask to confirm allergens/ingredients with yes/no.\n"
+
+
+        "UNKNOWN MENU DETECTION:\n"
+        "- Set is_menu='no' for size/option/notice text such as:\n"
+        "  '곱배기', '추가', '사리', '대/중/소', '리필', '공지', '안내', '이벤트', '원산지'.\n"
+        "- Set is_menu='yes' ONLY if it is a real orderable dish.\n"
     )
 
+    # -------------------------------------------------
+    # USER PROMPT
+    # -------------------------------------------------
     user = (
-        "Given the following input, produce the output JSON that matches EXACTLY the structure below.\n\n"
-        "[OUTPUT JSON STRUCTURE]\n"
+        "Generate output JSON that EXACTLY matches the schema below.\n\n"
+        "[OUTPUT SCHEMA EXAMPLE]\n"
         f"{json.dumps(output_schema_example, ensure_ascii=False, indent=2)}\n\n"
         "[INPUT]\n"
         f"run_id: {run_id}\n"
         f"user_profile: {json.dumps(user_profile, ensure_ascii=False)}\n"
         f"items: {json.dumps(items, ensure_ascii=False)}\n\n"
-        "Rules:\n"
-        "- For each input item, output exactly one item in output.items with the same item_id.\n"
-        "- Copy item_id and poly EXACTLY from input items.\n"
-        "- If input status is 'exact', keep menu_name identical to input.menu_name.\n"
-        "- If input status is 'close', you may refine menu_name BUT do not introduce unrelated menus.\n"
-        "- If input status is 'ambiguous' or 'not_found':\n"
-        "  - If evidence.candidates exists: choose menu_name from candidates and set match_status='llm_match' and selected_candidate_id.\n"
-        "  - If no candidates or low confidence: set match_status='unknown' and keep menu_name similar to evidence.ocr_text.\n"
-        "- menu_description_ko should briefly explain what the menu is.\n"
-        "- You MUST evaluate conflicts with user_profile and fill matched_constraints accordingly.\n"
-        "- reason_bullets must mention the specific matched constraint when present.\n"
-        "- confidence must be between 0.0 and 1.0.\n"
-        "- comment_en is optional, but if you include it, write natural English.\n"
+        "RULES:\n"
+        "- Output exactly one item per input item.\n"
+        "- item_id and poly MUST be copied exactly from input.\n"
+        "- Do NOT add or remove items.\n"
+        "- Do NOT add extra fields.\n"
     )
 
-    return {"system": system, "user": user}
+    return {
+        "system": system,
+        "user": user,
+    }

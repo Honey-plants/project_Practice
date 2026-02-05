@@ -6,83 +6,68 @@ from typing import Any, Dict, Tuple
 
 
 # ============================================================
-# Prompt builder for Step6 translation (final.json 기반)
+# Prompt builder for Step6 translation (final.json item 기반)
 # - 입력: final.json item (원본 그대로)
 # - 출력: (system_prompt, user_prompt)
-# - 모델 응답은 반드시 JSON (application/json) 형태로만 오게 유도
+# - 모델 응답은 반드시 JSON (application/json) 형태
+#
+# 루트 스키마 번역 대상:
+#   - menu_description_ko -> menu_description_en
+#   - risk_description_ko -> risk_description_en
+#   - comment_ko          -> comment_en
+#
+# 스키마 외 키는 절대 출력 금지
 # ============================================================
 
 _JSON_SCHEMA_HINT = {
-    "menu": {
-        "menu_name_en": "string",
-        "menu_description_en": "string",
-    },
-    "risk": {
-        "risk_description_en": "string",
-    },
-    "comment": {
+    "menu_description_en": "string",
+    "risk_description_en": "string",
     "comment_en": "string",
-    "comment_ko": "string"}
 }
 
 
 def build_translate_prompts_for_final_item(item: Dict[str, Any]) -> Tuple[str, str]:
     """
-    Step6에서 final.json의 item(1개)을 받아서
-    Gemini 호출용 system/user prompt를 만든다.
-
-    번역 필수:
-      - menu.menu_name_ko        -> menu.menu_name_en
-      - menu.menu_description_ko -> menu.menu_description_en
-      - risk.risk_description_ko -> risk.risk_description_en
-      - risk.comment             -> comment_en
-
-    유지(번역하지 않음):
-      - item_id, match (Step6에서 passthrough)
-      - risk.risk_level (그대로 유지 권장)
+    Step6에서 final.json의 item(1개)을 받아 Gemini 호출용 system/user prompt 생성.
+    루트 스키마만 사용한다.
     """
-    # 원본에서 필요한 값만 안전하게 뽑기 (빈값 가능)
-    item_id = item.get("item_id")
-    match = item.get("match")
-
-    menu = item.get("menu") or {}
-    risk = item.get("risk") or {}
-
     src = {
-        "item_id": item_id,
-        "match": match,
-        "menu": {
-            "menu_name_ko": (menu.get("menu_name_ko") or "").strip(),
-            "menu_description_ko": (menu.get("menu_description_ko") or "").strip(),
-        },
-        "risk": {
-            "risk_level": (risk.get("risk_level") or "").strip(),
-            "risk_description_ko": (risk.get("risk_description_ko") or "").strip(),
-            "comment_ko": (risk.get("comment") or "").strip(),
-        },
+        "menu_description_ko": (item.get("menu_description_ko") or "").strip(),
+        "risk_description_ko": (item.get("risk_description_ko") or "").strip(),
+        "comment_ko": (item.get("comment_ko") or "").strip(),
     }
 
     system_prompt = (
         "You are a translation engine for a Korean restaurant menu safety assistant.\n"
-        "Translate Korean text to natural, clear English for end-users.\n"
-        "You must output ONLY valid JSON (no markdown, no code fences, no extra keys).\n"
-        "Keep meanings accurate, especially allergy/diet-related warnings.\n"
+        "Translate Korean to natural, clear English for end-users.\n"
+        "You MUST output ONLY valid JSON (no markdown, no code fences).\n"
+        "You MUST NOT output any keys that are not in the output_schema.\n"
+        "Never invent ingredients, allergens, or restrictions not present in the source.\n"
         "If a source field is empty, output an empty string for the corresponding English field.\n"
-        "Never invent ingredients or allergens not present in the source.\n"
+        "You MUST return a JSON object with EXACTLY 3 keys:\n"
+        "menu_description_en, risk_description_en, comment_en.\n"
+        "Return ONLY these 3 keys. Do NOT include item_id, match, menu, risk, comment, or any other keys.\n"
+        "If you include extra keys, the output is invalid.\n"
+
     )
 
-    # user prompt는 최대한 구조화 + 강한 출력 제약
     user_payload = {
-        "task": "Translate the following fields from Korean to English.and leave comment_ko as is korean",
+        "task": "Translate the Korean fields to English.",
         "source": src,
         "output_schema": _JSON_SCHEMA_HINT,
         "rules": [
             "Return ONLY JSON matching output_schema exactly.",
-            "Do NOT include item_id, match, or risk_level in the output JSON (they are handled separately).",
-            "menu_name_en should be short (menu name).",
-            "Descriptions should be concise, user-friendly, and preserve safety meaning."
-            "comment_ko must keep original and after translate put in comment_en",
+            "Do NOT include any other keys.",
+            "Keep translations concise, user-friendly, and faithful.",
+            "comment_en must be a SINGLE natural English question.",
+
         ],
+        "output_example": {
+            "menu_description_en": "English menu description",
+            "risk_description_en": "English risk description",
+            "comment_en": "A single English yes/no question?"
+        }
+
     }
 
     user_prompt = json.dumps(user_payload, ensure_ascii=False, indent=2)

@@ -70,39 +70,47 @@ class GeminiTranslateClient:
     @staticmethod
     def extract_required_fields_from_final_item(item: Dict[str, Any]) -> Dict[str, Any]:
         """
-        final.json의 item 1개에서 번역에 필요한 필수 필드만 추출.
-        - item_id, match: 그대로 유지(passthrough)
-        - menu/risk/comment: 번역 대상(필수)
+        final.json item 1개에서 번역에 필요한 최소 필드만 추출.
+        - Step06 STRICT-FLAT을 기본으로 지원
+        - 레거시(중첩 menu/risk)도 fallback으로 지원
+        - match는 번역에 필요 없으므로 FLAT에서는 없어도 OK
         """
+        if not isinstance(item, dict):
+            raise ValueError("[translate/model] final item must be a dict.")
+
         item_id = item.get("item_id")
-        match = item.get("match")
-
-        menu = item.get("menu") or {}
-        risk = item.get("risk") or {}
-
-        payload = {
-            "item_id": item_id,
-            "match": match,
-            "menu": {
-                "menu_name_ko": (menu.get("menu_name_ko") or "").strip(),
-                "menu_description_ko": (menu.get("menu_description_ko") or "").strip(),
-            },
-            "risk": {
-                "risk_level": (risk.get("risk_level") or "").strip(),
-                "risk_description_ko": (risk.get("risk_description_ko") or "").strip(),
-            },
-            # comment는 final.json 구조상 risk 안에 있음
-            "comment_ko": (risk.get("comment") or "").strip(),
-        }
-
-        if payload["item_id"] is None:
+        if item_id is None:
             raise ValueError("[translate/model] item_id is missing in final item.")
-        if payload["match"] is None:
-            raise ValueError("[translate/model] match is missing in final item.")
-        if payload["risk"] is None:
-            raise ValueError("[translate/model] match is missing in final item.")
 
-        return payload
+        # ✅ match는 번역에 불필요. 없으면 {}로 처리 (STRICT-FLAT 호환)
+        match = item.get("match")
+        if not isinstance(match, dict):
+            match = {}
+
+        # 레거시 fallback
+        menu = item.get("menu") if isinstance(item.get("menu"), dict) else {}
+        risk = item.get("risk") if isinstance(item.get("risk"), dict) else {}
+
+        # ✅ prompt.py가 쓰는 "루트 3필드" 우선
+        menu_description_ko = (item.get("menu_description_ko") or menu.get("menu_description_ko") or "").strip()
+        risk_description_ko = (item.get("risk_description_ko") or risk.get("risk_description_ko") or "").strip()
+
+        comment_ko = (item.get("comment_ko") or "").strip()
+        if not comment_ko:
+            staff_list = risk.get("staff_comment_ko") or []
+            if isinstance(staff_list, list):
+                comment_ko = "\n".join([str(x).strip() for x in staff_list if str(x).strip()])
+        if not comment_ko:
+            comment_ko = (risk.get("comment") or "").strip()
+
+        # ✅ translate/prompt.py는 루트 3필드만 사용하므로, 여기서도 flat로 반환
+        return {
+            "item_id": item_id,
+            "match": match,  # 호환용(있어도/없어도 무관)
+            "menu_description_ko": menu_description_ko,
+            "risk_description_ko": risk_description_ko,
+            "comment_ko": comment_ko,
+        }
 
     def translate_final_item(
         self,
@@ -119,33 +127,32 @@ class GeminiTranslateClient:
         src = self.extract_required_fields_from_final_item(item)
         out = self.generate_json(system=system_prompt, user=user_prompt)
 
+        # ✅ Case A) prompt.py가 요구하는 "루트 3키" 응답
+
+        if isinstance(out, dict) and set(out.keys()) == {
+            "menu_description_en",
+            "risk_description_en",
+            "comment_en",
+            }:
+
+            return {
+                "menu_description_en": (out.get("menu_description_en") or "").strip(),
+                "risk_description_en": (out.get("risk_description_en") or "").strip(),
+                "comment_en": (out.get("comment_en") or "").strip(),
+                }
+
+        # ✅ Case B) (레거시) 중첩 객체 응답도 호환
         menu_out = out.get("menu", {}) if isinstance(out, dict) else {}
         risk_out = out.get("risk", {}) if isinstance(out, dict) else {}
-
         comment_out = out.get("comment", {}) if isinstance(out, dict) else {}
 
-        result = {
-            "item_id": src["item_id"],
-            "match": src["match"],
-            "menu": {
-                "menu_name_en": (menu_out.get("menu_name_en") or "").strip(),
-                "menu_description_en": (menu_out.get("menu_description_en") or "").strip(),
-            },
-            "risk": {
-                "risk_level": src["risk"]["risk_level"],  # 원본 유지
-                "risk_description_en": (risk_out.get("risk_description_en") or "").strip(),
-            },
-            "comment": {
-                #  schema에 맞는 경로
-                "comment_en": (comment_out.get("comment_en") or "").strip(),
-                #  LLM이 주면 그거 쓰고, 없으면 원본(=risk.comment) fallback
-                "comment_ko": (
-                        (comment_out.get("comment_ko") or "").strip()
-                        or (src.get("comment_ko") or "").strip()
-                ),
-            },
-        }
-        return result
+        # Step06 schema(3키)에 맞춰 정규화해서 반환
+
+        return {
+            "menu_description_en": (menu_out.get("menu_description_en") or "").strip(),
+            "risk_description_en": (risk_out.get("risk_description_en") or "").strip(),
+            "comment_en": (comment_out.get("comment_en") or "").strip(),
+            }
 
     def translate_final_items_batch(
         self,

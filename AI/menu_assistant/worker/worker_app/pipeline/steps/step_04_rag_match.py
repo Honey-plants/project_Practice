@@ -53,9 +53,17 @@ def run_step(run_dir: Path) -> Path:
     out_items: List[Dict[str, Any]] = []
     stats = {"TOTAL": 0, "EXACT": 0, "UNKNOWN": 0}
 
-    for it in items:
+    # 기존: for it in items:
+    for idx, it in enumerate(items, start=1):
         if not isinstance(it, dict):
             continue
+
+        # ✅ item_id 자동 생성 (없거나 null/빈값이면 순번 부여)
+        src_item_id = it.get("item_id", None)
+        if src_item_id is None or (isinstance(src_item_id, str) and src_item_id.strip() == ""):
+            item_id = f"itm_{idx:04d}"  # itm_0001, itm_0002 ...
+        else:
+            item_id = src_item_id
 
         raw_menu = str(
             it.get("raw_menu")
@@ -74,7 +82,7 @@ def run_step(run_dir: Path) -> Path:
             match_status = "unknown"
 
         out_item: Dict[str, Any] = {
-            "item_id": it.get("item_id"),
+            "item_id": item_id,  # ✅ 여기 null 대신 보장
             "raw_menu": raw_menu,
             "poly": _pick_poly(it),
             "menu_norm": menu_norm,
