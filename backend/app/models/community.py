@@ -10,8 +10,6 @@ class Community(Base):
     __tablename__ = "community"
 
     community_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    community_content: Mapped[str] = mapped_column(Text, nullable=False)
-    # community_img_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=False)
 
     create_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     update_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"), server_onupdate=text("CURRENT_TIMESTAMP"))

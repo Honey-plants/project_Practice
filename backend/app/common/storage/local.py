@@ -14,7 +14,7 @@ def _ext(filename: str) -> str:
 
 class LocalUploadStorage:
     """
-     config 기준으로 통일:
+    ✅ config 기준으로 통일:
     - upload_root: <PROJECT_ROOT>/uploads
     - tmp_root: upload_root/tmp
     - perm_root: upload_root/perm
@@ -51,7 +51,7 @@ class LocalUploadStorage:
 
         base = self.tmp_root if is_temp else self.perm_root
 
-        #  임시/영구 모두 scope_id 단위 폴더로 격리
+        # ✅ 임시/영구 모두 scope_id 단위 폴더로 격리
         scoped_dir = base / upload_type / scope_id
         scoped_dir.mkdir(parents=True, exist_ok=True)
 
@@ -125,7 +125,55 @@ class LocalUploadStorage:
         path = scoped_dir / stored_name
         path.write_bytes(data)
 
-        #  upload_root 기준 상대경로 → /static URL (Windows/Linux 안전)
+        # ✅ upload_root 기준 상대경로 → /static URL (Windows/Linux 안전)
+        rel_posix = path.relative_to(self.upload_root).as_posix()
+        storage_path = f"/static/{rel_posix}"
+
+        return StoredAsset(
+            owner_type=owner_type,
+            owner_id=owner_id,
+            member_id=member_id,
+            file_key=str(path),
+            storage_path=storage_path,
+            stored_file_name=stored_name,
+            org_file_name=org_name,
+            mime_type=mime,
+            size_bytes=size,
+            sort_order=sort_order,
+        )
+
+    async def save_permanent_bytes(
+        self,
+        *,
+        owner_type: str,
+        owner_id: int,
+        member_id: int,
+        data: bytes,
+        origin_name: str,
+        mime_type: str,
+        sort_order: int,
+    ) -> StoredAsset:
+        """
+        ✅ bytes(예: AI 생성 이미지) 영구 저장:
+        uploads/perm/{owner_type}/{owner_id}/...
+        storage_path=/static/perm/{owner_type}/{owner_id}/...
+        """
+        org_name = origin_name or "unknown"
+        mime = mime_type or "application/octet-stream"
+        size = len(data)
+
+        # AI 산출물도 이미지로 제한하고 싶으면 validate 유지 (싫으면 이 줄 제거)
+        validate_image(mime, size)
+
+        ext = _ext(org_name)
+
+        scoped_dir = self.perm_root / owner_type / str(owner_id)
+        scoped_dir.mkdir(parents=True, exist_ok=True)
+
+        stored_name = f"{owner_type}_{owner_id}_{sort_order}_{uuid.uuid4().hex}{ext}"
+        path = scoped_dir / stored_name
+        path.write_bytes(data)
+
         rel_posix = path.relative_to(self.upload_root).as_posix()
         storage_path = f"/static/{rel_posix}"
 

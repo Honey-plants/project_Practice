@@ -14,10 +14,18 @@ def build_journal_prompt(payload: Dict[str, Any]) -> str:
     member = payload.get("member", {})
     reviews: List[Dict[str, Any]] = payload.get("reviews", [])
     template = payload.get("template", {})
+    allergies = payload.get("allergy_tags", {})
 
     nickname = member.get("nickname", "The traveler")
     country = member.get("country", "Unknown country")
-    allergies = member.get("item_ids", [])
+    # allergies = member.get("item_ids", [])
+
+    print("저널 데이터 체크 시작")
+
+    print("11111 :: member_id :: ", member)
+
+
+    print("저널 데이터 체크 종료")
 
     # 안전: 리뷰는 최대 3개만 사용
     reviews = reviews[:3]
@@ -35,6 +43,7 @@ MEAL {i}:
 - City: {city}
 - Title: {title}
 - Notes: {content}
+
 """.strip()
         )
 

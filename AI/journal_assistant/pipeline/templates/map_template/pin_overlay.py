@@ -92,6 +92,10 @@ def render_pinned_map_bytes(
     center_lon = float(calib["center_lon"])
     scale = float(calib["scale"])
 
+    # 최정규 2222
+    print(places_raw)
+    print("pin_overlay 여긴 언제 오는걸까?")
+
     # ✅ icon load once
     icon_base = load_pin_icon(pin_icon_path, width_px=pin_width_px)
 

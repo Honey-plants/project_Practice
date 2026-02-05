@@ -9,8 +9,13 @@ from AI.journal_assistant.pipeline.templates.map_template.run_map_template impor
 def run_orchestrator(payload: Dict[str, Any]) -> bytes:
     template = payload.get("template") or {}
 
-    # ✅ 너 payload가 template_id로 오면 이걸 쓰고, template_type도 지원
+    print("ai 저널 진입 :: ", payload)
+
+
+    # 너 payload가 template_id로 오면 이걸 쓰고, template_type도 지원
     ttype = template.get("template_type", template.get("template_id"))
+
+    print("ttype :: ", ttype)
 
     try:
         ttype = int(ttype)
@@ -24,7 +29,10 @@ def run_orchestrator(payload: Dict[str, Any]) -> bytes:
             raise RuntimeError("Journal generation failed (blocked or empty).")
         return out
 
+
+
     if ttype == 2:
+        print("2번 진입")
         ref_bytes, prompt = run_map_template(payload)
 
         out = generate_image_with_ref(

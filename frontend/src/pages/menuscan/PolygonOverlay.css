@@ -10,29 +10,15 @@
   pointer-events: auto;
   cursor: pointer;
 }
-
+ 
 .ms-po__poly {
   fill: rgba(255, 0, 0, 0.2);
   stroke: red;
   stroke-width: 2;
 }
-
+ 
 .ms-po__text {
   font-weight: 700;
   stroke: white;
   paint-order: stroke;
-}
-.ms-po__poly--red {
-  fill: rgba(255, 0, 0, 0.2);
-  stroke: red;
-}
-
-.ms-po__poly--orange {
-  fill: rgba(255, 165, 0, 0.2);
-  stroke: orange;
-}
-
-.ms-po__poly--gray {
-  fill: rgba(120, 120, 120, 0.2);
-  stroke: #888;
 }

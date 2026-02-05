@@ -7,12 +7,27 @@ import numpy as np
 @dataclass(frozen=True)
 class PostprocessConfig:
     enable: bool = True
+
+    # Prefer gray-based processing for receipts
+    denoise_strength: int = 3        # 0이면 skip
     use_clahe: bool = True
-    clahe_clip: float = 3.0
+    clahe_clip: float = 2.0         # 낮춤 (기존 3.0)
     clahe_grid: int = 8
+
+    # Brightness protection
+    preserve_brightness: bool = True
+    max_dark_drop: float = 0.06     # 평균 밝기 6% 이상 떨어지면 보정
+    gamma: float = 0.85             # <1 이면 밝아짐 (0.85~0.95 추천)
+
     sharpen: bool = True
-    sharpen_strength: float = 0.6   # 0~1
-    denoise_strength: int = 3       # 0이면 skip
+    sharpen_strength: float = 0.35  # 낮춤 (기존 0.6)
+
+def _apply_gamma_u8(img_bgr: np.ndarray, gamma: float) -> np.ndarray:
+    # gamma < 1 => brighter, gamma > 1 => darker
+    if gamma <= 0:
+        return img_bgr
+    table = (np.linspace(0, 1, 256) ** gamma * 255.0).astype(np.uint8)
+    return cv2.LUT(img_bgr, table)
 
 def postprocess_for_ocr(image_bgr: np.ndarray, cfg: PostprocessConfig) -> Tuple[np.ndarray, Dict[str, Any]]:
     meta: Dict[str, Any] = {"postprocess_for_ocr": asdict(cfg)}
@@ -20,26 +35,53 @@ def postprocess_for_ocr(image_bgr: np.ndarray, cfg: PostprocessConfig) -> Tuple[
         meta["applied"] = False
         return image_bgr, meta
 
-    out = image_bgr
+    out = image_bgr.copy()
 
+    # --- measure brightness before (use LAB L mean) ---
+    lab0 = cv2.cvtColor(out, cv2.COLOR_BGR2LAB)
+    L0 = lab0[:, :, 0]
+    mean0 = float(np.mean(L0))
+    meta["mean_L_before"] = mean0
+
+    # 1) Denoise (gray-based is usually better for receipts)
     if cfg.denoise_strength > 0:
-        out = cv2.fastNlMeansDenoisingColored(out, None, cfg.denoise_strength, cfg.denoise_strength, 7, 21)
+        gray = cv2.cvtColor(out, cv2.COLOR_BGR2GRAY)
+        gray_dn = cv2.fastNlMeansDenoising(gray, None, cfg.denoise_strength, 7, 21)
+        out = cv2.cvtColor(gray_dn, cv2.COLOR_GRAY2BGR)
 
+    # 2) CLAHE on L channel (or gray), but gentle
     if cfg.use_clahe:
         lab = cv2.cvtColor(out, cv2.COLOR_BGR2LAB)
-        l, a, b = cv2.split(lab)
-        clahe = cv2.createCLAHE(clipLimit=float(cfg.clahe_clip), tileGridSize=(int(cfg.clahe_grid), int(cfg.clahe_grid)))
-        l2 = clahe.apply(l)
-        out = cv2.cvtColor(cv2.merge([l2, a, b]), cv2.COLOR_LAB2BGR)
+        L, A, B = cv2.split(lab)
+        clahe = cv2.createCLAHE(
+            clipLimit=float(cfg.clahe_clip),
+            tileGridSize=(int(cfg.clahe_grid), int(cfg.clahe_grid)),
+        )
+        L2 = clahe.apply(L)
+        out = cv2.cvtColor(cv2.merge([L2, A, B]), cv2.COLOR_LAB2BGR)
 
+    # --- measure brightness after clahe ---
+    lab1 = cv2.cvtColor(out, cv2.COLOR_BGR2LAB)
+    mean1 = float(np.mean(lab1[:, :, 0]))
+    meta["mean_L_after_clahe"] = mean1
+
+    # 3) Brightness preservation (gamma lift if it got darker)
+    if cfg.preserve_brightness:
+        drop = (mean0 - mean1) / max(mean0, 1e-6)
+        meta["brightness_drop_ratio"] = float(drop)
+
+        if drop > cfg.max_dark_drop:
+            # brighten a bit
+            out = _apply_gamma_u8(out, cfg.gamma)
+            meta["gamma_applied"] = cfg.gamma
+        else:
+            meta["gamma_applied"] = None
+
+    # 4) Sharpen (keep mild)
     if cfg.sharpen and cfg.sharpen_strength > 0:
-        # Unsharp mask
         blur = cv2.GaussianBlur(out, (0, 0), 1.0)
         out = cv2.addWeighted(out, 1.0 + float(cfg.sharpen_strength), blur, -float(cfg.sharpen_strength), 0)
+        out = np.clip(out, 0, 255).astype(np.uint8)
 
     meta["applied"] = True
     return out, meta
-
-'''
-OCR 용 보정 ( 텍스트 대비 올리기)
-'''

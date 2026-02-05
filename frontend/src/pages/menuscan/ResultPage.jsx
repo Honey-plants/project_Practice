@@ -1,118 +1,153 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { MenuAPI } from "../../api/menuApi";
 import PolygonOverlay from "./PolygonOverlay";
 import MenuDetailModal from "./MenuDetailModal";
+import "./ResultPage.css";
 
 /**
  * 백엔드 응답 형태 방어적 표준화
- * - router response_model: { job_id, upload_type, result }
- * - result 내부: { final, rectified_image: { mime, base64 }, run_id }
  */
 function normalizeBackendPayload(raw) {
   const root = raw?.data ?? raw;
-
-  // router wrapper가 있으면 result로 들어감
   const payload = root?.result ?? root;
-
-  // final_translated.json (최종 결과)
   const finalObj = payload?.final ?? payload?.final_obj ?? payload?.final_json ?? payload;
 
-  // rectified 이미지(base64)
   const rectified = payload?.rectified_image ?? payload?.rectified ?? null;
   const base64 = rectified?.base64 ?? null;
   const mime = rectified?.mime ?? "image/jpeg";
   const imageDataUrl = base64 ? `data:${mime};base64,${base64}` : null;
 
-  const runId = payload?.run_id ?? root?.job_id ?? root?.run_id ?? null;
-
-  return { raw: root, payload, final: finalObj, imageDataUrl, runId };
+  return { raw: root, payload, final: finalObj, imageDataUrl };
 }
 
-export default function ResultPage({ result }) {
+export default function ResultPage() {
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  // 페이지 진입 시 OCR 실행
+  useEffect(() => {
+    const file = window.__menuFile;
+    window.__menuFile = null; // 사용 후 즉시 클리어
+
+    if (!file) {
+      navigate("/", { replace: true });
+      return;
+    }
+
+    let cancelled = false;
+
+    MenuAPI.uploadMenu(file)
+      .then((response) => {
+        if (!cancelled) {
+          setResult(response?.data ?? response);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err?.response?.data?.detail || err?.message || "분석 실패");
+          setLoading(false);
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, [navigate]);
+
+  // -------- 로딩 중 전체화면 오버레이 --------
+  if (loading) {
+    return (
+      <div className="rp-loading-overlay">
+        <div className="rp-loading-box">
+          <div className="rp-spinner" />
+          <p className="rp-loading-text">Analyzing the menu...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // -------- 오류 상태 --------
+  if (error) {
+    return (
+      <div className="rp-error-wrap">
+        <p className="rp-error-text">{error}</p>
+        <button className="rp-back-btn" onClick={() => navigate("/")}>홈으로 돌아가기</button>
+      </div>
+    );
+  }
+
+  // -------- 결과 렌더 --------
+  return <ResultContent result={result} />;
+}
+
+/* =========================================================
+   결과 내용 컴포넌트 (기존 로직 유지)
+   ========================================================= */
+function ResultContent({ result }) {
+  const navigate = useNavigate();
   const [selectedItem, setSelectedItem] = useState(null);
   const [imgSize, setImgSize] = useState({ w: 0, h: 0 });
   const [imgBroken, setImgBroken] = useState(false);
 
   const normalized = useMemo(() => normalizeBackendPayload(result), [result]);
-
-  // ✅ items: root.items가 없으면 final.items를 사용
   const items = result?.items || normalized?.final?.items || [];
 
-  // ✅ image: URL이 없거나 정적서빙이 안 되면 base64(data url) 사용
   const imageUrl = result?.result_image_url || normalized?.imageDataUrl;
   const resolvedImageSrc = !imgBroken ? imageUrl : (normalized?.imageDataUrl || imageUrl);
 
   const jsonText = (() => {
-    try {
-      return JSON.stringify(result ?? {}, null, 2);
-    } catch (e) {
-      return String(result);
-    }
+    try { return JSON.stringify(result ?? {}, null, 2); }
+    catch (e) { return String(result); }
   })();
-
-  // ✅ overlay 활성화
-  const TEST_TEXT_ONLY = false;
 
   const getItemLabel = (item) =>
     item?.menu?.menu_name_en || item?.menu?.menu_name_ko || item?.menu_name_en || item?.menu_name_ko || "(no name)";
 
   return (
-    <div className="result-page">
-      <div style={{ position: "relative", width: "100%" }}>
+    <div className="rp-container">
+      {/* 다시 분석하기 버튼 */}
+      <button className="rp-back-btn" onClick={() => navigate("/")}>다시 분석하기</button>
+
+      {/* 결과 이미지 + PolygonOverlay */}
+      <div className="rp-image-wrap">
         {resolvedImageSrc ? (
           <img
             src={resolvedImageSrc}
             alt="result"
-            style={{ width: "100%", display: "block" }}
+            className="rp-image"
             onLoad={(e) => {
-              const w = e.currentTarget.naturalWidth || 0;
-              const h = e.currentTarget.naturalHeight || 0;
-              setImgSize({ w, h });
+              setImgSize({ w: e.currentTarget.naturalWidth || 0, h: e.currentTarget.naturalHeight || 0 });
             }}
-            onError={() => {
-              setImgBroken(true);
-              console.error("IMG_LOAD_FAIL:", imageUrl);
-            }}
+            onError={() => setImgBroken(true)}
           />
         ) : (
-          <p>AI result image will appear here.</p>
+          <p className="rp-empty">결과 이미지가 없습니다.</p>
         )}
 
-        {!TEST_TEXT_ONLY && (
-          <PolygonOverlay
-            items={items}
-            imgSize={imgSize}
-            onSelectItem={(item) => setSelectedItem(item)}
-          />
-        )}
+        <PolygonOverlay
+          items={items}
+          imgSize={imgSize}
+          onSelectItem={(item) => setSelectedItem(item)}
+        />
       </div>
 
-      {!TEST_TEXT_ONLY && selectedItem && (
+      {/* MenuDetailModal */}
+      {selectedItem && (
         <MenuDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
       )}
 
-      {/* ✅ 메뉴별 버튼 목록 (요청: ResultPage에서 버튼 눌러 모달 열기) */}
-      {!TEST_TEXT_ONLY && Array.isArray(items) && items.length > 0 && (
-        <div style={{ marginTop: 14 }}>
-          <h3 style={{ margin: "8px 0" }}>Detected menus</h3>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: 10,
-            }}
-          >
+      {/* 감지된 메뉴 목록 */}
+      {Array.isArray(items) && items.length > 0 && (
+        <div className="rp-menu-section">
+          <h3 className="rp-menu-title">Detected menus</h3>
+          <div className="rp-menu-grid">
             {items.map((it, idx) => (
-              <div
-                key={it?.id || it?.item_id || idx}
-                style={{
-                  border: "1px solid #e6e6e6",
-                  borderRadius: 10,
-                  padding: 12,
-                  background: "#fff",
-                }}
-              >
-                <div style={{ fontWeight: 700, marginBottom: 8 }}>{getItemLabel(it)}</div>
-                <button onClick={() => setSelectedItem(it)} style={{ width: "100%" }}>
+              <div key={it?.id || it?.item_id || idx} className="rp-menu-card">
+                <div className="rp-menu-name">{getItemLabel(it)}</div>
+                <button className="rp-menu-btn" onClick={() => setSelectedItem(it)}>
                   View English details
                 </button>
               </div>
@@ -121,22 +156,10 @@ export default function ResultPage({ result }) {
         </div>
       )}
 
-      {/* JSON 텍스트는 유지 */}
-      <div style={{ marginTop: 16 }}>
-        <h3 style={{ margin: "8px 0" }}>Result JSON (text only)</h3>
-        <pre
-          style={{
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            background: "#f6f8fa",
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            padding: 12,
-            margin: 0,
-          }}
-        >
-          {jsonText}
-        </pre>
+      {/* Result JSON */}
+      <div className="rp-json-wrap">
+        <h3 className="rp-json-title">Result JSON</h3>
+        <pre className="rp-json-pre">{jsonText}</pre>
       </div>
     </div>
   );

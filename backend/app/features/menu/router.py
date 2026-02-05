@@ -48,10 +48,10 @@ async def upload_menu(
 
     local_path, cleanup = ensure_local_path(obj)
 
-    # ✅ runs_root는 기존 그대로 유지
+    # runs_root는 기존 그대로 유지
     runs_root = Path(tmp_prefix) / "ai_runs"
 
-    # ✅ user_profile_json도 tmp_prefix 아래에 생성 (정책 유지: 끝나면 temp 삭제)
+    # user_profile_json도 tmp_prefix 아래에 생성 (정책 유지: 끝나면 temp 삭제)
     user_profile_json_path = Path(tmp_prefix) / "user_profile.json"
 
     try:

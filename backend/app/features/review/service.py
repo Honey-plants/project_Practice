@@ -326,43 +326,71 @@ def update_review_content_only(
         "updated_at": r.update_at.isoformat() if getattr(r, "update_at", None) else None,
     }
 
-# Review_items str -> list 변환 출력
-# def _parse_csv_ids(raw) -> list[int]:
-#     if not raw:
-#         return []
-#     if isinstance(raw, list):
-#         return [int(x) for x in raw]
-#     # raw == "3,7,12"
-#     return [int(x) for x in str(raw).split(",") if str(x).strip().isdigit()]
-#
-#
-# def parse_ids(raw: Any) -> list[int]:
-#     if raw is None:
-#         return []
-#     if isinstance(raw, list):
-#         return [int(x) for x in raw]
-#
-#     s = str(raw).strip()
-#     if not s:
-#         return []
-#
-#     # JSON 문자열이면 JSON으로 먼저 파싱
-#     if s.startswith("[") and s.endswith("]"):
-#         try:
-#             arr = json.loads(s)
-#             if isinstance(arr, list):
-#                 return [int(x) for x in arr]
-#         except Exception:
-#             pass
-#
-#     # fallback: "1,2,3" 같은 CSV
-#     out = []
-#     for p in s.split(","):
-#         p = p.strip()
-#         if not p:
-#             continue
-#         try:
-#             out.append(int(p))
-#         except ValueError:
-#             continue
-#     return out
+# community review 조회
+def list_reviews_by_ids(
+    db: Session,
+    review_ids: List[int],
+    *,
+    member_id: Optional[int] = None,          # 내 리뷰만 허용하려면 넣기
+    include_inactive: bool = True,            # available(False)도 포함할지
+) -> List[Dict[str, Any]]:
+    """
+    review_ids([4,2,1])로 리뷰를 한번에 조회해서
+    이미지까지 포함한 dict 리스트로 반환한다.
+    - IN 조회 1번 + 이미지 조회 1번 (총 2번 쿼리)
+    - review_ids의 원래 순서([4,2,1]) 유지
+    """
+
+    if not review_ids:
+        return []
+
+    # 1) Review 한번에 조회
+    q = select(Review).where(Review.review_id.in_(review_ids))
+
+    if member_id is not None:
+        q = q.where(Review.member_id == member_id)
+
+    if not include_inactive:
+        q = q.where(Review.available == True)
+
+    reviews = db.execute(q).scalars().all()
+
+    if not reviews:
+        return []
+
+    # 2) 이미지도 한번에 조회 (review_id IN)
+    imgs = db.execute(
+        select(ImgFile)
+        .where(ImgFile.owner_type == "review")
+        .where(ImgFile.review_id.in_(review_ids))
+        .order_by(ImgFile.review_id.asc(), ImgFile.sort_order.asc())
+    ).scalars().all()
+
+    img_map: Dict[int, List[str]] = {}
+    for img in imgs:
+        img_map.setdefault(img.review_id, []).append(img.storage_path)
+
+    # 3) 응답 dict 생성 (기존 list_reviews 형식과 최대한 동일하게)
+    by_id: Dict[int, Dict[str, Any]] = {}
+
+    for r in reviews:
+        by_id[r.review_id] = {
+            "review_id": r.review_id,
+            "member_id": r.member_id,
+            "review_title": r.review_title,
+            "review_content": r.review_content,
+            "rating": r.rating,
+            "location": r.location,
+            "available": r.available,
+            # 기존 코드 유지 (menu_name이 문자열이면 [문자열], 없으면 [])
+            "menu_name": [r.menu_name] if r.menu_name else [],
+            "review_items": parse_ids(r.review_items),
+            "created_at": r.create_at.isoformat() if getattr(r, "create_at", None) else None,
+            "updated_at": r.update_at.isoformat() if getattr(r, "update_at", None) else None,
+            "image_urls": img_map.get(r.review_id, []),
+        }
+
+    # 4) 요청한 review_ids 순서대로 정렬해서 반환
+    return [by_id[i] for i in review_ids if i in by_id]
+
+

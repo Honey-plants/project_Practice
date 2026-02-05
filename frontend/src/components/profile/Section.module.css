@@ -1,12 +1,11 @@
 /* ===== Section Container ===== */
 .section {
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: #FFFFFF; /* 흰색 배경 */
+  border: 1px solid #DDDDDD;
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 32px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* ===== Section Header ===== */
@@ -16,18 +15,18 @@
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid #DDDDDD;
 }
 
 .title {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #fff;
+  color: #333333; /* 다크 그레이 */
 }
 
 .link {
-  color: #a0d4ff;
+  color: #2E7D32; /* 딥 그린 */
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -35,15 +34,34 @@
 }
 
 .link:hover {
-  color: #667eea;
+  color: #1B5E20; /* 더 진한 그린 */
   text-decoration: underline;
+}
+
+/* ===== Loading State ===== */
+.loading {
+  margin: 10px 0;
+  text-align: center;
+  color: #666666; /* 미디엄 그레이 */
+  font-size: 14px;
+}
+
+/* ===== Error Box ===== */
+.errorBox {
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #D32F2F; /* 레드 */
+  background: #FFEBEE; /* 연한 레드 배경 */
+  border-radius: 8px;
+  color: #D32F2F; /* 레드 텍스트 */
+  font-size: 14px;
 }
 
 /* ===== Empty State ===== */
 .emptyState {
   text-align: center;
   padding: 60px 20px;
-  color: rgba(255, 255, 255, 0.5);
+  color: #999999; /* 라이트 그레이 */
 }
 
 .emptyIcon {
@@ -66,32 +84,32 @@
 .item {
   display: block;
   padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid #DDDDDD;
   border-radius: 12px;
   text-decoration: none;
   color: inherit;
   transition: all 0.3s ease;
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: #FAFAFA; /* 아주 연한 그레이 */
 }
 
 .item:hover {
-  border-color: rgba(102, 126, 234, 0.5);
-  background-color: rgba(255, 255, 255, 0.08);
+  border-color: #81C784; /* 라이트 그린 */
+  background-color: #F1F8E9; /* 아주 연한 그린 */
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 2px 8px rgba(129, 199, 132, 0.3);
 }
 
 .itemTitle {
   margin: 0 0 10px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: #333333; /* 다크 그레이 */
 }
 
 .itemContent {
   margin: 0 0 12px 0;
   font-size: 14px;
-  color: #cbd5e0;
+  color: #666666; /* 미디엄 그레이 */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -101,7 +119,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #a0aec0;
+  color: #999999; /* 라이트 그레이 */
 }
 
 /* ===== Pagination ===== */
@@ -115,9 +133,9 @@
 
 .pageButton {
   padding: 10px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background-color: rgba(255, 255, 255, 0.06);
-  color: #e0e0e0;
+  border: 1px solid #DDDDDD;
+  background-color: #FFFFFF;
+  color: #333333; /* 다크 그레이 */
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
@@ -126,30 +144,41 @@
 }
 
 .pageButton:hover {
-  border-color: rgba(102, 126, 234, 0.5);
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  border-color: #81C784; /* 라이트 그린 */
+  background-color: #F1F8E9; /* 아주 연한 그린 */
+  color: #2E7D32; /* 딥 그린 */
 }
 
 .pageButton.active {
-  border: 1px solid rgba(102, 126, 234, 0.6);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 1px solid #2E7D32; /* 딥 그린 */
+  background: #2E7D32; /* 딥 그린 */
   color: white;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
 }
 
 .pageButton.activeCommunity {
-  border: 1px solid rgba(40, 167, 69, 0.6);
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  border: 1px solid #2E7D32; /* 딥 그린 */
+  background: #2E7D32; /* 딥 그린 */
   color: white;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+}
+
+.pageButton.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pageButton.disabled:hover {
+  border-color: #DDDDDD;
+  background-color: #FFFFFF;
+  color: #333333;
 }
 
 .communityItem:hover {
-  border-color: rgba(40, 167, 69, 0.5);
-  background-color: rgba(40, 167, 69, 0.1);
+  border-color: #81C784; /* 라이트 그린 */
+  background-color: #F1F8E9; /* 아주 연한 그린 */
 }
 
 /* ===== Responsive Design ===== */
