@@ -77,11 +77,13 @@ export class CameraService {
 
       await this.video.play();
 
-      if (this.isDesktop && this.video.videoWidth < 50 ) { // 1024
-        this.disableCamera = false; // true
+      const MIN_DESKTOP_WIDTH = this.__DEV__ ? 320 : 1024;
+      if (this.isDesktop && this.video.videoWidth < MIN_DESKTOP_WIDTH) {
+        this.disableCamera = true;
       } else {
         this.disableCamera = false;
       }
+
 
       this.isActive = true;
 
@@ -160,11 +162,11 @@ export class CameraService {
 
     const { brightness, sharpness, shaken } = this.analyzeFrame();
 
-    if (brightness < 60) {
+    if (brightness < 60) { 
       return { ok: false, reason: 'TOO_DARK' };
     }
 
-    if (sharpness < 5) {
+    if (sharpness < 15) {
       return { ok: false, reason: 'BLURRY' };
     }
 
@@ -172,9 +174,12 @@ export class CameraService {
       return { ok: false, reason: 'SHAKING' };
     }
 
+    const MIN_CAPTURE_WIDTH = this.__DEV__ ? 320 : 1280;
+    const MIN_CAPTURE_HEIGHT = this.__DEV__ ? 240 : 720;
+
     if (
-      this.video.videoWidth < 320 || // 1280
-      this.video.videoHeight < 240    // 720
+      this.video.videoWidth < MIN_CAPTURE_WIDTH ||
+      this.video.videoHeight < MIN_CAPTURE_HEIGHT
     ) {
       return { ok: false, reason: 'LOW_RESOLUTION' };
     }
