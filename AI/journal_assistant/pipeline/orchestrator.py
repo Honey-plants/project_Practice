@@ -33,6 +33,7 @@ def run_orchestrator(payload: Dict[str, Any]) -> bytes:
 
     if ttype == 2:
         print("2번 진입")
+        print("payload", payload)
         ref_bytes, prompt = run_map_template(payload)
 
         out = generate_image_with_ref(
