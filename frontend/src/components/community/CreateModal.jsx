@@ -80,9 +80,13 @@ export default function CreateModal({
       : activeIds.length >= 3;
 
   const handleConfirm = () => {
+
+      console.log("나 버튼 눌렀다.")
+
     if (!canSubmit || saving) return;
 
     const reviewIds = templateId === 2 ? activeIds : selectedIds;
+    console.log("버튼 클릭 :: ", reviewIds)
     onConfirm?.({ templateId, reviewIds });
   };
 

@@ -15,10 +15,18 @@ def build_map_poster_prompt_with_ref(
     member = payload.get("member", {})
     reviews: List[Dict[str, Any]] = payload.get("reviews", [])
 
+
+
     nickname = member.get("nickname", "Traveler")
     country = member.get("country", "Unknown")
-    allergies = member.get("item_ids", [])
+    allergies = payload.get("allergy_tags", {})
+    # allergies = allergy_tags.get("item_ids", [])
+
+    print("allergies :: ", allergies)
+
     allergy_text = ", ".join(allergies) if allergies else "none"
+
+    # print("allergies :: ", allergies)
 
     eaten = []
     for r in reviews:

@@ -43,6 +43,7 @@ def update_member(payload: schemas.MemberUpdate, current: Member = Depends(get_c
     dislike_tags = json.loads(dislike_raw) if dislike_raw else []
 
     return {
+        "member_id": m.member_id,
         "email": m.email,
         "nickname": m.nickname,
         "gender": m.gender,

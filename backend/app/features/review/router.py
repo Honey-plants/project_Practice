@@ -1,6 +1,5 @@
 import uuid
 from typing import List
-from sqlalchemy import select
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
@@ -10,10 +9,7 @@ from backend.app.common.utils.debug import log_exception
 from backend.app.features.review.schemas import ReceiptVerifyResponse, ReviewCreateResponse, ReviewContentUpdateResponse, ReviewContentUpdate, ReviewRead
 from backend.app.features.review.service import verify_receipt, create_review_from_receipt, list_reviews, get_review_detail, update_review_content_only
 
-from backend.app.models.restrictions.member_restriction import MemberRestrictions
-
 router = APIRouter(prefix="/review", tags=["review"])
-
 
 @router.post("/receipt/verify", response_model=ReceiptVerifyResponse)
 async def receipt_verify(

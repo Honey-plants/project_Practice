@@ -38,7 +38,8 @@ class ReviewRead(BaseModel):
     updated_at: Optional[str] = None
 
 class ReviewContentUpdate(BaseModel):
-    review_content: str = Field(..., min_length=1, max_length=5000)
+    review_content: Optional[str] = None
+    available: Optional[bool] = None
 
 class ReviewContentUpdateResponse(BaseModel):
     review_id: int

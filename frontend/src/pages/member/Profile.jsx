@@ -39,7 +39,7 @@ export default function Profile() {
   // 리뷰와 커뮤니티 데이터 로드
   useEffect(() => {
     reviewActions.fetchMyList();
-    communityActions.fetchList();
+    communityActions.fetchMyList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
