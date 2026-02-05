@@ -65,3 +65,4 @@ AI/review/tmp_receipt/
 
 # uploads
 /uploads
+AI/**/data/chroma/
