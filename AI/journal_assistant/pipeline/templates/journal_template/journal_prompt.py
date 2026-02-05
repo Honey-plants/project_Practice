@@ -43,7 +43,7 @@ MEAL {i}:
 - City: {city}
 - Title: {title}
 - Notes: {content}
-- Rating: {rating}
+
 """.strip()
         )
 

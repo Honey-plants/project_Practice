@@ -93,18 +93,14 @@ def render_pinned_map_bytes(
     scale = float(calib["scale"])
 
     # 최정규 2222
-
+    print(places_raw)
     print("pin_overlay 여긴 언제 오는걸까?")
 
     # ✅ icon load once
     icon_base = load_pin_icon(pin_icon_path, width_px=pin_width_px)
 
     for idx, p in enumerate(places_raw):
-
-        if isinstance(p.get("location"), list) and len(p["location"]) >= 2:
-            x_raw, y_raw = p["location"][0], p["location"][1]
-
-        lat, lon = naver_xy_to_latlon(str(x_raw), str(y_raw))
+        lat, lon = naver_xy_to_latlon(p["coords"]["x"], p["coords"]["y"])
         x, y = latlon_to_image_px_calibrated(lat, lon, center_lat, center_lon, scale, bw, bh)
 
         color = PIN_COLORS[idx % len(PIN_COLORS)]
