@@ -198,3 +198,41 @@
     font-size: 1rem;
   }
 }
+
+/* ===================================================
+   Camera Overlay (ADD ONLY)
+   =================================================== */
+
+.home-logo-wrap {
+  position: relative;
+}
+
+.home-camera-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.home-white-cover {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  z-index: 2;
+  transition: opacity 0.25s ease;
+}
+
+.home-white-cover.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.home-logo-overlay {
+  width: 100%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.home-logo-overlay.hide {
+  opacity: 0;
+  transform: scale(0.98);
+}
