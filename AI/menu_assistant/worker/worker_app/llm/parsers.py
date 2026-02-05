@@ -55,7 +55,7 @@ def build_retry_prompt_from_error(err_msg: str) -> str:
         f"Validation error: {err_msg}\n"
         "Return ONLY valid JSON with ALL required fields:\n"
         "- schema_version, run_id, items\n"
-        "- items[*].item_id, menu_name, poly, menu_description_ko, risk_description_ko, comment\n"
+        "- items[*].item_id, menu_name, menu_name_en, poly, menu_description_ko, risk_description_ko, comment\n"
         "comment must be a single Korean question ending with '?'.\n"
         "Do NOT include markdown.\n"
         "Do NOT include any text outside JSON.\n"

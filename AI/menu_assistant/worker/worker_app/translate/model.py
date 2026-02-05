@@ -129,13 +129,12 @@ class GeminiTranslateClient:
 
         # ✅ Case A) prompt.py가 요구하는 "루트 3키" 응답
 
-        if isinstance(out, dict) and set(out.keys()) == {
-            "menu_description_en",
-            "risk_description_en",
-            "comment_en",
-            }:
-
+        if isinstance(out, dict) and set(out.keys()) in (
+                            {"menu_description_en", "risk_description_en", "comment_en"},
+                            {"menu_name_en", "menu_description_en", "risk_description_en", "comment_en"},
+                ):
             return {
+                "menu_name_en": (out.get("menu_name_en") or "").strip(),
                 "menu_description_en": (out.get("menu_description_en") or "").strip(),
                 "risk_description_en": (out.get("risk_description_en") or "").strip(),
                 "comment_en": (out.get("comment_en") or "").strip(),

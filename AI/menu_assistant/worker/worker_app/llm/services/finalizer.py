@@ -84,6 +84,13 @@ def merge_llm_output_to_final(
             or src.get("menu_name")
             or ""
         )
+        menu_name_en = llm.get("menu_name_en")
+        if not isinstance(menu_name_en, str):
+            menu_name_en = ""
+
+        # 안전장치: 비어있으면 ko로라도 채워 스키마를 깨지 않게
+        if not menu_name_en.strip():
+            menu_name_en = ""
 
         poly = src.get("poly") or src.get("match", {}).get("poly")  # 혹시 src 구조가 다를 경우 대비
 
@@ -131,6 +138,7 @@ def merge_llm_output_to_final(
                 "item_id": item_id,
                 "match_status": match_status,
                 "menu_name_ko": menu_name_ko,
+                "menu_name_en": menu_name_en,
                 "poly": poly,
 
                 "menu_description_ko": menu_description_ko,

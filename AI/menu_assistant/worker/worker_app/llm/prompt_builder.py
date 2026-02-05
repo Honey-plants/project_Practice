@@ -25,6 +25,7 @@ def build_step05_prompt(*, run_id: str, user_profile: Dict[str, Any], items: Lis
                 "match_status": "exact",   # "exact" | "unknown"
 
                 "menu_name_ko": "메뉴명",
+                "menu_name_en": "enlgish menu name",
                 "poly": [[0, 0], [1, 0], [1, 1], [0, 1]],
 
                 "menu_description_ko": "메뉴에 대한 한국어 설명",

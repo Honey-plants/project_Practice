@@ -84,7 +84,10 @@ def _normalize_translation_output(obj: Any) -> Dict[str, Any]:
     if not isinstance(obj, dict):
         return {}
 
-    if set(obj.keys()) == {"menu_description_en", "risk_description_en", "comment_en"}:
+    if set(obj.keys()) in (
+            {"menu_description_en", "risk_description_en", "comment_en"},
+            {"menu_name_en", "menu_description_en", "risk_description_en", "comment_en"},
+            ):
         return obj
 
     menu_en = ""
@@ -106,6 +109,7 @@ def _normalize_translation_output(obj: Any) -> Dict[str, Any]:
         comment_en = _get_str(obj.get("comment"))
 
     return {
+        "menu_name_en": _get_str(obj.get("menu_name_en")),
         "menu_description_en": menu_en,
         "risk_description_en": risk_en,
         "comment_en": comment_en,
@@ -121,7 +125,8 @@ def _translate_with_retries(
     last_err: Optional[Exception] = None
     for attempt in range(max_retries + 1):
         try:
-            system_p, user_p = build_translate_prompts_for_final_item(item)
+            require_menu_name = bool(item.get("_need_menu_name_en"))
+            system_p, user_p = build_translate_prompts_for_final_item(item,include_menu_name=require_menu_name)
 
             out = client.translate_final_item(
                 item=item,
@@ -130,7 +135,7 @@ def _translate_with_retries(
             )
             out = _normalize_translation_output(out)
 
-            ok, msg = validate_translate_output(out)
+            ok, msg = validate_translate_output(out, require_menu_name_en=require_menu_name)
             if not ok:
                 raise ValueError(f"[step06] Invalid translation output: {msg}")
 
@@ -171,6 +176,11 @@ def main() -> None:
 
     parser.add_argument("--max_retries", type=int, default=2)
     parser.add_argument("--sleep_base", type=float, default=0.7)
+
+    parser.add_argument("--translate_menu_name", action="store_true",
+                             help = "If set, translate menu_name_ko -> menu_name_en in Step6 (overrides Step5).")
+    parser.add_argument("--force_menu_name_en", action="store_true",
+                             help = "If set, re-translate menu_name_en even if it already exists (requires --translate_menu_name).")
 
     args = parser.parse_args()
 
@@ -215,7 +225,20 @@ def main() -> None:
         it["menu_description_ko"] = _get_str(it.get("menu_description_ko"))
         it["risk_description_ko"] = _get_str(it.get("risk_description_ko"))
         it["comment_ko"] = _get_str(it.get("comment_ko"))
+        # ✅ menu_name_en 번역 필요 여부(조건부)
+        it["menu_name_ko"] = _get_str(it.get("menu_name_ko"))
+        it["menu_name_en"] = _get_str(it.get("menu_name_en"))
 
+        need_menu = False
+
+        if args.translate_menu_name:
+
+            if args.force_menu_name_en:
+                need_menu = bool(it["menu_name_ko"])
+        else:
+            need_menu = bool(it["menu_name_ko"]) and (not it["menu_name_en"])
+        # 내부 플래그(프롬프트/검증에만 사용)
+        it["_need_menu_name_en"] = need_menu
         translated = _translate_with_retries(
             client=client,
             item=it,
@@ -227,15 +250,22 @@ def main() -> None:
         it["menu_description_en"] = _get_str(translated.get("menu_description_en"))
         it["risk_description_en"] = _get_str(translated.get("risk_description_en"))
         it["comment_en"] = _get_str(translated.get("comment_en"))
+        # ✅ 필요 시에만 menu_name_en 갱신
+
+        if need_menu:
+            it["menu_name_en"] = _get_str(translated.get("menu_name_en"))
 
         translated_rows.append(
             {
                 "item_id": it.get("item_id"),
+                "menu_name_en": it.get("menu_name_en"),
                 "menu_description_en": it["menu_description_en"],
                 "risk_description_en": it["risk_description_en"],
                 "comment_en": it["comment_en"],
             }
         )
+        # internal flag 제거(최종 산출물에 남기지 않음)
+        it.pop("_need_menu_name_en", None)
 
         merged_items.append(it)
 

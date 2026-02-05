@@ -2,19 +2,19 @@ import React, { useMemo } from "react";
 import "./PolygonOverlay.css";
 
 /**
- * [확정된 최신 구조]
- * - poly: item.match.poly
- * - label: item.menu.menu_name_en (fallback: ko)
+ * [final_translated 기준 + 하위호환]
+ * - poly: item.poly  (fallback: item.match.poly)
+ * - label: item.menu_name_en (fallback: item.menu.menu_name_en -> ko)
+ * - color: risk_difficulty (3=gray, 2=red, 1=orange, 0=green)
  *
  * 목표:
- * - poly 박스 표시
- * - 박스 크기에 맞춰 글씨(영문 메뉴명) 자동 크기 조절
- * - 길면 2줄까지 자동 래핑(tspan)
- * - 클릭 시 onSelectItem(item)
+ * - poly 박스 표시 (risk_difficulty 기반 색상)
+ * - 박스 위에 번역된 메뉴명(기본: EN) 표시
+ * - 클릭 시 onSelectItem(item)로 Modal 연동
  */
 
 function extractPoly(item) {
-  const poly = item?.match?.poly;
+  const poly = item?.poly ?? item?.match?.poly;
 
   if (!Array.isArray(poly)) return null;
   if (!poly.every((p) => Array.isArray(p) && p.length >= 2)) return null;
@@ -25,7 +25,32 @@ function extractPoly(item) {
 }
 
 function getLabel(item) {
-  return item?.menu?.menu_name_en || item?.menu?.menu_name_ko || "";
+  // final_translated: menu_name_en이 생기는 경우 우선 사용
+  return (
+    item?.menu_name_en ||
+    item?.menu?.menu_name_en ||
+    item?.menu_name_ko ||
+    item?.menu?.menu_name_ko ||
+    ""
+  );
+}
+
+function riskDifficultyToKey(v) {
+  const n = Number(v);
+  if (n === 3) return "gray";
+  if (n === 2) return "red";
+  if (n === 1) return "orange";
+  if (n === 0) return "green";
+  return "gray";
+}
+
+function riskDifficultyToStroke(v) {
+  const key = riskDifficultyToKey(v);
+  // CSS가 없거나 누락돼도 최소 동작하도록 inline도 같이 적용
+  if (key === "green") return "#16a34a";
+  if (key === "orange") return "#f97316";
+  if (key === "red") return "#ef4444";
+  return "#9ca3af"; // gray
 }
 
 function centroid(poly) {
@@ -113,7 +138,11 @@ export default function PolygonOverlay({ items, imgSize, onSelectItem }) {
   if (!w || !h || polygons.length === 0) return null;
 
   return (
-    <svg className="ms-po__svg" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+    <svg
+      className="ms-po__svg"
+      viewBox={`0 0 ${w} ${h}`}
+      preserveAspectRatio="none"
+    >
       {polygons.map(({ item, poly }, idx) => {
         const points = poly.map((p) => `${p[0]},${p[1]}`).join(" ");
         const bbox = getBBox(poly);
@@ -125,14 +154,26 @@ export default function PolygonOverlay({ items, imgSize, onSelectItem }) {
         const fs = pickFontSizeForBox(lines, bbox.w, bbox.h, 22, 10);
 
         const [cx, cy] = centroid(poly);
-
         const lineH = fs * 1.1;
-        const startY = lines.length <= 1 ? cy : cy - (lineH * (lines.length - 1)) / 2;
-        const color = item?.ui?.color || (["exact","close"].includes((item?.match?.status || "").toLowerCase()) ? "red" : "orange");
+        const startY =
+          lines.length <= 1 ? cy : cy - (lineH * (lines.length - 1)) / 2;
+
+        const riskDifficulty =
+          item?.risk_difficulty ?? item?.risk?.risk_difficulty ?? null;
+        const colorKey = riskDifficultyToKey(riskDifficulty);
+        const stroke = riskDifficultyToStroke(riskDifficulty);
 
         return (
-          <g key={idx} className="ms-po__group" onClick={() => onSelectItem?.(item)}>
-            <polygon className={`ms-po__poly ms-po__poly--${color}`} points={points} />
+          <g
+            key={item?.item_id || idx}
+            className="ms-po__group"
+            onClick={() => onSelectItem?.(item)}
+          >
+            <polygon
+              className={`ms-po__poly ms-po__poly--${colorKey}`}
+              points={points}
+              style={{ stroke, fill: "transparent" }}
+            />
 
             {lines.length > 0 && (
               <text

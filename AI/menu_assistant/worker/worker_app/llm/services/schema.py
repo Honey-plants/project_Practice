@@ -15,6 +15,7 @@ class LLMItemOutputV1:
     item_id: str
     match_status: str            # "exact" | "unknown"
     menu_name_ko: str
+    menu_name_en: str  # ✅ NEW (Step5에서 생성, Step6에서 재번역 가능)
     poly: List[List[float]]
 
     menu_description_ko: str
@@ -121,6 +122,7 @@ def validate_llm_output_v1(obj: Any) -> Tuple[bool, str]:
             "item_id",
             "match_status",
             "menu_name_ko",
+            "menu_name_en",
             "poly",
             "menu_description_ko",
             "menu_description_en",
@@ -145,6 +147,10 @@ def validate_llm_output_v1(obj: Any) -> Tuple[bool, str]:
 
         if not _is_non_empty_str(it.get("menu_name_ko")):
             return False, f"items[{i}].menu_name_ko must be non-empty string"
+
+        # ✅ menu_name_en은 Step5에서 만들지만 실패 방지를 위해 string만 강제 (빈문자 허용)
+        if not _is_str(it.get("menu_name_en")):
+            return False, f"items[{i}].menu_name_en must be string"
 
         if not _is_poly(it.get("poly")):
             return False, f"items[{i}].poly must be polygon [[x,y],...] with >=4 points"
