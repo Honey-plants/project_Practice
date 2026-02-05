@@ -12,7 +12,16 @@ class CommunityUpdate(BaseModel):
 
 class CommunityRead(BaseModel):
     community_id: int
-    community_content: str
+    recommend: int
+    member_id: int
+    community_active: bool
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    image_urls: List[str] = Field(default_factory=list)
+
+class CommunityListRead(BaseModel):
+    community_id: int
+    member_id: int
     recommend: int
     community_active: bool
     created_at: Optional[str] = None

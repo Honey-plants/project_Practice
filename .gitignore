@@ -7,7 +7,6 @@ __pycache__/
 /venv/
 /env/
 
-AI/menu_assistant/data/chroma/
 
 # allow GitOps values
 !k8s/env/**
@@ -66,4 +65,4 @@ AI/review/tmp_receipt/
 
 # uploads
 /uploads
-.vercel
+AI/**/data/chroma/

@@ -1,26 +1,46 @@
+# AI/journal_assistant/pipeline/templates/journal_template/journal_prompt.py
+
 from __future__ import annotations
 from typing import Dict, Any, List
 
 
 def build_journal_prompt(payload: Dict[str, Any]) -> str:
+    """
+    Build a funny / warm food journal prompt.
+    This function ONLY returns prompt text.
+    No model calls here.
+    """
 
     member = payload.get("member", {})
     reviews: List[Dict[str, Any]] = payload.get("reviews", [])
+    template = payload.get("template", {})
+    allergies = payload.get("allergy_tags", {})
 
     nickname = member.get("nickname", "The traveler")
     country = member.get("country", "Unknown country")
-    gender = member.get("gender", "")
-    allergies = member.get("item_ids", [])
+    # allergies = member.get("item_ids", [])
+
+    print("저널 데이터 체크 시작")
+
+    print("11111 :: member_id :: ", member)
+
+
+    print("저널 데이터 체크 종료")
+
+    # 안전: 리뷰는 최대 3개만 사용
+    reviews = reviews[:3]
 
     # 리뷰 요약 블록 생성
     review_blocks = []
     for i, r in enumerate(reviews, start=1):
         title = r.get("review_title", "Untitled meal")
         content = r.get("review_content", "")
-        rating = r.get("rating", 0)
+        city = r.get("city", "Unknown city")
+
         review_blocks.append(
             f"""
 MEAL {i}:
+- City: {city}
 - Title: {title}
 - Notes: {content}
 - Rating: {rating}
@@ -36,79 +56,128 @@ MEAL {i}:
     )
 
     return f"""
-    {reviews_text}
-    {allergy_text}
-    {nickname}
-    {country}
-    {gender}
-Create ONE single-page TRAVEL JOURNAL (landscape).
+You are creating a SINGLE-PAGE PHOTO JOURNAL
+written in a completely unserious “mock academic paper” style.
 
-MAIN CHARACTER:
-The USER is the main character, not the food.
-Food is only evidence of the user’s travel adventure in Korea.
-
-VISUAL PRIORITY (in order):
-1) The traveler’s presence (hands, silhouette, back-of-head, shoes, coat sleeve)
-2) Travel evidence in Korea (street signs, subway card, market aisle, night street, map scribbles)
-3) Food photos as “proof” (supporting role)
-
-CRITICAL PHOTO RULE:
-- Use REAL-LIFE photography for all photos.
-- Do NOT redraw photos.
-- Do NOT cartoonize food.
-- You MAY add hand-drawn doodles/annotations on top of photos.
-
-PAGE FEEL:
-- Looks like a personal scrapbook/journal page found in someone’s bag.
-- Paper texture, tape corners, torn edges, imperfect alignment.
-- Deadpan funny, overconfident, nonsense conclusions.
-
-CONTENT (must include):
-- 1 “Hero” travel photo panel (street / market / subway / night scene) as the biggest photo.
-- 3–5 smaller photos surrounding it:
-  - at least 1 food photo
-  - at least 1 “ordering / menu confusion / receipt / app screen” photo
-  - at least 1 “hands holding food / chopsticks / tray” photo (user presence)
-
-USER REPRESENTATION RULES:
-- The user must appear anonymously:
-  - hands, torso, silhouette, or cropped face turned away
-- Do not invent a specific identity or exact face.
-- The traveler is a symbolic anonymous person.
+This should feel like:
+- a fake research poster
+- a parody sociology paper
+- a university hallway bulletin board
+that somehow turned into a food diary.
 
 TONE:
-- Mock academic + diary + nonsense
-- Overconfident and wrong
-- Short lines only
-- No paragraphs
+- Extremely funny
+- Confident nonsense
+- Academic words used incorrectly but passionately
+- Reads like a professor lost their mind in Korea
 
-TEXT (minimal):
-- Only short caption-style notes.
-- Use fake academic words incorrectly.
-- Keep it shareable and instantly funny.
+IMPORTANT STYLE RULES:
+- This is NOT informative.
+- This is NOT serious.
+- This is NOT a travel guide.
+- The goal is: people should laugh immediately just by looking at it.
 
-ABSURD ASSOCIATIONS (allowed, no explanations):
-- Gukbap → pig → strength → spiritual upgrade
-- Tteokbokki → lava → bravery certification
-- Mandu → pillow → emotional stability regained
-Never explain why.
+KOREAN VIBE (light, not cringe):
+- Casual Korea references are OK (late-night eating, small restaurants, confusing menus, kindness of staff)
+- Do NOT explain Korea.
+- Assume Korea is chaos but warm.
 
-STRUCTURE (3 blocks on the page, not big headings):
-BLOCK 1: “HYPOTHESIS”
-- 1 travel photo + 1 short caption
-BLOCK 2: “FIELDWORK”
-- 2–3 mixed photos (travel + food + app/receipt) + short captions
-BLOCK 3: “CONCLUSION”
-- 1–2 photos + 1–2 absurd confident conclusion lines
+LANGUAGE:
+- ENGLISH ONLY
+- Short sentences.
+- Caption-style writing.
+- No long paragraphs.
 
-DO NOT:
-- No restaurant names, addresses, dates
-- No ratings
-- No hashtags/emojis
-- No long text
+STRUCTURE:
+The journal has EXACTLY 3 SECTIONS.
 
-FINAL FEEL:
-This is a Korea travel journal page where the viewer laughs because
-the traveler is taking their own eating journey way too seriously.
+--------------------------------------------------
+SECTION 1 — INTRO / IDEA
+--------------------------------------------------
+SECTION TITLE (funny, academic-sounding):
+Something like:
+- “Initial Hypothesis: I Thought I Was Just Hungry”
+- “Preliminary Assumptions Before Entering Korea”
+
+CONTENT:
+- 2 REAL-LIFE PHOTOS from the user (food / table / receipt / street food etc.)
+- Under EACH photo, write ONE short caption.
+
+CAPTION STYLE:
+- Fake academic observation
+- Slightly dramatic
+- Mildly confused
+
+Examples (vibe only, do not copy):
+- “Figure 1. The moment I believed I understood the menu.”
+- “Early evidence suggested this meal would be safe. This belief was incorrect.”
+
+--------------------------------------------------
+SECTION 2 — INVESTIGATION
+--------------------------------------------------
+SECTION TITLE:
+Something like:
+- “Field Research Conducted While Sitting Down”
+- “Methods: Trusting the App With My Life”
+
+CONTENT:
+- 2 REAL-LIFE PHOTOS
+- Each photo gets ONE caption.
+
+CAPTION STYLE:
+- Treat eating as scientific experimentation
+- Overanalyze normal things
+- Reference allergies / translation / ordering confusion casually
+
+Examples (vibe only):
+- “Figure 3. Allergy avoidance in its natural habitat.”
+- “Data indicates the staff was kinder than expected.”
+
+--------------------------------------------------
+SECTION 3 — AFTERMATH
+--------------------------------------------------
+SECTION TITLE:
+Something like:
+- “Conclusions Drawn With a Full Stomach”
+- “Post-Meal Reflections and Emotional Stability”
+
+CONTENT:
+- 2 REAL-LIFE PHOTOS
+- One-line captions only.
+
+CAPTION STYLE:
+- Absurd confidence
+- Fake conclusions
+- Slight emotional closure
+
+Examples (vibe only):
+- “Figure 6. No peanuts detected. Peace achieved.”
+- “Further research is recommended. Tomorrow.”
+
+--------------------------------------------------
+TEXT RULES (VERY IMPORTANT):
+- NO restaurant names
+- NO addresses
+- NO dates
+- NO hashtags
+- NO emojis
+- NO real academic citations
+- Do NOT explain jokes
+
+PHOTO RULES:
+- Photos are REAL-LIFE user photos (do not stylize them)
+- Do not redraw or replace photos
+- Treat photos as documentary evidence
+
+FINAL OUTPUT:
+- ONE single-page journal layout
+- 3 clearly separated sections
+- Each section has:
+  - A funny academic-style title
+  - 2 photos
+  - Very short captions only
+
+This journal should feel like:
+“I accidentally published my lunch as a research paper.”
 
 """.strip()

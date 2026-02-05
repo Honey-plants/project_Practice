@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import json
 from pathlib import Path
 from typing import Any, Dict, Tuple, List
 from io import BytesIO
@@ -61,6 +61,39 @@ def run_map_template(payload: Dict[str, Any]) -> Tuple[bytes, str]:
       prompt: Gemini 편집 프롬프트
     """
     reviews = payload.get("reviews", [])
+    
+    # 최정규 1111
+    # print("temp2 payload dep1 :: ", payload.get("reviews"))
+    # locations = [r["location"] for r in payload.get("reviews", []) if r.get("location")]
+    #
+    # print("location :: ", locations)
+
+    # 1) reviews의 location을 coords로 변환해서 심기
+    for r in reviews:
+        loc = r.get("location")
+        if not loc:
+            continue
+
+        # location이 문자열 JSON이면 파싱
+        if isinstance(loc, str):
+            try:
+                loc = json.loads(loc)  # ['1284216484', '348857549']
+            except Exception:
+                continue
+
+        # loc이 [x, y] 형태면 coords로 변환
+        if isinstance(loc, (list, tuple)) and len(loc) >= 2:
+            x, y = loc[0], loc[1]
+            if x is None or y is None:
+                continue
+
+            # orchestrator가 체크하는 조건: r.get("coords") and coords.x and coords.y
+            r["coords"] = {"x": str(x), "y": str(y)}
+
+    # (원하면 디버그)
+    locations = [r.get("location") for r in reviews if r.get("location")]
+    print("location :: ", locations)
+
 
     places: List[Dict[str, Any]] = payload.get("places") or [
         {
@@ -73,6 +106,8 @@ def run_map_template(payload: Dict[str, Any]) -> Tuple[bytes, str]:
 
     if not places:
         raise ValueError("No coordinates found to pin on the map.")
+
+    print("최종 위치 값 :: ", places)
 
     pinned_map_bytes = render_pinned_map_bytes(
         base_image_path=BASE_MAP,
