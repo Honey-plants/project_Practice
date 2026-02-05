@@ -1,20 +1,25 @@
+/* ===== 전체 라이아웃 ===== */
 .communityDetail {
-  max-width: 480px;
+  max-width: 720px;
   margin: 0 auto;
-  background: white;
-  border: 1px solid #ddd;
+  background: #FFFFFF;
+  border: 1px solid #DDDDDD;
+  border-radius: 16px;
+  /* overflow visible — 하단 commentForm 등이 잘리지 않도록 */
+  overflow: visible;
 }
 
-.detailHeader {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px;
-  font-weight: 600;
+.loading {
+  text-align: center;
+  padding: 60px;
+  color: #666666;
+  font-size: 15px;
 }
 
-.detailHeader .actions {
-  display: flex;
-  gap: 8px;
+/* ===== 이미지 영역 ===== */
+.imageBox {
+  width: 100%;
+  background: #F5F5F5;
 }
 
 .imageBox img {
@@ -23,39 +28,211 @@
   object-fit: cover;
 }
 
-.contentBox {
-  padding: 12px;
+/* ===== 작성자 정보 행 ===== */
+.detailHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #EEEEEE;
 }
 
-.contentText {
-  margin-bottom: 8px;
+.authorRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.meta {
-  font-size: 12px;
-  color: #888;
+/* 아바타 원형 */
+.authorAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #2E7D32;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
+.authorInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.authorName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.authorLike {
+  font-size: 14px;
+  color: #666666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.likeIcon {
+  color: #E53935;
+}
+
+/* ===== 공개/비공개 토글 버튼 ===== */
+.toggleBtn {
+  border: none;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleOn {
+  background: #2E7D32;
+  color: #FFFFFF;
+}
+
+.toggleOn:hover {
+  background: #1B5E20;
+}
+
+.toggleOff {
+  background: #F5F5F5;
+  color: #666666;
+  border: 1px solid #DDDDDD;
+}
+
+.toggleOff:hover {
+  background: #EEEEEE;
+}
+
+.toggleBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== 댓글 영역 ===== */
 .commentBox {
-  border-top: 1px solid #eee;
-  padding: 12px;
+  padding: 20px;
+}
+
+.commentTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333333;
+  margin-bottom: 12px;
+}
+
+.commentEmpty {
+  font-size: 14px;
+  color: #999999;
+  text-align: center;
+  padding: 20px 0;
 }
 
 .comment {
-  font-size: 14px;
-  margin-bottom: 6px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid #F0F0F0;
 }
 
-.comment b {
-  margin-right: 6px;
+.comment:last-of-type {
+  border-bottom: none;
+}
+
+.commentAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2E7D32;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.commentContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.commentAuthor {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.commentText {
+  font-size: 14px;
+  color: #555555;
+}
+
+/* ===== 댓글 입력폼 ===== */
+.commentForm {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #EEEEEE;
 }
 
 .commentInput {
-  width: 100%;
-  border: none;
-  border-top: 1px solid #eee;
-  padding: 10px 0;
-  outline: none;
+  flex: 1;
+  border: 1px solid #DDDDDD;
+  border-radius: 8px;
+  padding: 10px 14px;
   font-size: 14px;
-  color: #aaa;
+  color: #333333;
+  outline: none;
+  transition: border-color 0.2s ease;
+  background: #FFFFFF;
+}
+
+.commentInput::placeholder {
+  color: #999999;
+}
+
+.commentInput:focus {
+  border-color: #81C784;
+}
+
+.commentInput:disabled {
+  background: #F5F5F5;
+  color: #999999;
+  cursor: not-allowed;
+}
+
+.commentSubmitBtn {
+  background: #2E7D32;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+}
+
+.commentSubmitBtn:hover {
+  background: #1B5E20;
+}
+
+.commentSubmitBtn:disabled {
+  background: #E0E0E0;
+  color: #999999;
+  cursor: not-allowed;
 }

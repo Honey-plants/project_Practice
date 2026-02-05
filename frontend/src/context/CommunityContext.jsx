@@ -67,6 +67,14 @@ export function CommunityProvider({ children }) {
     create: async (payload) => (await CommunityAPI.create(payload)).data,
     update: async (id, payload) => (await CommunityAPI.update(id, payload)).data,
     remove: async (id) => (await CommunityAPI.remove(id)).data,
+
+    // 공개/비공개 토글 후 상세 상태 갱신
+    toggleActive: async (id, active) => {
+      const r = await CommunityAPI.update(id, { community_active: active });
+      // 로컬 detail 상태도 바로 갱신
+      dispatch({ type: "SET_DETAIL", payload: { ...r.data, community_active: active } });
+      return r.data;
+    },
   };
 
   return (

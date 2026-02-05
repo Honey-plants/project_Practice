@@ -29,20 +29,15 @@ export default function CreateModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    if (!myMemberId) {
-      setTemplateId(1);
-      setSelectedIds([]);
-      return;
-    }
-
-    if (myReviews.length === 0 && !stateReview.loading) {
-      reviewActions.fetchMyList?.();
-    }
-
     setTemplateId(1);
     setSelectedIds([]);
+
+    if (!myMemberId) return;
+
+    // 모달 열기마다 반드시 본인 리뷰만 새로 가져옴
+    reviewActions.fetchMyList?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, myMemberId]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -68,7 +63,15 @@ export default function CreateModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="AI 이미지 생성">
+    <Modal isOpen={isOpen} onClose={saving ? undefined : onClose} title="AI 이미지 생성">
+      {/* 생성 중 로딩 오버레이 — 모든 조작 차단 */}
+      {saving && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingSpinner}></div>
+          <p className={styles.loadingText}>AI 이미지 생성 중...</p>
+        </div>
+      )}
+
       <p className={styles.desc}>Choose a template</p>
 
       {/* ✅ Template 선택 UI (컴포넌트 없이 inline) */}
@@ -80,7 +83,7 @@ export default function CreateModal({
             checked={templateId === 1}
             onChange={() => setTemplateId(1)}
           />
-          <img src="/template2.png" alt="Template 1" />
+          <img src="/template1.png" alt="Template 1" />
           <div>
             <b>Template 1 (Journal)</b>
             <div className={styles.small}>Select exactly 3 ACTIVE reviews</div>
@@ -94,7 +97,7 @@ export default function CreateModal({
             checked={templateId === 2}
             onChange={() => setTemplateId(2)}
           />
-          <img src="/template1.png" alt="Template 2" />
+          <img src="/template2.png" alt="Template 2" />
           <div>
             <b>Template 2 (Map)</b>
             <div className={styles.small}>Uses ALL ACTIVE reviews</div>
@@ -102,8 +105,8 @@ export default function CreateModal({
         </label>
       </div>
 
-      <div className="section" style={{ marginTop: 12 }}>
-        <div className="sectionTitle">
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>
           Total reviews ({myReviews.length}) / ACTIVE ({activeReviews.length})
         </div>
 
@@ -119,7 +122,7 @@ export default function CreateModal({
               Chosen 3 reviews will be used ({selectedIds.length}/3)
             </div>
 
-            <ul className="reviewList">
+            <ul className={styles.reviewList}>
               {myReviews.map((r) => {
                 const id = r.review_id ?? r.id;
                 const title = r.review_title ?? r.title ?? "(no title)";
@@ -128,16 +131,16 @@ export default function CreateModal({
 
                 return (
                   <li key={id} className={`${styles.reviewItem} ${!isActive ? styles.inactive : ""}`}>
-                    <label className="checkboxRow">
+                    <label className={styles.checkboxRow}>
                       <input
                         type="checkbox"
                         checked={checked}
                         disabled={!isActive}
                         onChange={() => toggleSelect(id, isActive)}
                       />
-                      <span className="reviewTitle">
+                      <span className={styles.reviewTitle}>
                         {title}
-                        {!isActive && <span className="inactiveTag"> (INACTIVE)</span>}
+                        {!isActive && <span className={styles.inactiveTag}> (INACTIVE)</span>}
                       </span>
                     </label>
                   </li>
@@ -155,7 +158,7 @@ export default function CreateModal({
       </div>
 
       <div className={styles.actions}>
-        <button type="button" onClick={onClose} className={styles.btnGhost}>
+        <button type="button" onClick={onClose} disabled={saving} className={styles.btnGhost}>
           Cancel
         </button>
 

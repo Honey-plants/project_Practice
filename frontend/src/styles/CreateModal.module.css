@@ -5,18 +5,63 @@
   font-size: 14px;
 }
 
-/* ===== Template Grid ===== */
-.templateGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+/* ===== Template 행 ===== */
+.templateRow {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
-@media (max-width: 768px) {
-  .templateGrid {
-    grid-template-columns: 1fr;
+@media (max-width: 600px) {
+  .templateRow {
+    flex-direction: column;
   }
+}
+
+/* 템플릿 카드 하나 */
+.templateItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid #DDDDDD;
+  border-radius: 10px;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  text-align: center;
+}
+
+.templateItem input[type="radio"] {
+  display: none;
+}
+
+.templateItem img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #F5F5F5;
+}
+
+.templateItem b {
+  font-size: 14px;
+  color: #333333;
+}
+
+/* 선택된 템플릿 카드 */
+.active {
+  border-color: #2E7D32;
+  background: #F1F8E9;
+}
+
+/* 템플릿 카드 내 설명 텍스트 */
+.small {
+  font-size: 12px;
+  color: #666666;
+  margin-top: 2px;
 }
 
 /* ===== Checkbox Row ===== */
@@ -164,4 +209,45 @@
   margin-left: 6px;
   font-size: 12px;
   color: #999999; /* 라이트 그레이 */
+}
+
+/* ===== Ghost 버튼 disabled ===== */
+.btnGhost:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===== 로딩 오버레이 (생성 진행 중 전체 차단) ===== */
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.88);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border-radius: 10px;
+  pointer-events: all;
+}
+
+.loadingSpinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid #DDDDDD;
+  border-top-color: #2E7D32;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333333;
+  margin: 0;
 }

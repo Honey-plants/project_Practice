@@ -1,0 +1,127 @@
+/* ===== Community List Container ===== */
+.listContainer {
+  margin-top: 20px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;                   /* 인스타 스타일: 카드 사이 얇은 구분선 효과 */
+  background: #EFEFEF;        /* 구분선 색 (카드 사이 빈 틈이 이 색으로 보임) */
+}
+
+/* ===== 카드 (리스트 아이템) — 인스타 포스팅 스타일 ===== */
+.listItem {
+  background: #FFFFFF;
+  overflow: hidden;
+  transition: background 0.2s ease;
+}
+
+.listItem:hover {
+  background: #FAFAFA;
+}
+
+/* 카드 내부 링크 — 세로 스택 */
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;     /* 세로로 쌓임 */
+}
+
+/* ===== 상단 헤더: 닉네임(왼쪽) + 좋아요(오른쪽) ===== */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+}
+
+/* ===== 이미지 영역 — 정사각형 (인스타 기본 비율) ===== */
+.cardImage {
+  width: 100%;
+  aspect-ratio: 1 / 1;       /* 항상 정사각형 유지 */
+  background: #F5F5F5;
+  overflow: hidden;
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.imgPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #999999;
+  background: #EFEFEF;
+}
+
+/* ===== 닉네임 & 좋아요 ===== */
+.cardNickname {
+  font-size: 14px;
+  font-weight: 700;           /* 인스타 스타일: 닉네임 볼드 */
+  color: #262626;
+}
+
+.cardLike {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.likeIcon {
+  color: #E53935;
+  font-size: 15px;
+}
+
+.likeCount {
+  font-size: 14px;
+  font-weight: 600;
+  color: #262626;
+}
+
+/* ===== 최신 댓글 ===== */
+.cardComment {
+  padding: 8px 14px 12px;     /* 이미지 아래 약간의 여백 + 하단 여백 */
+  font-size: 13px;
+  color: #8E8E8E;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== Error / Loading / Empty ===== */
+.errorBox {
+  padding: 16px;
+  background: #FFFFFF;
+  border: 1px solid #D32F2F;
+  border-radius: 10px;
+  color: #D32F2F;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666666;
+  font-size: 15px;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: #999999;
+  font-size: 15px;
+}
