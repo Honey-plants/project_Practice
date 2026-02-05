@@ -198,10 +198,16 @@ class Step4Options:
 @dataclass
 class Step5Options:
     user_profile_json: Optional[str] = None
-    include_debug: bool = False
+    include_debug: bool = True
     max_retries: int = 2
     require_poly: bool = True
     sleep_base: float = 2.0  # orchestrator-level backoff
+
+    # ✅ speed patch (Step05 chunk/parallel/cache)
+    chunk_size: int = 8       # 0이면 기존처럼 단일 호출
+    workers: int = 2          # 병렬 worker (권장 2~4)
+    use_cache: bool = True   # llm/llm_cache.json 사용
+
 
 
 @dataclass
@@ -218,6 +224,16 @@ class Step6Options:
 
     dotenv_path: Optional[str] = None
     max_dotenv_up: int = 8
+
+    # ✅ performance / behavior options (patched Step06)
+    batch_size: int = 5
+    use_cache: bool = False
+    force_translate_all: bool = False
+
+    # ✅ menu_name_en control
+    translate_menu_name: bool = False
+    force_menu_name_en: bool = False
+
 
 
 class PipelineOrchestrator:
@@ -454,6 +470,16 @@ class PipelineOrchestrator:
                 cmd5 += ["--no_require_poly"]
             if step5.include_debug:
                 cmd5 += ["--include_debug"]
+            # ✅ Step05 speed patch args
+            if int(getattr(step5, "chunk_size", 0) or 0) > 0:
+                cmd5 += ["--chunk_size", str(int(step5.chunk_size))]
+
+            if int(getattr(step5, "workers", 1) or 1) > 1:
+                cmd5 += ["--workers", str(int(step5.workers))]
+
+            if bool(getattr(step5, "use_cache", False)):
+                cmd5 += ["--use_cache"]
+
 
             # orchestrator-level backoff retry (subprocess)
             for attempt in range(int(step5.max_retries) + 1):
@@ -497,6 +523,19 @@ class PipelineOrchestrator:
             if step6.dotenv_path:
                 cmd6 += ["--dotenv_path", step6.dotenv_path]
 
+            # ✅ patched Step06 args
+            if int(step6.batch_size) > 1:
+                cmd6 += ["--batch_size", str(int(step6.batch_size))]
+            if step6.use_cache:
+                cmd6 += ["--use_cache"]
+            if step6.force_translate_all:
+                cmd6 += ["--force_translate_all"]
+
+            if step6.translate_menu_name:
+                cmd6 += ["--translate_menu_name"]
+                if step6.force_menu_name_en:
+                    cmd6 += ["--force_menu_name_en"]
+
             run_cmd(cmd6, cwd=self.ai_root)
 
             ensure_exists(translate_json, "Step06 expected output missing (translate.json)")
@@ -509,18 +548,18 @@ class PipelineOrchestrator:
                 "final_output": {
                     "type": "final_translated",
                     "relative_path": str(Path("final") / "final_translated.json"),
-                    },
+                },
                 "artifacts": {
                     "rectified_image": str(rectify_img),
                     "final_json": str(final_json),
                     "translate_json": str(translate_json),
                     "final_translated_json": str(final_translated_json),
-                    },
-                }
+                },
+            }
             final_output_path = run_dir / "final" / "final_output.json"
             final_output_path.write_text(
                 json.dumps(final_output_meta, ensure_ascii=False, indent=2),
-                encoding = "utf-8",
+                encoding="utf-8",
             )
             print(f"[STEP06] wrote final_output.json : {final_output_path}")
             _mark("step06_translate", t0)
@@ -624,6 +663,11 @@ if __name__ == "__main__":
     p.add_argument("--step5-debug", action="store_true")
     p.add_argument("--step5-max-retries", type=int, default=2)
     p.add_argument("--step5-no-require-poly", action="store_true")
+    # ✅ Step05 speed patch
+    p.add_argument("--step5-chunk-size", type=int, default=0)
+    p.add_argument("--step5-workers", type=int, default=1)
+    p.add_argument("--step5-use-cache", action="store_true")
+
 
     # ---------------- Step6 ----------------
     p.add_argument("--no-step6", action="store_true", help="Skip step6")
@@ -636,6 +680,14 @@ if __name__ == "__main__":
     p.add_argument("--step6-sleep-base", type=float, default=0.7)
     p.add_argument("--step6-dotenv-path", default=None)
     p.add_argument("--step6-max-dotenv-up", type=int, default=8)
+
+    # ✅ patched Step06 flags
+    p.add_argument("--step6-batch-size", type=int, default=2)
+    p.add_argument("--step6-use-cache", action="store_true")
+    p.add_argument("--step6-force-translate-all", action="store_true")
+
+    p.add_argument("--step6-translate-menu-name", action="store_true")
+    p.add_argument("--step6-force-menu-name-en", action="store_true")
 
     # ---------------- Step3 checker ----------------
     p.add_argument("--no-check", action="store_true")
@@ -697,6 +749,11 @@ if __name__ == "__main__":
         include_debug=args.step5_debug,
         max_retries=args.step5_max_retries,
         require_poly=(not args.step5_no_require_poly),
+
+        # ✅ Step05 speed patch
+        chunk_size=args.step5_chunk_size,
+        workers=args.step5_workers,
+        use_cache=args.step5_use_cache,
     )
 
     step6 = Step6Options(
@@ -708,8 +765,13 @@ if __name__ == "__main__":
         max_retries=args.step6_max_retries,
         sleep_base=args.step6_sleep_base,
         dotenv_path=args.step6_dotenv_path,
-        max_dotenv_up=args.step6_max_dotenv_up,
-    )
+        max_dotenv_up=args.step6_max_dotenv_up,# ✅ patched Step06
+        batch_size=args.step6_batch_size,
+        use_cache=args.step6_use_cache,
+        force_translate_all=args.step6_force_translate_all,
+        translate_menu_name=args.step6_translate_menu_name,
+        force_menu_name_en=args.step6_force_menu_name_en,
+)
 
     orch.run(
         image_path=resolved_image,

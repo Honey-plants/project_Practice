@@ -10,15 +10,18 @@
   pointer-events: auto;
   cursor: pointer;
 }
- 
+
 .ms-po__poly {
+  /* 기본값 (실제 색은 JSX inline style이 덮어씀) */
   fill: rgba(255, 0, 0, 0.2);
   stroke: red;
   stroke-width: 2;
 }
- 
+
+/* 텍스트 가독성: fill(검정) + stroke(흰색) 외곽선 */
 .ms-po__text {
-  font-weight: 700;
-  stroke: white;
+  font-weight: 800;
+  fill: #111;
+  stroke: #fff;
   paint-order: stroke;
 }

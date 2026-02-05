@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import time
 from pathlib import Path
@@ -9,8 +10,14 @@ from typing import Any, Dict, List, Tuple, Optional
 
 from menu_assistant.worker.worker_app.llm.client import GeminiClientConfig
 from menu_assistant.worker.worker_app.translate.model import GeminiTranslateClient
-from menu_assistant.worker.worker_app.translate.prompt import build_translate_prompts_for_final_item
-from menu_assistant.worker.worker_app.translate.schema import validate_translate_output
+from menu_assistant.worker.worker_app.translate.prompt import (
+    build_translate_prompts_for_final_item,
+    build_translate_prompts_for_final_items_batch,
+)
+from menu_assistant.worker.worker_app.translate.schema import (
+    validate_translate_output,
+    validate_translate_batch_output,
+)
 
 
 # ============================================================
@@ -18,10 +25,6 @@ from menu_assistant.worker.worker_app.translate.schema import validate_translate
 # - Input  : run_dir/final/final.json   (Step05 strict-flat output)
 # - Output : run_dir/translate/translate.json
 #            run_dir/final/final_translated.json
-#
-# IMPORTANT:
-#   Step05 final.json is STRICT-FLAT schema (no menu/risk/ui nesting).
-#   This step reads *_ko from root and writes *_en to root only.
 # ============================================================
 
 
@@ -85,9 +88,9 @@ def _normalize_translation_output(obj: Any) -> Dict[str, Any]:
         return {}
 
     if set(obj.keys()) in (
-            {"menu_description_en", "risk_description_en", "comment_en"},
-            {"menu_name_en", "menu_description_en", "risk_description_en", "comment_en"},
-            ):
+        {"menu_description_en", "risk_description_en", "comment_en"},
+        {"menu_name_en", "menu_description_en", "risk_description_en", "comment_en"},
+    ):
         return obj
 
     menu_en = ""
@@ -116,30 +119,68 @@ def _normalize_translation_output(obj: Any) -> Dict[str, Any]:
     }
 
 
-def _translate_with_retries(
+def _translation_cache_key(*, model: str, include_menu_name: bool, item: Dict[str, Any]) -> str:
+    """
+    캐시 키는 "번역 입력"만으로 결정 (item_id, poly 등은 제외)
+    """
+    payload = {
+        "model": model,
+        "include_menu_name": bool(include_menu_name),
+        "menu_name_ko": _get_str(item.get("menu_name_ko")),
+        "menu_description_ko": _get_str(item.get("menu_description_ko")),
+        "risk_description_ko": _get_str(item.get("risk_description_ko")),
+        "comment_ko": _get_str(item.get("comment_ko")),
+    }
+    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _load_cache(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        obj = json.loads(path.read_text(encoding="utf-8"))
+        return obj if isinstance(obj, dict) else {}
+    except Exception:
+        return {}
+
+
+def _save_cache(path: Path, cache: Dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(cache, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _translate_single_with_retries(
+    *,
     client: GeminiTranslateClient,
     item: Dict[str, Any],
+    model_name: str,
+    include_menu_name: bool,
     max_retries: int,
     sleep_base: float,
+    cache: Dict[str, Any],
 ) -> Dict[str, Any]:
+    # 캐시 우선
+    key = _translation_cache_key(model=model_name, include_menu_name=include_menu_name, item=item)
+    cached = cache.get(key)
+    if isinstance(cached, dict):
+        out = _normalize_translation_output(cached)
+        ok, _ = validate_translate_output(out, require_menu_name_en=include_menu_name)
+        if ok:
+            return out
+
     last_err: Optional[Exception] = None
     for attempt in range(max_retries + 1):
         try:
-            require_menu_name = bool(item.get("_need_menu_name_en"))
-            system_p, user_p = build_translate_prompts_for_final_item(item,include_menu_name=require_menu_name)
-
-            out = client.translate_final_item(
-                item=item,
-                system_prompt=system_p,
-                user_prompt=user_p,
-            )
+            system_p, user_p = build_translate_prompts_for_final_item(item, include_menu_name=include_menu_name)
+            out = client.translate_final_item(item=item, system_prompt=system_p, user_prompt=user_p)
             out = _normalize_translation_output(out)
 
-            ok, msg = validate_translate_output(out, require_menu_name_en=require_menu_name)
+            ok, msg = validate_translate_output(out, require_menu_name_en=include_menu_name)
             if not ok:
                 raise ValueError(f"[step06] Invalid translation output: {msg}")
 
-            # ✅ HARD CHECK: KO가 있는데 EN이 비면 실패로 처리 (빈 번역 저장 방지)
+            # HARD CHECK: KO가 있는데 EN이 비면 실패로 처리
             if _get_str(item.get("menu_description_ko")) and not _get_str(out.get("menu_description_en")):
                 raise ValueError("[step06] empty menu_description_en while menu_description_ko exists")
             if _get_str(item.get("risk_description_ko")) and not _get_str(out.get("risk_description_en")):
@@ -147,6 +188,7 @@ def _translate_with_retries(
             if _get_str(item.get("comment_ko")) and not _get_str(out.get("comment_en")):
                 raise ValueError("[step06] empty comment_en while comment_ko exists")
 
+            cache[key] = out
             return out
 
         except Exception as e:
@@ -158,8 +200,50 @@ def _translate_with_retries(
     raise RuntimeError(f"[step06] Translation failed after retries: {last_err}") from last_err
 
 
+def _translate_batch_with_retries(
+    *,
+    client: GeminiTranslateClient,
+    items: List[Dict[str, Any]],
+    model_name: str,
+    include_menu_name: bool,
+    max_retries: int,
+    sleep_base: float,
+) -> Any:
+    last_err: Optional[Exception] = None
+    for attempt in range(max_retries + 1):
+        try:
+            system_p, user_p = build_translate_prompts_for_final_items_batch(items, include_menu_name=include_menu_name)
+            out = client.translate_final_items_batch_json(system_prompt=system_p, user_prompt=user_p)
+
+            ok, msg = validate_translate_batch_output(
+                out,
+                expected_len=len(items),
+                require_menu_name_en=include_menu_name,
+            )
+            if not ok:
+                raise ValueError(f"[step06] Invalid batch translation output: {msg}")
+
+            return out
+        except Exception as e:
+            last_err = e
+            if attempt >= max_retries:
+                break
+            time.sleep(sleep_base * (attempt + 1))
+
+    raise RuntimeError(f"[step06] Batch translation failed after retries: {last_err}") from last_err
+
+
+def _extract_batch_items(out: Any) -> List[Dict[str, Any]]:
+    if isinstance(out, dict) and isinstance(out.get("items"), list):
+        return out["items"]
+    if isinstance(out, list):
+        return out
+    return []
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Step06: Translate final.json fields (STRICT-FLAT)")
+
     parser.add_argument("--run_id", type=str, default=None)
     parser.add_argument("--data_dir", type=str, default="menu_assistant/data")
     parser.add_argument("--run_dir", type=str, default=None)
@@ -177,10 +261,34 @@ def main() -> None:
     parser.add_argument("--max_retries", type=int, default=2)
     parser.add_argument("--sleep_base", type=float, default=0.7)
 
-    parser.add_argument("--translate_menu_name", action="store_true",
-                             help = "If set, translate menu_name_ko -> menu_name_en in Step6 (overrides Step5).")
-    parser.add_argument("--force_menu_name_en", action="store_true",
-                             help = "If set, re-translate menu_name_en even if it already exists (requires --translate_menu_name).")
+    parser.add_argument(
+        "--translate_menu_name",
+        action="store_true",
+        help="If set, translate menu_name_ko -> menu_name_en in Step6 (overrides Step5).",
+    )
+    parser.add_argument(
+        "--force_menu_name_en",
+        action="store_true",
+        help="If set, re-translate menu_name_en even if it already exists (requires --translate_menu_name).",
+    )
+
+    # ✅ 성능 옵션
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=1,
+        help="If >1, translate items in batches to reduce API calls.",
+    )
+    parser.add_argument(
+        "--use_cache",
+        action="store_true",
+        help="If set, enable translation cache under run_dir/translate/translate_cache.json",
+    )
+    parser.add_argument(
+        "--force_translate_all",
+        action="store_true",
+        help="If set, translate even if *_en already exists (cache still applies).",
+    )
 
     args = parser.parse_args()
 
@@ -212,67 +320,157 @@ def main() -> None:
         max_dotenv_up=int(args.max_dotenv_up),
     )
 
+    cache_path = run_dir / "translate" / "translate_cache.json"
+    cache: Dict[str, Any] = _load_cache(cache_path) if args.use_cache else {}
+
     translated_rows: List[Dict[str, Any]] = []
     merged_items: List[Dict[str, Any]] = []
 
+    # --- normalize inputs / compute per-item include_menu flag ---
     for idx, it in enumerate(items):
         if not isinstance(it, dict):
             raise ValueError(f"[step06] items[{idx}] is not an object/dict.")
         if it.get("item_id") is None:
             raise ValueError(f"[step06] items[{idx}] missing item_id.")
 
-        # flat KO only
         it["menu_description_ko"] = _get_str(it.get("menu_description_ko"))
         it["risk_description_ko"] = _get_str(it.get("risk_description_ko"))
         it["comment_ko"] = _get_str(it.get("comment_ko"))
-        # ✅ menu_name_en 번역 필요 여부(조건부)
         it["menu_name_ko"] = _get_str(it.get("menu_name_ko"))
         it["menu_name_en"] = _get_str(it.get("menu_name_en"))
 
         need_menu = False
-
         if args.translate_menu_name:
-
             if args.force_menu_name_en:
                 need_menu = bool(it["menu_name_ko"])
+            else:
+                need_menu = bool(it["menu_name_ko"]) and (not it["menu_name_en"])
         else:
             need_menu = bool(it["menu_name_ko"]) and (not it["menu_name_en"])
-        # 내부 플래그(프롬프트/검증에만 사용)
+
         it["_need_menu_name_en"] = need_menu
-        translated = _translate_with_retries(
-            client=client,
-            item=it,
-            max_retries=int(args.max_retries),
-            sleep_base=float(args.sleep_base),
-        )
 
-        # write EN to root only
-        it["menu_description_en"] = _get_str(translated.get("menu_description_en"))
-        it["risk_description_en"] = _get_str(translated.get("risk_description_en"))
-        it["comment_en"] = _get_str(translated.get("comment_en"))
-        # ✅ 필요 시에만 menu_name_en 갱신
+    # --- translate ---
+    bs = max(1, int(args.batch_size))
+    idx = 0
+    while idx < len(items):
+        chunk = items[idx : idx + bs]
 
-        if need_menu:
-            it["menu_name_en"] = _get_str(translated.get("menu_name_en"))
+        # chunk 내에서 menu_name_en 필요가 하나라도 있으면 batch에 포함
+        include_menu_name = any(bool(x.get("_need_menu_name_en")) for x in chunk)
 
-        translated_rows.append(
-            {
-                "item_id": it.get("item_id"),
-                "menu_name_en": it.get("menu_name_en"),
-                "menu_description_en": it["menu_description_en"],
-                "risk_description_en": it["risk_description_en"],
-                "comment_en": it["comment_en"],
-            }
-        )
-        # internal flag 제거(최종 산출물에 남기지 않음)
-        it.pop("_need_menu_name_en", None)
+        # ✅ 스킵 조건(이미 en이 있고 force_translate_all 아니면)
+        def _needs_translation(it: Dict[str, Any]) -> bool:
+            if args.force_translate_all:
+                return True
+            # 최소 3개 en 필드가 다 채워져 있으면 스킵
+            has_menu_en = bool(_get_str(it.get("menu_description_en")))
+            has_risk_en = bool(_get_str(it.get("risk_description_en")))
+            has_comment_en = bool(_get_str(it.get("comment_en")))
+            if include_menu_name and bool(it.get("_need_menu_name_en")):
+                has_name_en = bool(_get_str(it.get("menu_name_en")))
+                return not (has_menu_en and has_risk_en and has_comment_en and has_name_en)
+            return not (has_menu_en and has_risk_en and has_comment_en)
 
-        merged_items.append(it)
+        # 실제로 번역이 필요한 item만 따로 모음
+        need_items = [it for it in chunk if _needs_translation(it)]
 
-        print(
-            f"[OK] idx={idx:04d} item_id={it.get('item_id')} "
-            f"menu_en_len={len(it['menu_description_en'])} risk_en_len={len(it['risk_description_en'])}"
-        )
+        t0 = time.time()
+
+        if bs > 1 and len(need_items) > 0:
+            # ✅ Batch path (필요한 것만 배치로 보냄)
+            try:
+                out_any = _translate_batch_with_retries(
+                    client=client,
+                    items=need_items,
+                    model_name=args.model,
+                    include_menu_name=include_menu_name,
+                    max_retries=int(args.max_retries),
+                    sleep_base=float(args.sleep_base),
+                )
+                out_list = _extract_batch_items(out_any)
+
+                # 캐시 저장 + 결과 반영(need_items와 동일 순서 가정)
+                for it, translated in zip(need_items, out_list):
+                    translated = _normalize_translation_output(translated)
+
+                    # HARD CHECK
+                    if _get_str(it.get("menu_description_ko")) and not _get_str(translated.get("menu_description_en")):
+                        raise ValueError("[step06] empty menu_description_en while menu_description_ko exists")
+                    if _get_str(it.get("risk_description_ko")) and not _get_str(translated.get("risk_description_en")):
+                        raise ValueError("[step06] empty risk_description_en while risk_description_ko exists")
+                    if _get_str(it.get("comment_ko")) and not _get_str(translated.get("comment_en")):
+                        raise ValueError("[step06] empty comment_en while comment_ko exists")
+
+                    # write EN to root only
+                    it["menu_description_en"] = _get_str(translated.get("menu_description_en"))
+                    it["risk_description_en"] = _get_str(translated.get("risk_description_en"))
+                    it["comment_en"] = _get_str(translated.get("comment_en"))
+
+                    if bool(it.get("_need_menu_name_en")):
+                        it["menu_name_en"] = _get_str(translated.get("menu_name_en"))
+
+                    if args.use_cache:
+                        key = _translation_cache_key(model=args.model, include_menu_name=include_menu_name, item=it)
+                        cache[key] = translated
+
+            except Exception as e:
+                # ✅ 안전 폴백: 배치 실패 시 기존 1개씩 번역
+                print(f"[WARN] batch failed (idx={idx} size={len(need_items)}). fallback to single. err={e}")
+                for it in need_items:
+                    translated = _translate_single_with_retries(
+                        client=client,
+                        item=it,
+                        model_name=args.model,
+                        include_menu_name=bool(it.get("_need_menu_name_en")),
+                        max_retries=int(args.max_retries),
+                        sleep_base=float(args.sleep_base),
+                        cache=cache,
+                    )
+                    it["menu_description_en"] = _get_str(translated.get("menu_description_en"))
+                    it["risk_description_en"] = _get_str(translated.get("risk_description_en"))
+                    it["comment_en"] = _get_str(translated.get("comment_en"))
+                    if bool(it.get("_need_menu_name_en")):
+                        it["menu_name_en"] = _get_str(translated.get("menu_name_en"))
+        else:
+            # ✅ Single path (or bs==1)
+            for it in need_items:
+                translated = _translate_single_with_retries(
+                    client=client,
+                    item=it,
+                    model_name=args.model,
+                    include_menu_name=bool(it.get("_need_menu_name_en")),
+                    max_retries=int(args.max_retries),
+                    sleep_base=float(args.sleep_base),
+                    cache=cache,
+                )
+                it["menu_description_en"] = _get_str(translated.get("menu_description_en"))
+                it["risk_description_en"] = _get_str(translated.get("risk_description_en"))
+                it["comment_en"] = _get_str(translated.get("comment_en"))
+                if bool(it.get("_need_menu_name_en")):
+                    it["menu_name_en"] = _get_str(translated.get("menu_name_en"))
+
+        dt = time.time() - t0
+        print(f"[BATCH] idx={idx:04d} size={len(chunk)} need={len(need_items)} batch_size={bs} took={dt:.2f}s")
+
+        # translate.json rows + cleanup flag
+        for it in chunk:
+            translated_rows.append(
+                {
+                    "item_id": it.get("item_id"),
+                    "menu_name_en": it.get("menu_name_en"),
+                    "menu_description_en": _get_str(it.get("menu_description_en")),
+                    "risk_description_en": _get_str(it.get("risk_description_en")),
+                    "comment_en": _get_str(it.get("comment_en")),
+                }
+            )
+            it.pop("_need_menu_name_en", None)
+            merged_items.append(it)
+
+        idx += bs
+
+    if args.use_cache:
+        _save_cache(cache_path, cache)
 
     _save_json(run_dir / "translate" / "translate.json", {"items": translated_rows})
     container["items"] = merged_items
@@ -280,6 +478,8 @@ def main() -> None:
 
     print(f"[DONE] translate.json        = {run_dir / 'translate' / 'translate.json'}")
     print(f"[DONE] final_translated.json = {run_dir / 'final' / 'final_translated.json'}")
+    if args.use_cache:
+        print(f"[DONE] translate_cache.json  = {cache_path}")
 
 
 if __name__ == "__main__":

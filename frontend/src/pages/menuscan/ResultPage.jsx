@@ -156,11 +156,11 @@ function ResultContent({ result }) {
         </div>
       )}
 
-      {/* Result JSON */}
-      <div className="rp-json-wrap">
-        <h3 className="rp-json-title">Result JSON</h3>
-        <pre className="rp-json-pre">{jsonText}</pre>
-      </div>
+{/*        */}{/* Result JSON */}
+{/*       <div className="rp-json-wrap"> */}
+{/*         <h3 className="rp-json-title">Result JSON</h3> */}
+{/*         <pre className="rp-json-pre">{jsonText}</pre> */}
+{/*       </div> */}
     </div>
   );
 }
