@@ -27,8 +27,8 @@ export default function CreateModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    // ✅ only Template 2 uses selection
-    if (templateId !== 2) {
+    // only Template 2 uses selection
+    if (templateId !== 1) {
       setSelectedIds([]);
       return;
     }
@@ -49,7 +49,7 @@ export default function CreateModal({
     });
   };
 
-  const canSubmit = templateId === 2 && selectedIds.length > 0;
+  const canSubmit = templateId === 1 && selectedIds.length > 0;
 
   const handleConfirm = () => {
     if (!canSubmit || saving) return;
@@ -58,7 +58,7 @@ export default function CreateModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Select Reviews">
-      {templateId !== 2 ? (
+      {templateId !== 1 ? (
         <div className={styles.empty}>
           Review selection is only available for Template 2.
         </div>

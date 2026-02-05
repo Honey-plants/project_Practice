@@ -107,14 +107,14 @@ export default function Home() {
 
         {/* 카메라 / 이미지 파일 → 바 형태 */}
         <div className="home-pick-bar">
-          <button onClick={()=> navigate('menu/upload')} className="home-pick-btn">
+          <button onClick={()=>navigate('menu/upload')} className="home-pick-btn">
             <CameraIcon />
             <span>Camera</span>
           </button>
           <div className="home-pick-divider" />
           <button onClick={handleFileSelectClick} className="home-pick-btn">
             <ImageIcon />
-            <span>Menu Image</span>
+            <span>Upload Image</span>
           </button>
         </div>
 
@@ -125,7 +125,7 @@ export default function Home() {
           className="home-analyze-btn"
         >
           <AnalyzeIcon />
-          <span>Menu analysis</span>
+          <span>Analyze Menu</span>
         </button>
       </div>
     </div>
