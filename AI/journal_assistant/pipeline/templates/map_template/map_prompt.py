@@ -33,7 +33,7 @@ def build_map_poster_prompt_with_ref(
         eaten.append(r.get("review_title", "Food experience"))
 
     eaten_text = ", ".join(eaten) if eaten else "No meals recorded"
-    print(eaten_text)
+
     map_box = f"x={map_left}..{map_left+map_w}, y={map_top}..{map_top+map_h}"
 
     #음식 이미지 사진 사이즈 고정시키기

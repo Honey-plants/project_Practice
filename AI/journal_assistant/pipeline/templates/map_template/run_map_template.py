@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import json
 from pathlib import Path
 from typing import Any, Dict, Tuple, List
 from io import BytesIO
@@ -9,7 +9,6 @@ from PIL import Image
 from AI.journal_assistant.pipeline.templates.map_template.pin_overlay import render_pinned_map_bytes
 from AI.journal_assistant.pipeline.templates.map_template.map_prompt import build_map_poster_prompt_with_ref
 
-
 ASSETS_DIR = Path(__file__).parent / "assets"
 BASE_MAP = ASSETS_DIR / "map_names.png"
 CALIB = ASSETS_DIR / "kakao_map_calibration.json"
@@ -17,13 +16,13 @@ PIN_ICON = ASSETS_DIR / "pin.png"
 
 
 def compose_ref_canvas(
-    pinned_map_bytes: bytes,
-    *,
-    canvas_w: int = 1200,
-    canvas_h: int = 820,
-    map_w: int = 900,
-    map_h: int = 520,
-    map_bottom_margin: int = 40,
+        pinned_map_bytes: bytes,
+        *,
+        canvas_w: int = 1200,
+        canvas_h: int = 820,
+        map_w: int = 900,
+        map_h: int = 520,
+        map_bottom_margin: int = 40,
 ) -> Tuple[bytes, Dict[str, int]]:
     """
     pinned map(900x520)을 캔버스(1200x820) 위에 붙여서 ref로 만들기.
@@ -62,17 +61,47 @@ def run_map_template(payload: Dict[str, Any]) -> Tuple[bytes, str]:
     """
     reviews = payload.get("reviews", [])
 
-    places: List[Dict[str, Any]] = payload.get("places") or [
-        {
-            "label": str(i + 1),
-            "location": r["location"],  # e.g. ["1269852828","375735721"]
-        }
-        for i, r in enumerate(reviews)
-        if isinstance(r.get("location"), list) and len(r["location"]) == 2
-    ]
+    # 최정규 1111
+    # print("temp2 payload dep1 :: ", payload.get("reviews"))
+    # locations = [r["location"] for r in payload.get("reviews", []) if r.get("location")]
+    #
+    # print("location :: ", locations)
 
+    # 1) reviews의 location을 coords로 변환해서 심기
+    for r in reviews:
+        loc = r.get("location")
+        if not loc:
+            continue
+
+        # location이 문자열 JSON이면 파싱
+        if isinstance(loc, str):
+            try:
+                loc = json.loads(loc)  # ['1284216484', '348857549']
+            except Exception:
+                continue
+
+        # loc이 [x, y] 형태면 coords로 변환
+        if isinstance(loc, (list, tuple)) and len(loc) >= 2:
+            x, y = loc[0], loc[1]
+            if x is None or y is None:
+                continue
+
+            # orchestrator가 체크하는 조건: r.get("coords") and coords.x and coords.y
+            r["coords"] = {"x": str(x), "y": str(y)}
+
+    # (원하면 디버그)
+    locations = [r.get("location") for r in reviews if r.get("location")]
+    print("location :: ", locations)
+
+    places: List[Dict[str, Any]] = payload.get("places") or [
+        {"coords": r["coords"], "label": str(i + 1)}
+        for i, r in enumerate(reviews)
+        if r.get("coords") and r["coords"].get("x") and r["coords"].get("y")
+    ]
     if not places:
         raise ValueError("No coordinates found to pin on the map.")
+
+    print("최종 위치 값 :: ", places)
 
     pinned_map_bytes = render_pinned_map_bytes(
         base_image_path=BASE_MAP,
