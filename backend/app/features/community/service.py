@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional, List
 from starlette.concurrency import run_in_threadpool
 
 from backend.app.models.community import Community
+from backend.app.models.community_like import CommunityLike
 from backend.app.models.img_file import ImgFile
 
 # review 로직
@@ -197,10 +198,57 @@ def list_community(
 # ---------------------------------------------------------------------
 # 상세
 # ---------------------------------------------------------------------
-def get_community_detail(db: Session, community_id: int) -> Dict[str, Any]:
+def get_community_detail(db: Session, community_id: int, *, current_member_id: Optional[int] = None) -> Dict[str, Any]:
     c = db.get(Community, community_id)
     if not c:
         raise HTTPException(status_code=404, detail="Community not found")
+
+    imgs = db.execute(
+        select(ImgFile)
+        .where(ImgFile.community_id == community_id)
+        .where(ImgFile.owner_type == "community")
+        .order_by(ImgFile.sort_order.asc())
+    ).scalars().all()
+
+    # 현재 사용자가 좋아요 했는지 확인
+    liked = False
+    if current_member_id is not None:
+        existing = db.execute(
+            select(CommunityLike)
+            .where(CommunityLike.community_id == community_id)
+            .where(CommunityLike.member_id == current_member_id)
+        ).scalar_one_or_none()
+        liked = existing is not None
+
+    return {
+        "community_id": c.community_id,
+        "member_id": c.member_id,
+        "community_active": bool(c.community_active),
+        "recommend": int(c.recommend or 0),
+        "liked": liked,
+        "created_at": c.create_at.isoformat() if getattr(c, "create_at", None) else None,
+        "updated_at": c.update_at.isoformat() if getattr(c, "update_at", None) else None,
+        "image_urls": [img.storage_path for img in imgs],
+    }
+
+
+# ---------------------------------------------------------------------
+# 공개/비공개 수정 (community_active 토글)
+# ---------------------------------------------------------------------
+def update_community(db: Session, community_id: int, member_id: int, payload) -> Dict[str, Any]:
+    c = db.get(Community, community_id)
+    if not c:
+        raise HTTPException(status_code=404, detail="Community not found")
+    if c.member_id != member_id:
+        raise HTTPException(status_code=403, detail="Not allowed")
+
+    if payload.community_active is not None:
+        c.community_active = payload.community_active
+    if payload.recommend is not None:
+        c.recommend = payload.recommend
+
+    db.commit()
+    db.refresh(c)
 
     imgs = db.execute(
         select(ImgFile)
@@ -217,4 +265,40 @@ def get_community_detail(db: Session, community_id: int) -> Dict[str, Any]:
         "created_at": c.create_at.isoformat() if getattr(c, "create_at", None) else None,
         "updated_at": c.update_at.isoformat() if getattr(c, "update_at", None) else None,
         "image_urls": [img.storage_path for img in imgs],
+    }
+
+
+# ---------------------------------------------------------------------
+# 좋아요(recommend) 토글 — 1인 1좋아요, 다시 누르면 취소
+# ---------------------------------------------------------------------
+def toggle_recommend(db: Session, community_id: int, member_id: int) -> Dict[str, Any]:
+    c = db.get(Community, community_id)
+    if not c:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # 이미 좋아요 했는지 확인
+    existing = db.execute(
+        select(CommunityLike)
+        .where(CommunityLike.community_id == community_id)
+        .where(CommunityLike.member_id == member_id)
+    ).scalar_one_or_none()
+
+    if existing:
+        # 좋아요 취소
+        db.delete(existing)
+        c.recommend = max(int(c.recommend or 0) - 1, 0)
+        liked = False
+    else:
+        # 좋아요 추가
+        db.add(CommunityLike(community_id=community_id, member_id=member_id))
+        c.recommend = int(c.recommend or 0) + 1
+        liked = True
+
+    db.commit()
+    db.refresh(c)
+
+    return {
+        "community_id": c.community_id,
+        "recommend": int(c.recommend or 0),
+        "liked": liked,
     }

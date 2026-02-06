@@ -47,7 +47,20 @@ def get_community(community_id: int, db: Session = Depends(get_db), current=Depe
 
     print("community 상세 조회 :: ", current.member_id)
 
-    return service.get_community_detail(db, community_id)
+    return service.get_community_detail(db, community_id, current_member_id=current.member_id)
+
+
+@router.put("/{community_id}", response_model=CommunityRead)
+def update_community(community_id: int, payload: CommunityUpdate, db: Session = Depends(get_db), current=Depends(get_current_member)):
+    """공개/비공개 토글 (community_active: 1=공개, 0=비공개)"""
+    return service.update_community(db, community_id, current.member_id, payload)
+
+
+@router.post("/{community_id}/recommend")
+def toggle_recommend(community_id: int, db: Session = Depends(get_db), current=Depends(get_current_member)):
+    """좋아요 +1 토글"""
+    return service.toggle_recommend(db, community_id, current.member_id)
+
 #
 # @router.delete("/{community_id}")
 # def delete_community(community_id: int, db: Session = Depends(get_db)):

@@ -79,42 +79,117 @@
 }
 
 .likeIcon {
+  color: #CCCCCC;
+  transition: color 0.2s ease, transform 0.2s ease;
+  font-size: 18px;
+}
+
+.likeIcon.likeActive {
   color: #E53935;
 }
 
-/* ===== 공개/비공개 토글 버튼 ===== */
-.toggleBtn {
-  border: none;
-  padding: 8px 18px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
+/* ===== 좋아요 버튼 ===== */
+.recommendBtn {
+  background: none;
+  border: 1px solid #EEEEEE;
+  border-radius: 16px;
+  padding: 4px 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-}
-
-.toggleOn {
-  background: #2E7D32;
-  color: #FFFFFF;
-}
-
-.toggleOn:hover {
-  background: #1B5E20;
-}
-
-.toggleOff {
-  background: #F5F5F5;
+  font-size: 14px;
   color: #666666;
-  border: 1px solid #DDDDDD;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
-.toggleOff:hover {
-  background: #EEEEEE;
+.recommendBtn:hover {
+  background: #FFEBEE;
+  border-color: #E53935;
 }
 
-.toggleBtn:disabled {
+.recommendBtn:hover .likeIcon {
+  transform: scale(1.25);
+}
+
+/* 좋아요 눌린 상태 */
+.recommendBtn.liked {
+  background: #FFEBEE;
+  border-color: #EF9A9A;
+  color: #E53935;
+}
+
+.recommendBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* 하트 펄스 애니메이션 */
+@keyframes heartPulse {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.3); }
+  50%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.recommendBtn.liked .likeIcon.likeActive {
+  animation: heartPulse 0.35s ease;
+}
+
+/* ===== 공개/비공개 ON/OFF 스위치 ===== */
+.switchRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.switchLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666666;
+  min-width: 40px;
+  text-align: right;
+}
+
+.switchTrack {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  cursor: pointer;
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+}
+
+.switchOn {
+  background: #2E7D32;
+}
+
+.switchOff {
+  background: #CCCCCC;
+}
+
+.switchThumb {
+  position: absolute;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: left 0.25s ease;
+}
+
+.switchOn .switchThumb {
+  left: 25px;
+}
+
+.switchOff .switchThumb {
+  left: 3px;
+}
+
+.switchTrack:hover {
+  opacity: 0.85;
 }
 
 /* ===== 댓글 영역 ===== */

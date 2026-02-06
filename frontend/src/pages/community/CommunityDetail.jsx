@@ -1,13 +1,16 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { CommunityContext } from "../../context/CommunityContext";
+import { AuthContext } from "../../context/AuthContext";
 import { MemberContext } from "../../context/MemberContext";
 import api from "../../api/axiosInstance";
 import "../../styles/CommunityDetail.css";
 
 export default function CommunityDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { stateCommunity, communityActions } = useContext(CommunityContext);
+  const { stateAuth } = useContext(AuthContext);
   const { stateMember } = useContext(MemberContext);
 
   const myMemberId = stateMember?.me?.member_id;
@@ -17,8 +20,19 @@ export default function CommunityDetail() {
   const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
+  const [recommendLoading, setRecommendLoading] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [localRecommend, setLocalRecommend] = useState(0);
+
+  // 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!stateAuth.loading && !stateAuth.accessToken) {
+      navigate("/login?message=login_required", { replace: true });
+    }
+  }, [stateAuth.loading, stateAuth.accessToken, navigate]);
 
   useEffect(() => {
+    if (!stateAuth.accessToken) return;
     communityActions.fetchDetail(id);
     setComments([]);
     setCommentInput("");
@@ -33,10 +47,19 @@ export default function CommunityDetail() {
         // 엔드포인트 미준비 → 빈 목록 유지
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, stateAuth.accessToken]);
 
   const d = stateCommunity.detail;
-  if (!d) return <div className="loading">Loading...</div>;
+
+  // detail 데이터가 바뀌면 liked / recommend 로컬 상태 동기화
+  useEffect(() => {
+    if (d) {
+      setLiked(!!d.liked);
+      setLocalRecommend(d.recommend ?? 0);
+    }
+  }, [d]);
+
+  if (stateAuth.loading || !d) return <div className="loading">Loading...</div>;
 
   const isOwner = d.member_id === myMemberId;
   const nickname = isOwner && myNickname ? myNickname : `#${d.member_id}`;
@@ -48,6 +71,30 @@ export default function CommunityDetail() {
       await communityActions.toggleActive(id, !isActive);
     } finally {
       setToggleLoading(false);
+    }
+  };
+
+  // 좋아요(recommend) 토글 — 인스타 스타일
+  const handleRecommend = async () => {
+    if (recommendLoading) return;
+    setRecommendLoading(true);
+
+    // 낙관적 업데이트
+    const prevLiked = liked;
+    const prevCount = localRecommend;
+    setLiked(!prevLiked);
+    setLocalRecommend(prevLiked ? Math.max(prevCount - 1, 0) : prevCount + 1);
+
+    try {
+      await communityActions.recommend(id);
+      // 서버 실제 값으로 갱신
+      communityActions.fetchDetail(id);
+    } catch {
+      // 실패 시 원복
+      setLiked(prevLiked);
+      setLocalRecommend(prevCount);
+    } finally {
+      setRecommendLoading(false);
     }
   };
 
@@ -97,21 +144,32 @@ export default function CommunityDetail() {
           <div className="authorAvatar">{nickname.charAt(0)}</div>
           <div className="authorInfo">
             <span className="authorName">{nickname}</span>
-            <span className="authorLike">
-              <span className="likeIcon">♥</span> {d.recommend ?? 0}
-            </span>
+            <button
+              className={`authorLike recommendBtn ${liked ? "liked" : ""}`}
+              onClick={handleRecommend}
+              disabled={recommendLoading}
+            >
+              <span className={`likeIcon ${liked ? "likeActive" : ""}`}>
+                {liked ? "♥" : "♡"}
+              </span>
+              {localRecommend}
+            </button>
           </div>
         </div>
 
-        {/* 공개/비공개 토글 — 작성자에게만 표시 */}
+        {/* 공개/비공개 ON/OFF 스위치 — 작성자에게만 표시 */}
         {isOwner && (
-          <button
-            className={`toggleBtn ${isActive ? "toggleOn" : "toggleOff"}`}
-            onClick={handleToggleActive}
-            disabled={toggleLoading}
-          >
-            {toggleLoading ? "..." : isActive ? "공개" : "비공개"}
-          </button>
+          <div className="switchRow">
+            <span className="switchLabel">{isActive ? "공개" : "비공개"}</span>
+            <div
+              className={`switchTrack ${isActive ? "switchOn" : "switchOff"}`}
+              onClick={toggleLoading ? undefined : handleToggleActive}
+              role="switch"
+              aria-checked={isActive}
+            >
+              <div className="switchThumb" />
+            </div>
+          </div>
         )}
       </div>
 

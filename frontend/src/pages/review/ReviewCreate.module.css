@@ -118,6 +118,33 @@
   font-size: 13px;
   font-weight: 500;
   color: #333333; /* 다크 그레이 */
+  flex: 1;
+}
+
+/* 메뉴 X 삭제 버튼 */
+.btnRemoveMenu {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: #E53935;
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  padding: 0;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.btnRemoveMenu:hover {
+  background: #C62828;
+  transform: scale(1.15);
 }
 
 /* ===== Menu Confirm Buttons ===== */

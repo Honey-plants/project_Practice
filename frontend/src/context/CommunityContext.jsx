@@ -75,6 +75,12 @@ export function CommunityProvider({ children }) {
       dispatch({ type: "SET_DETAIL", payload: { ...r.data, community_active: active } });
       return r.data;
     },
+
+    // 좋아요(recommend) +1
+    recommend: async (id) => {
+      const r = await CommunityAPI.recommend(id);
+      return r.data;
+    },
   };
 
   return (

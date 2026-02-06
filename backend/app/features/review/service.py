@@ -119,6 +119,7 @@ async def create_review_from_receipt(
     title: str,
     content: str,
     rating: int,
+    menu_name_override: Optional[str] = None,
     images: List[UploadFile],
 ) -> Dict[str, Any]:
     session = ReceiptSessionService.get(receipt_id=receipt_id)
@@ -141,9 +142,16 @@ async def create_review_from_receipt(
 
     print("localtion ::: x, y :: ", location_list)
 
-    # menu_en list 작업
-    raw = final_payload.get("menu_name")
-    menu_en_list = ensure_list(raw) if raw else []
+    # menu_en list 작업 — 프론트에서 편집된 목록이 있으면 우선 사용
+    if menu_name_override:
+        try:
+            parsed = json.loads(menu_name_override)
+            menu_en_list = parsed if isinstance(parsed, list) else [parsed]
+        except (json.JSONDecodeError, TypeError):
+            menu_en_list = [menu_name_override]
+    else:
+        raw = final_payload.get("menu_name")
+        menu_en_list = ensure_list(raw) if raw else []
 
     # review Items
     member_item_ids = db.execute(

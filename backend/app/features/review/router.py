@@ -36,6 +36,7 @@ async def review_create(
     title: str = Form(...),
     content: str = Form(...),
     rating: int = Form(...),
+    menu_name: str = Form(default=None),
     images: List[UploadFile] = File(default=[]),
     db: Session = Depends(get_db),
     current=Depends(get_current_member),
@@ -52,6 +53,7 @@ async def review_create(
             title=title,
             content=content,
             rating=rating,
+            menu_name_override=menu_name,
             images=imgs,
         )
         return ReviewCreateResponse(review_id=out["review_id"], image_urls=out["image_urls"])

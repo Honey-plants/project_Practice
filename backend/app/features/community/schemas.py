@@ -15,6 +15,7 @@ class CommunityRead(BaseModel):
     recommend: int
     member_id: int
     community_active: bool
+    liked: Optional[bool] = False
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
     image_urls: List[str] = Field(default_factory=list)
