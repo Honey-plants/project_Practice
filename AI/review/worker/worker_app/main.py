@@ -83,20 +83,39 @@ def _handle_task(task: str, payload: Dict[str, Any]) -> Dict[str, Any]:
 
     if task == "review_receipt_ocr":
         import base64
-        from AI.review.pipeline.receipt_service import process_receipt_ocr
+        import os
+        from pathlib import Path
+        from AI.review.app.pipeline.orchestrator import PipelineConfig, run_pipeline
 
         encoded = payload.get("image_base64")
         if not encoded:
             raise ValueError("Missing 'image_base64' in payload")
-        
-        # Base64 Decoding
-        # payload가 dict가 아닐 경우 에러날 수 있으나 위에서 dict 변환 보장함
+
+        receipt_id = str(payload.get("receipt_id") or "").strip() or None
+        runs_root = Path(payload.get("runs_root") or "/tmp/ai_runs").expanduser().resolve()
+        tmp_dir = runs_root / "tmp"
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+
         img_bytes = base64.b64decode(encoded)
-        
-        # OCR 처리
-        result = process_receipt_ocr(img_bytes)
-        
-        return result
+        image_path = tmp_dir / f"receipt_{receipt_id or uuid.uuid4().hex}.jpg"
+        image_path.write_bytes(img_bytes)
+
+        gemini_key = os.getenv("GEMINI_API_KEY") or None
+        naver_cfg = {
+            "NAVER_CLIENT_ID": os.getenv("NAVER_CLIENT_ID", ""),
+            "NAVER_CLIENT_SECRET": os.getenv("NAVER_CLIENT_SECRET", ""),
+        }
+
+        cfg = PipelineConfig(
+            mode="prod",
+            test_base_dir=runs_root,
+            run_name=receipt_id,
+            gemini_api_key=gemini_key,
+            naver_cfg=naver_cfg,
+        )
+
+        result = run_pipeline(input_image_path=str(image_path), cfg=cfg)
+        return result.get("final") or result
 
     raise ValueError(f"Unsupported task: {task}")
 

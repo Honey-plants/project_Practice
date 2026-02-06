@@ -11,7 +11,8 @@
       "Condition": {
         "StringLike": {
           "s3:prefix": [
-            "upload/*"
+            "upload/*",
+            "ai/*"
           ]
         }
       }
@@ -25,6 +26,14 @@
         "s3:DeleteObject"
       ],
       "Resource": "arn:aws:s3:::haenet-s3-project/upload/*"
+    },
+    {
+      "Sid": "ROAiObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": "arn:aws:s3:::haenet-s3-project/ai/*"
     }
   ]
 }

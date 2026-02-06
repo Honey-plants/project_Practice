@@ -49,8 +49,12 @@ config:
     LOG_LEVEL: "INFO"
     # 예: S3 버킷/프리픽스 같은 비민감 값
     S3_BUCKET: ""
-    S3_PREFIX: "uploads/"
+    S3_PREFIX: "upload/"
+    S3_PREFIX_TMP: "tmp"
+    S3_PREFIX_PERM: "perm"
     S3_REGION: ""
+    MENU_ASSISTANT_CHROMA_S3_PREFIX: ""
+    MENU_ASSISTANT_MENU_INDEX_S3_URI: ""
 
 # 비밀 값(Secret로 생성 + /run/app-secrets 로 마운트)
 secrets:

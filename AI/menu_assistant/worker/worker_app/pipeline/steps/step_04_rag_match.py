@@ -16,7 +16,25 @@ from menu_assistant.worker.worker_app.rag.retrieval import match_menu_norm
 # - This prevents cases where an exact menu exists in the index
 #   but is not retrieved by embedding top_k candidates.
 # ============================================================
-menu_index_json='AI/menu_assistant/data/datasets/raw/menu_seed_with_alg_tags_variants_v3.json'
+menu_index_json = "/tmp/menu_seed_with_alg_tags_variants_v3.json"
+ENV_MENU_INDEX_S3_URI = "MENU_ASSISTANT_MENU_INDEX_S3_URI"
+
+
+def _parse_s3_uri(uri: str) -> Tuple[str, str]:
+    if not uri.startswith("s3://"):
+        raise ValueError(f"invalid s3 uri: {uri}")
+    parts = uri[5:].split("/", 1)
+    bucket = parts[0]
+    key = parts[1] if len(parts) > 1 else ""
+    return bucket, key
+
+
+def _download_s3_file(uri: str, dest: Path) -> None:
+    import boto3
+
+    bucket, key = _parse_s3_uri(uri)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    boto3.client("s3").download_file(bucket, key, str(dest))
 def _load_menu_index_for_exact(path_str: Optional[str]) -> Optional[Dict[str, Dict[str, Any]]]:
     """Load a menu index json (list of entries) and build variant->record map.
 
@@ -38,8 +56,15 @@ def _load_menu_index_for_exact(path_str: Optional[str]) -> Optional[Dict[str, Di
         return None
     path = Path(p).expanduser()
     if not path.exists():
-        print(f"[WARN] menu_index_json not found: {path}")
-        return None
+        s3_uri = os.environ.get(ENV_MENU_INDEX_S3_URI, "").strip()
+        if s3_uri:
+            try:
+                _download_s3_file(s3_uri, path)
+            except Exception as e:
+                print(f"[WARN] failed to download menu_index_json from S3: {type(e).__name__}: {e}")
+        if not path.exists():
+            print(f"[WARN] menu_index_json not found: {path}")
+            return None
     try:
         obj = json.loads(path.read_text(encoding="utf-8"))
     except Exception as e:

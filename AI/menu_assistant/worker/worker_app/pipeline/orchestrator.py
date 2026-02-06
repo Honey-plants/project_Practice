@@ -487,6 +487,11 @@ class PipelineOrchestrator:
             print("\n[RAG] using chroma_dir   =", step4_env["MENU_ASSISTANT_CHROMA_DIR"])
             print("[RAG] using collection  =", step4_env["MENU_ASSISTANT_COLLECTION"])
 
+            menu_index_json = os.environ.get(
+                "MENU_ASSISTANT_MENU_INDEX_JSON",
+                "/tmp/menu_seed_with_alg_tags_variants_v3.json",
+            )
+
             cmd4 = [
                 sys.executable,
                 "-m",
@@ -511,7 +516,7 @@ class PipelineOrchestrator:
                 "--rerank_top_k",
                 str(step4.rerank_top_k),
                 "--menu_index_json",
-                str('AI/menu_assistant/data/datasets/raw/menu_seed_with_alg_tags_variants_v3.json')
+                menu_index_json
             ]
 
             if step4.use_rerank:

@@ -17,7 +17,9 @@ queue:
 config:
     LOG_LEVEL: INFO
     S3_BUCKET: haenet-s3-project
-    S3_PREFIX: uploads/
+    S3_PREFIX: upload/
+    S3_PREFIX_TMP: tmp
+    S3_PREFIX_PERM: perm
     S3_REGION: ap-northeast-2
 
 secrets:

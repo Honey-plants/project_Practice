@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Dict, Any
 from datetime import datetime
@@ -67,7 +67,7 @@ class PipelineConfig:
     step0_cfg: Step0PreprocessConfig = Step0PreprocessConfig()
 
     # step1
-    rectify_cfg: RectifyConfig = RectifyConfig()
+    rectify_cfg: RectifyConfig = field(default_factory=RectifyConfig)
 
     # step2
     ocr_cfg: Optional[OCRConfig] = None
