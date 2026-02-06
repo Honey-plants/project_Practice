@@ -69,12 +69,12 @@ export default function EditProfile() {
     const trimmed = dislikeInput.trim();
     if (!trimmed) return;
     if (dislikes.length >= 3) {
-      setMsg("최대 3개까지만 추가할 수 있습니다");
+      setMsg("Upto 3 images only");
       setMsgType("error");
       return;
     }
     if (dislikes.includes(trimmed)) {
-      setMsg("이미 추가된 재료입니다");
+      setMsg("Already exist");
       setMsgType("error");
       return;
     }

@@ -15,17 +15,25 @@ def build_map_poster_prompt_with_ref(
     member = payload.get("member", {})
     reviews: List[Dict[str, Any]] = payload.get("reviews", [])
 
+
+
     nickname = member.get("nickname", "Traveler")
     country = member.get("country", "Unknown")
-    allergies = member.get("item_ids", [])
+    allergies = payload.get("allergy_tags", {})
+    # allergies = allergy_tags.get("item_ids", [])
+
+    print("allergies :: ", allergies)
+
     allergy_text = ", ".join(allergies) if allergies else "none"
+
+    # print("allergies :: ", allergies)
 
     eaten = []
     for r in reviews:
         eaten.append(r.get("review_title", "Food experience"))
 
     eaten_text = ", ".join(eaten) if eaten else "No meals recorded"
-    print(eaten_text)
+
     map_box = f"x={map_left}..{map_left+map_w}, y={map_top}..{map_top+map_h}"
 
     #음식 이미지 사진 사이즈 고정시키기

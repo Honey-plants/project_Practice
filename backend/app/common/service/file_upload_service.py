@@ -1,7 +1,7 @@
 import os
 import uuid
 from pathlib import Path
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Optional
 
 from fastapi import UploadFile
 
@@ -18,7 +18,7 @@ _WORK_DIR.mkdir(parents=True, exist_ok=True)
 # --------------------------------------------------------------------
 def build_temp_prefix(*, upload_type: str, scope_id: str) -> str:
     """
-     임시 저장 폴더(prefix) 생성 규칙을 "한 군데"에서 통일
+    ✅ 임시 저장 폴더(prefix) 생성 규칙을 "한 군데"에서 통일
     - local:  <LOCAL_TMP_ROOT>/<upload_type>/<scope_id>
     - s3:     upload/<S3_PREFIX_TMP>/<upload_type>/<scope_id>
     """
@@ -84,7 +84,7 @@ def delete_input_file(*, file_key: str) -> None:
 
 def delete_prefix(*, prefix_key: str) -> None:
     """
-     폴더(prefix) 단위 삭제
+    ✅ 폴더(prefix) 단위 삭제
     - local: 디렉토리 rmtree
     - s3: prefix 하위 오브젝트 삭제
     """
@@ -93,7 +93,7 @@ def delete_prefix(*, prefix_key: str) -> None:
 
 
 # --------------------------------------------------------------------
-# Permanent save
+# Permanent save (UploadFile)
 # --------------------------------------------------------------------
 async def save_permanent_asset(
     *,
@@ -155,3 +155,37 @@ def ensure_local_path(obj: UploadObject) -> Tuple[str, Callable[[], None]]:
             pass
 
     return str(local_path), cleanup
+
+
+# --------------------------------------------------------------------
+# Permanent save from bytes (AI outputs)
+# --------------------------------------------------------------------
+async def save_permanent_bytes(
+    *,
+    owner_type: str,
+    owner_id: int,
+    member_id: int,
+    data: bytes,
+    origin_name: str = "generated.png",
+    mime_type: str = "image/png",
+    sort_order: int = 0,
+) -> StoredAsset:
+    """
+    ✅ AI 등에서 생성된 bytes를 영구 저장할 때 사용
+    - local: uploads/perm/{owner_type}/{owner_id}/...
+            storage_path=/static/perm/{owner_type}/{owner_id}/...
+    - s3:    upload/<perm prefix>/{owner_type}/{owner_id}/... (지원 시)
+    """
+    storage = get_storage()
+    if not hasattr(storage, "save_permanent_bytes"):
+        raise RuntimeError("Storage does not support save_permanent_bytes()")
+
+    return await storage.save_permanent_bytes(
+        owner_type=owner_type,
+        owner_id=owner_id,
+        member_id=member_id,
+        data=data,
+        origin_name=origin_name,
+        mime_type=mime_type,
+        sort_order=sort_order,
+    )

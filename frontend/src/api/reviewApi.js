@@ -54,6 +54,4 @@ export const ReviewAPI = {
   //  리뷰 내용만 수정
   updateContent: (id, review_content) =>
     api.patch(`/review/${id}`, { review_content }),
-
-  // (기존 list/detail 있으면 유지)
 };
