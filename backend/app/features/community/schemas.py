@@ -14,6 +14,7 @@ class CommunityRead(BaseModel):
     community_id: int
     recommend: int
     member_id: int
+    nickname: str
     community_active: bool
     liked: Optional[bool] = False
     created_at: Optional[str] = None
@@ -24,6 +25,7 @@ class CommunityListRead(BaseModel):
     community_id: int
     member_id: int
     recommend: int
+    nickname: str
     community_active: bool
     created_at: Optional[str] = None
     updated_at: Optional[str] = None

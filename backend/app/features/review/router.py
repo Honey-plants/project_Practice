@@ -64,13 +64,15 @@ async def review_create(
 # active True or 1
 @router.get("", response_model=list[ReviewRead])
 def review_list(db: Session = Depends(get_db)):
-    return list_reviews(db, member_id=None, active_only=True)
+    # return list_reviews(db, member_id=None, active_only=True)
+    return list_reviews(db, member_id=None)
 
 # active 상관없이 내것 전부
 @router.get("/me", response_model=list[ReviewRead])
 def review_my_list(db: Session = Depends(get_db), current=Depends(get_current_member)):
     print("review list 내것만 조회중")
-    return list_reviews(db, member_id=current.member_id, active_only=None)
+    # return list_reviews(db, member_id=current.member_id, active_only=None)
+    return list_reviews(db, member_id=current.member_id)
 
 @router.get("/{review_id}", response_model=ReviewRead)
 def review_detail(

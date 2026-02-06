@@ -1,12 +1,11 @@
 import React, { useContext, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
-import { MemberContext } from "../../context/MemberContext";
+import { getJwtRole } from "../../utils/jwt";
 import "../../styles/Register.css";
 
 export default function Login() {
   const { authActions } = useContext(AuthContext);
-  const { memberActions } = useContext(MemberContext);
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -39,8 +38,11 @@ export default function Login() {
     try {
       const ok = await authActions.login(form.email.trim(), form.password);
       if (ok) {
-        const me = await memberActions.loadMe();
-        if (me?.role === "ADMIN") {
+        // ✅ memberActions.loadMe() 호출 제거
+        // - MemberProvider가 accessToken 변경을 감지해 /member/me를 1회 자동 호출
+        const token = sessionStorage.getItem("access_token");
+        const role = getJwtRole(token);
+        if (role === "ADMIN") {
           nav("/admin");
         } else {
           nav("/");

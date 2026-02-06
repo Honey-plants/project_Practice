@@ -15,7 +15,7 @@ from backend.app.core import config
 
 
 from backend.app.common.utils.tmp_cleanup import cleanup_receipt_tmp
-from backend.app.common.utils.redis_lock import acquire_lock
+from backend.app.common.utils.redis_lock import acquire_lock, release_lock
 
 from backend.app.core.cache.redis import redis_client
 
@@ -68,12 +68,17 @@ async def _tmp_cleanup_loop():
     lock_ttl = max(30, config.TMP_CLEAN_INTERVAL_SECONDS - 1)
 
     while True:
+        token = None
         try:
-            if acquire_lock(redis_client, lock_key, lock_ttl):
-                deleted = cleanup_receipt_tmp(config.LOCAL_TMP_ROOT, config.TMP_TTL_SECONDS)
-                # print(f"[tmp_cleanup] deleted receipt dirs: {deleted}")
+            # ✅ token 방식 락
+            token = acquire_lock(redis_client, lock_key, lock_ttl)
+            if token:
+                cleanup_receipt_tmp(config.LOCAL_TMP_ROOT, config.TMP_TTL_SECONDS)
         except Exception:
             pass
+        finally:
+            if token:
+                release_lock(redis_client, lock_key, token)
 
         await asyncio.sleep(config.TMP_CLEAN_INTERVAL_SECONDS)
 

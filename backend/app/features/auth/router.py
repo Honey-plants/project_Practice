@@ -13,50 +13,39 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # front 확인 할 Cookie
 COOKIE_NAME = "refresh_token"
 
-# LOGIN
 @router.post("/login", response_model=schemas.AccessTokenResponse)
-def login(response: Response, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    print("login form :: ", form)
+def login(
+    response: Response,
+    form: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
     access, refresh = service.login_issue_tokens(db, email=form.username, password=form.password)
 
-    print("acc :: ", access)
-
-    print("refresh token : ", refresh)
-
-    # refresh 생성 시 exp 구하기
     decode_refresh = jwt.decode_token(refresh)
     ttl = jwt.exp_seconds_left(decode_refresh)
 
-    print("cookie name :: ", COOKIE_NAME)
-
-    # refresh는 HttpOnly 쿠키로 저장
     response.set_cookie(
         key=COOKIE_NAME,
         value=refresh,
         httponly=True,
-        secure=False,      # 로컬 http면 False, 배포(https)면 True
-        samesite="lax",    # 프론트/백 완전 다른 도메인이면 none+secure 필요
+        secure=False,   # https 배포면 True
+        samesite="lax",
         path="/",
         max_age=ttl,
     )
-
-    print("refresh set cookie :: ", response)
-
     return {"access_token": access, "token_type": "bearer"}
 
-# REFRESH TOKEN 재발급
-@router.post("/refresh", response_model=schemas.AccessTokenResponse)
-def refresh(response: Response, db: Session = Depends(get_db), refresh_token: str | None = Cookie(default=None, alias=COOKIE_NAME),):
 
+@router.post("/refresh", response_model=schemas.AccessTokenResponse)
+def refresh(
+    response: Response,
+    db: Session = Depends(get_db),
+    refresh_token: str | None = Cookie(default=None, alias=COOKIE_NAME),
+):
     if not refresh_token:
         raise HTTPException(status_code=401, detail="Missing refresh cookie")
 
-    print("refresh token :: ", refresh_token)
-
     new_access, new_refresh = service.refresh_rotate_tokens(db, refresh_token)
-
-    print("new_acc :: ", new_access)
-    print("new_ref :: ", new_refresh)
 
     new_refresh_payload = jwt.decode_token(new_refresh)
     ttl = jwt.exp_seconds_left(new_refresh_payload)
@@ -72,21 +61,21 @@ def refresh(response: Response, db: Session = Depends(get_db), refresh_token: st
     )
     return {"access_token": new_access, "token_type": "bearer"}
 
-# LOGOUT
-@router.post("/logout")
-def logout(response: Response, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    # service.logout(token)
 
-    # logout refresh token revoked 로직 추가!
+@router.post("/logout")
+def logout(
+    response: Response,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
     service.logout(db, token)
 
-    # front cookie refresh token 삭제 처리
+    # refresh cookie 삭제
     response.delete_cookie(key=COOKIE_NAME, path="/")
-    # 둘 다 삭제 (과거 path=/auth 잔재 제거)
     response.delete_cookie(key=COOKIE_NAME, path="/auth")
     return {"ok": True}
 
-# 현재 USER 정보
+
 @router.get("/me")
 def me(current=Depends(get_current_member)):
     return {
@@ -94,18 +83,3 @@ def me(current=Depends(get_current_member)):
         "email": current.email,
         "nickname": current.nickname,
     }
-
-# redis test
-from fastapi import APIRouter
-from backend.app.core.cache.redis import redis_client
-
-# router = APIRouter(prefix="/debug", tags=["debug"])
-#
-# @router.get("/redis")
-# def redis_health():
-#     try:
-#         redis_client.set("debug:ping", "pong", ex=30)
-#         v = redis_client.get("debug:ping")
-#         return {"redis": "ok", "value": v}
-#     except Exception as e:
-#         return {"redis": "fail", "error": str(e)}
