@@ -10,6 +10,8 @@ from backend.app.core.security.deps import get_current_member
 from backend.app.features.community.schemas import CommunityUpdate, CommunityCreate, CommunityRead, CommunityListRead
 from backend.app.features.community import service
 from backend.app.models.community import Community
+from backend.app.features.review.service import availavble_review
+
 
 router = APIRouter(prefix="/community", tags=["community"])
 
@@ -19,15 +21,48 @@ async def create_community(payload: CommunityCreate, db: Session = Depends(get_d
     # 1. 넘겨 받은 데이터 조회 및 조합
     total_data = service.create_step1(db, payload, member_id=current.member_id)
     print("router data :: ", total_data)
-    
-    # 2. 넘겨 받은 데이터 AI 로직 시작
-    result = await service.create_step2(db, total_data)
 
-    print("result :: ", result)
 
-    # 3. AI 생성 후 완료되면 REVIEW available F or 0 수정 처리
+    try:
+        # 2. AI 로직 시작 (예외 가능성 제일 큼)
+        result = await service.create_step2(db, total_data)
+        print("result :: ", result)
 
-    return result
+        # 3. AI 성공 후 REVIEW available 처리
+        print("AI 처리 후 REVIEW AVAILABLE ", payload.review_ids)
+        ok = availavble_review(db, payload.review_ids)
+
+        if not ok:
+            # 여기서 실패하면 절대 성공 리턴하면 안됨(데이터 정합성 깨짐)
+            raise HTTPException(status_code=500, detail="Failed to update review availability")
+
+        # step1/step2에서 DB write가 있었다면 여기서 한 번에 커밋
+        # step2 commit 주석처리 완
+        db.commit()
+
+        return result
+
+    except HTTPException:
+        db.rollback()
+        raise
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Community create failed: {type(e).__name__}: {e}")
+
+
+
+    # # 2. 넘겨 받은 데이터 AI 로직 시작
+    # result = await service.create_step2(db, total_data)
+    #
+    # print("result :: ", result)
+    #
+    # # 3. AI 생성 후 완료되면 REVIEW available F or 0 수정 처리
+    #
+    # print("AI 처리 후 REVIEW AVAILABLE ", payload.review_ids)
+    # availavble_review(db, payload.review_ids)
+    #
+    # return result
     # return CommunityListRead(community_id=result["community_id"], image_urls=result['image_urls'], member_id=result["member_id"])
 
 

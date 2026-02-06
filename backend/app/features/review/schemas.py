@@ -28,7 +28,8 @@ class ReviewRead(BaseModel):
     review_content: str
     rating: int
     location: Optional[str] = None
-    available: bool
+    available: int
+    nickname: str
     # menu_name: Optional[str] = None
     menu_name: List[str] = Field(default_factory=list)
     image_urls: List[str] = Field(default_factory=list)
@@ -39,7 +40,6 @@ class ReviewRead(BaseModel):
 
 class ReviewContentUpdate(BaseModel):
     review_content: Optional[str] = None
-    available: Optional[bool] = None
 
 class ReviewContentUpdateResponse(BaseModel):
     review_id: int

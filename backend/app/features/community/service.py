@@ -122,7 +122,7 @@ async def create_step2(db: Session, total_data: Dict[str, Any]) -> Dict[str, Any
             review_id=None,
         )
         db.add(img)
-        db.commit()
+        # db.commit() router에서 한번에 commit 예정
         db.refresh(community)
 
     except Exception as e:
@@ -155,28 +155,30 @@ def list_community(
     active_only: Optional[bool] = True,   # Optional로 변경
 ) -> List[Dict[str, Any]]:
 
-    stmt = select(Community)
+    stmt = (
+        select(Community, Member.nickname)
+        .join(Member, Member.member_id == Community.member_id)
+    )
 
     if member_id is not None:
         stmt = stmt.where(Community.member_id == member_id)
 
-    # active_only가 True/False/None을 정확히 처리
     if active_only is True:
         stmt = stmt.where(Community.community_active.is_(True))
     elif active_only is False:
         stmt = stmt.where(Community.community_active.is_(False))
     # None이면 필터 없음
 
-    communities = db.execute(stmt.order_by(Community.community_id.desc())).scalars().all()
-    if not communities:
+    rows = db.execute(stmt.order_by(Community.community_id.desc())).all()
+    if not rows:
         return []
 
-    # 이번 목록에 필요한 community_id만 이미지 조회 (성능/정확성)
+    communities = [c for c, _ in rows]
     community_ids = [c.community_id for c in communities]
 
+    # 이미지 붙이기(기존 방식 유지)
     imgs = db.execute(
         select(ImgFile)
-        # 해당 부분 community_j and community_j 둘 다 조회로 변경
         .where(ImgFile.owner_type == "community")
         .where(ImgFile.community_id.in_(community_ids))
         .order_by(ImgFile.community_id.asc(), ImgFile.sort_order.asc())
@@ -186,21 +188,19 @@ def list_community(
     for img in imgs:
         img_map.setdefault(img.community_id, []).append(img.storage_path)
 
-    # m = db.execute(select(Member).where(Member.member_id == member_id))
-    # print("커뮤 :: m ", m.nickname)
-
     out: List[Dict[str, Any]] = []
-    for c in communities:
+    for c, nickname in rows:
         out.append({
             "community_id": c.community_id,
             "member_id": c.member_id,
-            "recommend": int(c.recommend or 0),
+            "nickname": nickname,
             "community_active": bool(c.community_active),
+            "recommend": int(c.recommend or 0),
             "created_at": c.create_at.isoformat() if getattr(c, "create_at", None) else None,
             "updated_at": c.update_at.isoformat() if getattr(c, "update_at", None) else None,
             "image_urls": img_map.get(c.community_id, []),
+            # comment_count/latest_comment 쓰면 여기에 추가 merge
         })
-
     return out
 
 
@@ -208,9 +208,16 @@ def list_community(
 # 상세
 # ---------------------------------------------------------------------
 def get_community_detail(db: Session, community_id: int) -> Dict[str, Any]:
-    c = db.get(Community, community_id)
-    if not c:
+    row = db.execute(
+        select(Community, Member.nickname)
+        .join(Member, Member.member_id == Community.member_id)
+        .where(Community.community_id == int(community_id))
+    ).first()
+
+    if not row:
         raise HTTPException(status_code=404, detail="Community not found")
+
+    c, nickname = row
 
     imgs = db.execute(
         select(ImgFile)
@@ -222,6 +229,7 @@ def get_community_detail(db: Session, community_id: int) -> Dict[str, Any]:
     return {
         "community_id": c.community_id,
         "member_id": c.member_id,
+        "nickname": nickname,
         "community_active": bool(c.community_active),
         "recommend": int(c.recommend or 0),
         "created_at": c.create_at.isoformat() if getattr(c, "create_at", None) else None,

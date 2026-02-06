@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from backend.app.core import config
 from backend.app.common.utils.debug import log_exception
@@ -23,6 +23,7 @@ from backend.app.models.review import Review
 from backend.app.models.restrictions.item import Item
 from backend.app.models.restrictions.category import Category
 from backend.app.models.restrictions import MemberRestrictions
+from backend.app.models.member import Member
 
 def run_receipt_ai_step5(*, image_path: str, receipt_id: str, base_dir: Path) -> Dict[str, Any]:
     """
@@ -216,25 +217,29 @@ async def create_review_from_receipt(
 
 
 # 전체 조회 / 본인 리스트 조회 한번에 처리
-def list_reviews(db: Session, *, member_id: Optional[int] = None, active_only: bool = True,) -> List[Dict[str, Any]]:
-    stmt = select(Review)
+# def list_reviews(db: Session, *, member_id: Optional[int] = None, active_only: bool = True,) -> List[Dict[str, Any]]:
+def list_reviews(db: Session, *, member_id: Optional[int] = None) -> List[
+        Dict[str, Any]]:
+    stmt = (
+        select(Review, Member.nickname)
+        .join(Member, Member.member_id == Review.member_id)
+    )
 
     # member_id
     if member_id is not None:
         stmt = stmt.where(Review.member_id == member_id)
 
     # active
-    if active_only:
-        stmt = stmt.where(Review.available == True)
+    # if active_only:
+    #     stmt = stmt.where(Review.available == True)
 
     # 최신순
     reviews = db.execute(
         stmt.order_by(Review.review_id.desc())
-    ).scalars().all()
+    ).all()
 
     if not reviews:
         return []
-
 
     # 이미지: review_id 기준으로 묶기
     imgs = db.execute(
@@ -248,12 +253,13 @@ def list_reviews(db: Session, *, member_id: Optional[int] = None, active_only: b
         img_map.setdefault(img.review_id, []).append(img.storage_path)
 
     out: List[Dict[str, Any]] = []
-    for r in reviews:
+    for r, nickname in reviews:
         print("r :: ", r.review_items)
 
         out.append({
             "review_id": r.review_id,
             "member_id": r.member_id,
+            "nickname": nickname,
             "review_title": r.review_title,
             "review_content": r.review_content,
             "rating": r.rating,
@@ -273,9 +279,17 @@ def list_reviews(db: Session, *, member_id: Optional[int] = None, active_only: b
 
 
 def get_review_detail(db: Session, review_id: int) -> Dict[str, Any]:
-    r = db.get(Review, review_id)
-    if not r or not r.available:
+
+    row = db.execute(
+        select(Review, Member.nickname)
+        .join(Member, Member.member_id == Review.member_id)
+        .where(Review.review_id == int(review_id))
+    ).first()
+
+    if not row:
         raise HTTPException(status_code=404, detail="Review not found")
+
+    r, nickname = row
 
     imgs = db.execute(
         select(ImgFile)
@@ -284,13 +298,13 @@ def get_review_detail(db: Session, review_id: int) -> Dict[str, Any]:
         .order_by(ImgFile.sort_order.asc())
     ).scalars().all()
 
-    print("detail  rr :: ", r.menu_name)
 
     return {
         "review_id": r.review_id,
         "member_id": r.member_id,
         "review_title": r.review_title,
         "review_content": r.review_content,
+        "nickname": nickname,
         "rating": r.rating,
         "location": r.location,
         "available": r.available,
@@ -314,8 +328,18 @@ def update_review_content_only(
     new_content: str,
 ) -> Dict[str, Any]:
     r = db.get(Review, review_id)
-    if not r or not r.available:
+    print("수정 review :: ", r.available)
+
+
+    if not r:
         raise HTTPException(status_code=404, detail="Review not found")
+
+    # available == 0 이면 수정 불가
+    if int(getattr(r, "available", 0)) != 1:
+        raise HTTPException(
+            status_code=409,
+            detail="이미 커뮤니티 생성에 사용된 리뷰이므로 변경할 수 없습니다."
+        )
 
     #  본인만 수정 (ADMIN 예외 허용)
     is_admin = (current_role or "").upper() == "ADMIN"
@@ -339,7 +363,7 @@ def list_reviews_by_ids(
     review_ids: List[int],
     *,
     member_id: Optional[int] = None,          # 내 리뷰만 허용하려면 넣기
-    include_inactive: bool = True,            # available(False)도 포함할지
+    # include_inactive: bool = True,            # available(False)도 포함할지
 ) -> List[Dict[str, Any]]:
     """
     review_ids([4,2,1])로 리뷰를 한번에 조회해서
@@ -357,8 +381,8 @@ def list_reviews_by_ids(
     if member_id is not None:
         q = q.where(Review.member_id == member_id)
 
-    if not include_inactive:
-        q = q.where(Review.available == True)
+    # if not include_inactive:
+    #     q = q.where(Review.available == True)
 
     reviews = db.execute(q).scalars().all()
 
@@ -401,3 +425,40 @@ def list_reviews_by_ids(
     return [by_id[i] for i in review_ids if i in by_id]
 
 
+def availavble_review(db: Session, review_ids: List[int]):
+
+    print("available :: ", review_ids)
+
+    ids = [int(x) for x in (review_ids or [])]
+    # 중복 제거(순서 유지)
+    ids = list(dict.fromkeys(ids))
+
+    if not ids:
+        return True
+
+    try:
+        # 🔥 available 컬럼 타입에 맞게 둘 중 하나만 사용
+        # 1) bool 컬럼이면:
+        # res = db.execute(
+        #     update(Review)
+        #     .where(Review.review_id.in_(ids))
+        #     .values(available=False)
+        # )
+
+        # 테스트 진행 후 int 넘길 예정이면 사용
+        # 2) int(0/1) 컬럼이면:
+        res = db.execute(
+            update(Review)
+            .where(Review.review_id.in_(ids))
+            .values(available=0)
+        )
+
+        # ids 개수와 업데이트 rowcount가 다르면 누락된 id가 있거나 조건이 안 맞는 상황
+        if res.rowcount is not None and res.rowcount != len(ids):
+            return False
+
+        return True
+
+    except Exception:
+        # rollback은 라우터에서 통합 처리
+        return False
