@@ -5,8 +5,11 @@ from typing import List
 
 BANNED = [
     "영수증","매장명","사업자","대표자","TEL","전화","주문","고객","합계","부가세","과세",
-    "금액","단가","수량","상품명","카드","승인","결제","매출","거래","현금","봉사료"
+    "금액","교환권","단가","수량","상품명","카드","승인","결제","매출","거래","현금","봉사료"
 ]
+
+MENU_SECTION_TRIGGERS = ["상품명", "수량", "단가", "금액", "품명", "메뉴"]
+
 
 def extract_store_name_candidates(lines: List[str], *, top_k: int = 10, max_candidates: int = 5) -> List[str]:
     """

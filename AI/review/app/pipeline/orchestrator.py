@@ -100,6 +100,7 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
     # =========================
     # Step0: 가벼운 OCR-friendly preprocess
     # =========================
+    print("step0")
     step0 = run_step0_preprocess(
         input_image_path=ctx.images.input_path,
         out_dir=step0_dir,
@@ -114,6 +115,7 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
     # =========================
     # 1) OCR 1차: step0 결과로 OCR
     # =========================
+    print("step2")
     ctx_ocr1 = run_step2_ocr(
         ctx,
         out_dir=step2_dir / "pass1_pre",
@@ -166,6 +168,7 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
     # =========================
     # step3 이후 동일
     # =========================
+    print("step3")
     ctx = run_step3_normalize(ctx, cfg=cfg.normalize_cfg)
 
     step3_dir.mkdir(parents=True, exist_ok=True)
@@ -178,6 +181,8 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
         raise ValueError("Missing gemini_api_key ...")
 
     naver_cfg = cfg.naver_cfg or {}
+
+    print("step4")
     ctx = run_step4_enrich(ctx, naver_cfg=naver_cfg, gemini_api_key=cfg.gemini_api_key)
 
     step4_dir.mkdir(parents=True, exist_ok=True)
@@ -186,7 +191,9 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
         encoding="utf-8",
     )
 
+    print("step5")
     ctx = run_build_final_response(ctx)
+
     final_payload = ctx.final.model_dump() if hasattr(ctx.final, "model_dump") else ctx.final.dict()
 
     step5_dir.mkdir(parents=True, exist_ok=True)
@@ -196,7 +203,6 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
     )
 
     return {"run_dir": str(run_dir), "final": final_payload}
-
 
 # from __future__ import annotations
 #

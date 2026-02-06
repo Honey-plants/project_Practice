@@ -46,7 +46,7 @@ export default function ReviewCreateInline({ onCreated }) {
   const verify = async () => {
     setErr("");
     setMsg("");
-    if (!receiptFile) return setErr("영수증 이미지를 선택해줘");
+    if (!receiptFile) return setErr("Select image");
 
     setLoadingVerify(true);
     try {
@@ -55,7 +55,7 @@ export default function ReviewCreateInline({ onCreated }) {
       setExtracted(r.data?.extracted || null);
       setMsg("영수증 인증 완료. 메뉴를 확인해주세요.");
     } catch (e) {
-      setErr(e?.response?.data?.detail || e?.message || "영수증 인증 실패");
+      setErr(e?.response?.data?.detail || e?.message || "Receipt Detection failed");
     } finally {
       setLoadingVerify(false);
     }
@@ -105,10 +105,10 @@ export default function ReviewCreateInline({ onCreated }) {
     setErr("");
     setMsg("");
 
-    if (!receiptId) return setErr("먼저 영수증 인증을 해줘");
-    if (!title.trim()) return setErr("title 입력해줘");
-    if (!content.trim()) return setErr("content 입력해줘");
-    if (images.length > 3) return setErr("이미지는 최대 3장");
+    if (!receiptId) return setErr("Verify receipt");
+    if (!title.trim()) return setErr("Title is missing");
+    if (!content.trim()) return setErr("Content is missing");
+    if (images.length > 3) return setErr("Upto 3 images");
 
     setLoadingCreate(true);
     try {
@@ -150,7 +150,7 @@ export default function ReviewCreateInline({ onCreated }) {
       {/* Step 1: 영수증 인증 */}
       {!receiptId && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>1) 영수증 인증</div>
+          <div className={styles.stepHeader}>1) Verify receipt</div>
           <div className={styles.receiptUpload}>
             <input
               type="file"
@@ -168,9 +168,10 @@ export default function ReviewCreateInline({ onCreated }) {
       {/* Step 2: 메뉴 확인 */}
       {receiptId && extracted && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>2) 메뉴 확인</div>
+          <div className={styles.stepHeader}>2) Confirm Receipt Details</div>
+          <p>{extracted.store_name} / {extracted.store_name_en}</p>
           <div className={styles.menuConfirmSection}>
-            {!menuConfirmed && <p className={styles.menuConfirmText}>다음 메뉴들이 맞나요?</p>}
+            {!menuConfirmed && <p className={styles.menuConfirmText}>Please select menus you consumed</p>}
             <div className={styles.menuList}>
               {extracted.menu_en && (
                 Array.isArray(extracted.menu_en)
@@ -191,10 +192,10 @@ export default function ReviewCreateInline({ onCreated }) {
             {!menuConfirmed && (
               <div className={styles.menuConfirmButtons}>
                 <button onClick={confirmMenu} className={styles.btnConfirm}>
-                  확인
+                  Confirm
                 </button>
                 <button onClick={cancelMenu} className={styles.btnCancel}>
-                  취소
+                  Cancel
                 </button>
               </div>
             )}
@@ -205,32 +206,32 @@ export default function ReviewCreateInline({ onCreated }) {
       {/* Step 3: 리뷰 작성 */}
       {receiptId && menuConfirmed && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>3) 리뷰 작성</div>
+          <div className={styles.stepHeader}>3) Write review</div>
 
           <div className={styles.reviewForm}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>제목</label>
+              <label className={styles.formLabel}>Title</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="리뷰 제목을 입력해주세요"
+                placeholder="Enter review title"
                 className={styles.formInput}
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>내용</label>
+              <label className={styles.formLabel}>Content</label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="리뷰 내용을 입력해주세요"
+                placeholder="Enter review content"
                 rows={6}
                 className={styles.formTextarea}
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>별점</label>
+              <label className={styles.formLabel}>Rating</label>
               <div className={styles.ratingSelect}>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <span
@@ -245,7 +246,7 @@ export default function ReviewCreateInline({ onCreated }) {
             </div>
  
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>추가 이미지 (최대 3장)</label>
+              <label className={styles.formLabel}>Add FOOD image (3 max)</label>
               <input
                 ref={imageInputRef}
                 type="file"
@@ -256,7 +257,7 @@ export default function ReviewCreateInline({ onCreated }) {
                 className={styles.fileInput}
               />
               <div className={styles.imageCount}>
-                추가 이미지 {images.length}/3
+                Images {images.length}/3
               </div>
 
               {previewUrls.length > 0 && (

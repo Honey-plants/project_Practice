@@ -29,13 +29,13 @@ def enrich_data(
     if phone:
         store = find_store_by_query(phone, client_id=client_id, client_secret=client_secret)
 
-    # # 2) store가 None일 때만 후보군 뽑고 name search
-    # if store is None:
-    #     candidates = extract_store_name_candidates(lines, top_k=12, max_candidates=5)
-    #     for cand in candidates:
-    #         store = find_store_by_query(cand, client_id=client_id, client_secret=client_secret)
-    #         if store:
-    #             break
+    # 2) store가 None일 때만 후보군 뽑고 name search
+    if store is None:
+        candidates = extract_store_name_candidates(lines, top_k=10, max_candidates=5)
+        for cand in candidates:
+            store = find_store_by_query(cand, client_id=client_id, client_secret=client_secret)
+            if store:
+                break
 
     texts_to_translate = []
     if store:

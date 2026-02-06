@@ -184,6 +184,7 @@ def list_community(
         out.append({
             "community_id": c.community_id,
             "member_id": c.member_id,
+            "nickname": nickname,
             "recommend": int(c.recommend or 0),
             "community_active": bool(c.community_active),
             "created_at": c.create_at.isoformat() if getattr(c, "create_at", None) else None,
