@@ -5,7 +5,7 @@ from typing import List
 PRICE_RE = re.compile(r"\d{1,3}(?:,\d{3})+|\d{4,}")
 
 START_KEYWORDS = ["메뉴", "단가", "금액", "수량", "품명", "리뷰", "상품"]
-STOP_KEYWORDS = ["부가세", "합계", "결제", "신용", "카드", "총액", "판매", "금 액", "현금", "공급"]
+STOP_KEYWORDS = ["소 계","소계","부가세", "합계", "결제", "신용", "카드", "총액", "판매", "금 액", "현금", "공급"]
 
 BANNED_MENU = set(START_KEYWORDS + STOP_KEYWORDS)
 
