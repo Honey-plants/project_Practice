@@ -16,3 +16,5 @@ data:
   S3_BUCKET: {{ .Values.config.S3_BUCKET | quote }}
   S3_PREFIX: {{ .Values.config.S3_PREFIX | quote }}
   S3_REGION: {{ .Values.config.S3_REGION | quote }}
+  MENU_ASSISTANT_RUNS_ROOT: {{ default "" .Values.config.MENU_ASSISTANT_RUNS_ROOT | quote }}
+  MENU_ASSISTANT_IMAGE_BASE: {{ default "" .Values.config.MENU_ASSISTANT_IMAGE_BASE | quote }}

@@ -46,7 +46,7 @@ def authenticate_member(db: Session, email: str, password: str) -> Member:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
-            headers={" WWW-Authenticate": "Bearer"},
+            headers={"WWW-Authenticate": "Bearer"},
         )
     return member
 

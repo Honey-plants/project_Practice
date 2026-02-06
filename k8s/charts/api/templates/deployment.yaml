@@ -16,6 +16,8 @@ spec:
       labels:
         {{- include "api.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "api.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml .Values.imagePullSecrets | nindent 8 }}

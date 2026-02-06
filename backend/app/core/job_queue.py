@@ -36,8 +36,8 @@ def _queue_for_task(task: str) -> str:
     return "cicdex:jobs"
 
 
-def enqueue_task(r: redis.Redis, task: str, payload: Dict[str, Any]) -> str:
-    job_id = str(uuid.uuid4())
+def enqueue_task(r: redis.Redis, task: str, payload: Dict[str, Any], job_id: str | None = None) -> str:
+    job_id = job_id or str(uuid.uuid4())
     queued_at = utc_now_iso()
 
     data = {

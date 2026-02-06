@@ -1,6 +1,9 @@
+# syntax=docker/dockerfile:1.7
 # docker/worker.Dockerfile
 
-FROM python:3.11-slim AS builder
+ARG PYTHON_IMAGE=python:3.11-slim@sha256:db27ce7778e5f581d5d97812ee577a01a9fffbfa612c47fc521fa684e3389c9b
+
+FROM ${PYTHON_IMAGE} AS builder
 WORKDIR /build
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,20 +16,31 @@ ARG PIP_EXTRA_INDEX_URL=""
 
 COPY ${WORKER_REQUIREMENTS} /build/requirements.txt
 
-RUN pip install --upgrade pip && \
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && \
     if [ -n "$PIP_EXTRA_INDEX_URL" ]; then \
-      pip wheel --no-cache-dir --wheel-dir /wheels -r /build/requirements.txt --extra-index-url "$PIP_EXTRA_INDEX_URL"; \
+      pip wheel --wheel-dir /wheels -r /build/requirements.txt --extra-index-url "$PIP_EXTRA_INDEX_URL"; \
     else \
-      pip wheel --no-cache-dir --wheel-dir /wheels -r /build/requirements.txt; \
+      pip wheel --wheel-dir /wheels -r /build/requirements.txt; \
     fi
 
-FROM python:3.11-slim AS runtime
+FROM ${PYTHON_IMAGE} AS runtime
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglib2.0-0 \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+RUN pip install --upgrade pip
 
 RUN useradd -m -u 10001 appuser
 
 COPY --from=builder /wheels /wheels
-RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir /wheels/* && rm -rf /wheels
 
 COPY . /app
 ENV PYTHONPATH=/app

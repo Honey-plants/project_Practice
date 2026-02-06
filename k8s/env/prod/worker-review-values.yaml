@@ -12,13 +12,13 @@ env:
 queue:
     type: redis
     redisUrl: redis://redis.app-prod.svc.cluster.local:6379/0
+    name: "cicdex:jobs:review"
+    processingName: "cicdex:jobs:review:processing"
 config:
     LOG_LEVEL: INFO
     S3_BUCKET: haenet-s3-project
     S3_PREFIX: uploads/
     S3_REGION: ap-northeast-2
-    name: "cicdex:jobs:review"
-    processingName: "cicdex:jobs:review:processing"
 
 secrets:
     enabled: false

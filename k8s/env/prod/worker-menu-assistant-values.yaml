@@ -16,6 +16,7 @@ config:
     S3_BUCKET: haenet-s3-project
     S3_PREFIX: uploads/
     S3_REGION: ap-northeast-2
+    MENU_ASSISTANT_RUNS_ROOT: /tmp/ai_runs
 
 secrets:
     enabled: false

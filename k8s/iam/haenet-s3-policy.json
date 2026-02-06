@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListBucketUploadPrefix",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::haenet-s3-project",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "upload/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "RWUploadObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::haenet-s3-project/upload/*"
+    }
+  ]
+}

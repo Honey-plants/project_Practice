@@ -46,16 +46,32 @@ export default function ReviewCreateInline({ onCreated }) {
   const verify = async () => {
     setErr("");
     setMsg("");
-    if (!receiptFile) return setErr("영수증 이미지를 선택해줘");
+    if (!receiptFile) return setErr("??????????????????");
 
     setLoadingVerify(true);
     try {
       const r = await ReviewAPI.verifyReceipt(receiptFile);
-      setReceiptId(r.data?.receipt_id);
-      setExtracted(r.data?.extracted || null);
-      setMsg("영수증 인증 완료. 메뉴를 확인해주세요.");
+      const jobId = r.data?.job_id;
+      if (!jobId) {
+        throw new Error("?????? job_id????? ?????");
+      }
+
+      setReceiptId(jobId);
+      setExtracted(null);
+      setMsg("???????? ???????????????.");
+
+      const jobRes = await ReviewAPI.waitReceiptJob(jobId);
+      const status = jobRes?.data?.status;
+      if (status === "DONE") {
+        setExtracted(jobRes?.data?.extracted || null);
+        setMsg("???????? ???. ??????????????.");
+      } else {
+        const err = jobRes?.data?.error;
+        const errMsg = err?.message || err?.detail || JSON.stringify(err || {});
+        setErr(`???????? ???: ${errMsg}`);
+      }
     } catch (e) {
-      setErr(e?.response?.data?.detail || e?.message || "영수증 인증 실패");
+      setErr(e?.response?.data?.detail || e?.message || "???????? ???");
     } finally {
       setLoadingVerify(false);
     }

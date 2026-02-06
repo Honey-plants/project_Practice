@@ -1,1 +1,0 @@
-{"DB_HOST":"heanet-rds-db.chm8ecgk8z74.ap-northeast-2.rds.amazonaws.com","DB_PORT":"3306","DB_NAME":"foodray_db_rds","S3_BUCKET":"haenet-s3-project","S3_REGION":"ap-northeast-2","S3_PREFIX_TMP":"tmp","S3_PREFIX_PERM":"perm"}

@@ -75,17 +75,29 @@ export default function MenuUploadInline() {
       localStorage.setItem(LS_KEY, (profileText || "").trim());
 
       const r = await MenuAPI.uploadMenu(file, profileObj);
+      const jobId = r?.data?.job_id;
+      const status = r?.data?.status;
 
-      setRawRes(r);
+      if (!jobId) {
+        throw new Error("서버에서 job_id를 받지 못했어");
+      }
 
-      // meta.profile_source가 있으면 메시지 개선(없어도 기존 메시지 유지)
-      const profileSource = r?.data?.result?.meta?.profile_source;
-      if (profileSource === "default") {
-        setMsg("✅ 메뉴 분석 완료 (프로필 미제공 → 기본 프로필로 분석됨)");
-      } else if (profileSource === "provided") {
-        setMsg("✅ 메뉴 분석 완료 (사용자 프로필 적용됨)");
-      } else {
+      // If server already returned a result (legacy sync flow), use it.
+      if (status === "DONE" && r?.data?.result) {
+        setRawRes(r);
         setMsg("✅ 메뉴 분석 완료");
+      } else {
+        setMsg("⏳ 메뉴 분석 중… 잠시만 기다려줘.");
+        const jobRes = await MenuAPI.waitMenuJob(jobId);
+        const jobStatus = jobRes?.data?.status;
+        if (jobStatus === "DONE") {
+          setRawRes({ data: { job_id: jobId, result: jobRes?.data?.result } });
+          setMsg("✅ 메뉴 분석 완료");
+        } else {
+          const err = jobRes?.data?.error;
+          const errMsg = err?.message || err?.detail || JSON.stringify(err || {});
+          setMsg(`❌ 메뉴 분석 실패: ${errMsg}`);
+        }
       }
     } catch (e) {
       setMsg(`❌ ${e?.response?.data?.detail || e?.message || "업로드 실패"}`);
