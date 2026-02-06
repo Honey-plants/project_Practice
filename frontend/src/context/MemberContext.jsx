@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useEffect, useReducer } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from "react";
 import { MemberAPI } from "../api/memberApi";
 import { AuthContext } from "./AuthContext";
 
@@ -29,8 +36,15 @@ export function MemberProvider({ children }) {
   const { stateAuth } = useContext(AuthContext);
   const [stateMember, dispatch] = useReducer(reducer, initial);
 
-  const memberActions = {
-    loadMe: async () => {
+  // ✅ 중복 호출 방지
+  // - StrictMode/재마운트
+  // - 토큰 세팅 타이밍 겹침
+  // - 다른 화면에서 loadMe를 추가로 부르는 경우
+  const lastTokenRef = useRef(null);
+  const inflightRef = useRef(null);
+
+  const memberActions = useMemo(() => {
+    const loadMe = async () => {
       dispatch({ type: "LOADING" });
       try {
         const r = await MemberAPI.me();
@@ -40,27 +54,50 @@ export function MemberProvider({ children }) {
         dispatch({ type: "ERROR", payload: e.message });
         return null;
       }
-    },
+    };
 
-    updateMe: async (payload) => {
+    const updateMe = async (payload) => {
       dispatch({ type: "LOADING" });
       try {
         await MemberAPI.updateMe(payload);
-        return await memberActions.loadMe();
+        return await loadMe(); // ✅ update 후 me 최신화는 여기서 1회만
       } catch (e) {
         dispatch({ type: "ERROR", payload: e.message });
         throw e;
       }
-    },
+    };
 
-    clear: () => dispatch({ type: "CLEAR" }),
-  };
+    const clear = () => dispatch({ type: "CLEAR" });
+
+    return { loadMe, updateMe, clear };
+  }, []);
 
   useEffect(() => {
-    if (stateAuth.accessToken) memberActions.loadMe();
-    else memberActions.clear();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stateAuth.accessToken]);
+    const token = stateAuth?.accessToken;
+
+    // 토큰 없으면 초기화
+    if (!token) {
+      lastTokenRef.current = null;
+      inflightRef.current = null;
+      memberActions.clear();
+      return;
+    }
+
+    // ✅ 동일 토큰으로는 다시 호출하지 않음
+    if (lastTokenRef.current === token) return;
+
+    // ✅ 이미 loadMe 진행 중이면 중복 호출 금지
+    if (inflightRef.current) return;
+
+    lastTokenRef.current = token;
+    inflightRef.current = (async () => {
+      try {
+        await memberActions.loadMe();
+      } finally {
+        inflightRef.current = null;
+      }
+    })();
+  }, [stateAuth?.accessToken, memberActions]);
 
   return (
     <MemberContext.Provider value={{ stateMember, memberActions }}>

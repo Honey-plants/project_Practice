@@ -1,8 +1,7 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { MemberContext } from "../../context/MemberContext";
 import { MetaContext } from "../../context/MetaContext";
-import { MemberAPI } from "../../api/memberApi";
 import RestrictionsPicker from "../../components/restrictions/RestrictionsPicker";
 import styles from "./EditProfile.module.css";
 
@@ -17,6 +16,9 @@ export default function EditProfile() {
   const { stateMeta, metaActions } = useContext(MetaContext);
 
   const me = stateMember.me;
+
+  // ✅ 새로고침/직접 진입: me가 없으면 1회만 불러오기
+  const requestedMeRef = useRef(false);
   const categories = useMemo(() => stateMeta?.restrictions || [], [stateMeta?.restrictions]);
 
   // Form state
@@ -41,6 +43,16 @@ export default function EditProfile() {
     setDislikes(Array.isArray(me.dislike_tags) ? me.dislike_tags : []);
   }, [me]);
 
+  // ✅ me가 없고 로딩도 아니면 1회만 loadMe
+  useEffect(() => {
+    if (me) return;
+    if (stateMember?.loading) return;
+    if (requestedMeRef.current) return;
+    requestedMeRef.current = true;
+    memberActions?.loadMe?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me, stateMember?.loading]);
+
   // meta 데이터 로드
   useEffect(() => {
     if (!stateMeta?.loading && categories.length === 0) {
@@ -49,25 +61,19 @@ export default function EditProfile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 닉네임 변경 핸들러
   const handleNicknameChange = (e) => {
     setForm((prev) => ({ ...prev, nickname: e.target.value }));
   };
 
-  // 제한 아이템 토글 핸들러
   const handleToggleItem = (id) => {
     setForm((prev) => {
       const itemSet = new Set(prev.item_ids || []);
-      if (itemSet.has(id)) {
-        itemSet.delete(id);
-      } else {
-        itemSet.add(id);
-      }
+      if (itemSet.has(id)) itemSet.delete(id);
+      else itemSet.add(id);
       return { ...prev, item_ids: Array.from(itemSet) };
     });
   };
 
-  // Dislike 관련 핸들러
   const addDislike = () => {
     const trimmed = dislikeInput.trim();
     if (!trimmed) return;
@@ -97,7 +103,6 @@ export default function EditProfile() {
     }
   };
 
-  // 저장 핸들러
   const handleSave = async () => {
     setMsg("");
     setMsgType("");
@@ -110,10 +115,9 @@ export default function EditProfile() {
         dislike_tags: dislikes.length > 0 ? dislikes : null,
       };
 
-      await MemberAPI.updateMe(payload);
-      await memberActions.loadMe();
+      // ✅ updateMe 안에서 update + loadMe까지 처리 (중복 호출 방지)
+      await memberActions.updateMe(payload);
 
-      // 즉시 이동 (로딩 없이)
       nav("/member/profile");
     } catch (error) {
       const errorMsg = error?.response?.data?.detail || error?.message || "저장에 실패했습니다";
@@ -124,7 +128,6 @@ export default function EditProfile() {
     }
   };
 
-  // 취소 핸들러
   const handleCancel = () => {
     nav("/member/profile");
   };

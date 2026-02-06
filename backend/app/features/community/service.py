@@ -13,12 +13,13 @@ from backend.app.features.review.service import list_reviews_by_ids
 
 # member 로직
 from backend.app.features.member.service import get_member
-
+from backend.app.models.member import Member
 # category, item 조회
 from backend.app.common.service.ai_member_info import build_user_profile_payload
 
 # ai
 from AI.journal_assistant.pipeline.orchestrator import run_orchestrator
+from backend.app.common.service.file_upload_service import save_permanent_bytes, delete_prefix, build_perm_prefix
 
 # 공통 저장(규칙은 공통에서만)
 from backend.app.common.service.file_upload_service import save_permanent_bytes
@@ -57,6 +58,7 @@ def create_step1(db: Session, payload, member_id: int) -> Dict[str, Any]:
 # ---------------------------------------------------------------------
 # 등록 Step2
 # ---------------------------------------------------------------------
+
 async def create_step2(db: Session, total_data: Dict[str, Any]) -> Dict[str, Any]:
     ai_payload = {
         "template": {
@@ -69,8 +71,7 @@ async def create_step2(db: Session, total_data: Dict[str, Any]) -> Dict[str, Any
         "reviews": total_data.get("reviews"),
     }
 
-
-    # 1) AI 호출
+    # 1) AI 호출 (이벤트루프 안막도록 threadpool)
     try:
         image_bytes: bytes = await run_in_threadpool(run_orchestrator, ai_payload)
         if not image_bytes:
@@ -86,37 +87,35 @@ async def create_step2(db: Session, total_data: Dict[str, Any]) -> Dict[str, Any
             recommend=0,
         )
         db.add(community)
-        db.flush()  # community_id 생성
+        db.flush()
         community_id = community.community_id
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Community insert failed: {type(e).__name__}: {e}")
 
-    # 3) 공통 저장 (origin_name None 금지)
+    stored = None
+    perm_prefix = build_perm_prefix(owner_type="community", owner_id=community_id)
+
     try:
+        # 3) 파일 저장
         stored = await save_permanent_bytes(
             owner_type="community",
             owner_id=community_id,
             member_id=int(total_data["member_id"]),
             data=image_bytes,
-            origin_name="community.png",     # NOT NULL 방지
+            origin_name="community.png",
             mime_type="image/png",
             sort_order=0,
         )
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Image save failed: {type(e).__name__}: {e}")
 
-    # 4) ImgFile 저장 (필드명은 네 모델 기준)
-    try:
+        # 4) ImgFile 저장
         img = ImgFile(
-            origin_name=stored.org_file_name,  # "community.png"
-            storage_key=stored.stored_file_name,  # key는 stored_file_name이 가장 안전
-            storage_path=stored.storage_path,  # /static/perm/community/{id}/...
+            origin_name=stored.org_file_name,
+            storage_key=stored.stored_file_name,
+            storage_path=stored.storage_path,
             mime_type=stored.mime_type,
             file_size=stored.size_bytes,
             sort_order=stored.sort_order,
-
             owner_type="community",
             member_id=int(total_data["member_id"]),
             community_id=community_id,
@@ -125,9 +124,15 @@ async def create_step2(db: Session, total_data: Dict[str, Any]) -> Dict[str, Any
         db.add(img)
         db.commit()
         db.refresh(community)
+
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"ImgFile insert failed: {type(e).__name__}: {e}")
+        # ✅ DB 실패 시 파일 삭제(유령파일 방지)
+        try:
+            delete_prefix(prefix_key=perm_prefix)
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=f"Community create failed: {type(e).__name__}: {e}")
 
     return {
         "community_id": community_id,
@@ -149,6 +154,7 @@ def list_community(
     member_id: Optional[int] = None,
     active_only: Optional[bool] = True,   # Optional로 변경
 ) -> List[Dict[str, Any]]:
+
     stmt = select(Community)
 
     if member_id is not None:
@@ -170,6 +176,7 @@ def list_community(
 
     imgs = db.execute(
         select(ImgFile)
+        # 해당 부분 community_j and community_j 둘 다 조회로 변경
         .where(ImgFile.owner_type == "community")
         .where(ImgFile.community_id.in_(community_ids))
         .order_by(ImgFile.community_id.asc(), ImgFile.sort_order.asc())
@@ -178,6 +185,9 @@ def list_community(
     img_map: Dict[int, List[str]] = {}
     for img in imgs:
         img_map.setdefault(img.community_id, []).append(img.storage_path)
+
+    # m = db.execute(select(Member).where(Member.member_id == member_id))
+    # print("커뮤 :: m ", m.nickname)
 
     out: List[Dict[str, Any]] = []
     for c in communities:

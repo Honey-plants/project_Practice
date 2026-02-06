@@ -48,12 +48,4 @@ def get_community(community_id: int, db: Session = Depends(get_db), current=Depe
     print("community 상세 조회 :: ", current.member_id)
 
     return service.get_community_detail(db, community_id)
-#
-# @router.delete("/{community_id}")
-# def delete_community(community_id: int, db: Session = Depends(get_db)):
-#     c = db.query(model).filter(model.community_id == community_id).first()
-#     if not c:
-#         raise HTTPException(status_code=404, detail="Community not found")
-#     db.delete(c)
-#     db.commit()
-#     return {"deleted": True, "community_id": community_id}
+

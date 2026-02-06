@@ -127,86 +127,93 @@ async def create_review_from_receipt(
     if int(session.get("member_id") or 0) != int(member_id):
         raise HTTPException(status_code=403, detail="forbidden")
 
-    final_payload = session.get("payload") or {}
+    # ✅ 동시 생성 방지 락
+    lock_token = ReceiptSessionService.acquire_create_lock(receipt_id=receipt_id)
+    if not lock_token:
+        raise HTTPException(status_code=409, detail="receipt is being processed (try again)")
 
-    print("바뀐거 찾기 :: input_value ", final_payload)
+    try:
+        # 락 잡은 뒤 다시 확인(중간에 만료/삭제 가능)
+        session = ReceiptSessionService.get(receipt_id=receipt_id)
+        if not session:
+            raise HTTPException(status_code=400, detail="receipt expired (verify again)")
+        if int(session.get("member_id") or 0) != int(member_id):
+            raise HTTPException(status_code=403, detail="forbidden")
 
-    # x, y list 작업
-    location_list = []
-    x = final_payload.get('coords')['x']
-    y = final_payload.get('coords')['y']
+        final_payload = session.get("payload") or {}
 
-    location_list.append(x)
-    location_list.append(y)
+        coords = final_payload.get("coords") or {}
+        x = coords.get("x")
+        y = coords.get("y")
+        location_list = [x, y] if (x is not None and y is not None) else []
 
-    print("localtion ::: x, y :: ", location_list)
+        raw = final_payload.get("menu_name")
+        menu_en_list = ensure_list(raw) if raw else []
 
-    # menu_en list 작업
-    raw = final_payload.get("menu_name")
-    menu_en_list = ensure_list(raw) if raw else []
+        member_item_ids = db.execute(
+            select(MemberRestrictions.item_id)
+            .join(Item, Item.item_id == MemberRestrictions.item_id)
+            .join(Category, Category.category_id == Item.category_id)
+            .where(MemberRestrictions.member_id == member_id)
+            .where(Item.item_active == 1)
+            .where(Category.category_active == 1)
+        ).scalars().all()
 
-    # review Items
-    member_item_ids = db.execute(
-        select(MemberRestrictions.item_id)
-        .join(Item, Item.item_id == MemberRestrictions.item_id)
-        .join(Category, Category.category_id == Item.category_id)
-        .where(MemberRestrictions.member_id == member_id)
-        .where(Item.item_active == 1)
-        .where(Category.category_active == 1)
-    ).scalars().all()
+        if rating < 1 or rating > 5:
+            raise HTTPException(status_code=400, detail="rating must be 1~5")
+        if len(images) > 3:
+            raise HTTPException(status_code=400, detail="images max 3")
 
-    if rating < 1 or rating > 5:
-        raise HTTPException(status_code=400, detail="rating must be 1~5")
-    if len(images) > 3:
-        raise HTTPException(status_code=400, detail="images max 3")
-
-    review = Review(
-        review_title=title,
-        review_content=content,
-        rating=rating,
-        location=dumps_json(location_list),
-        menu_name=dumps_json(menu_en_list),
-        member_id=member_id,
-        available=True,
-        review_items=dumps_json(member_item_ids),
-    )
-    db.add(review)
-    db.flush()
-
-
-    image_urls: List[str] = []
-
-    for idx, img in enumerate(images):
-        stored = await save_permanent_asset(
-            owner_type="review",
-            owner_id=review.review_id,
+        review = Review(
+            review_title=title,
+            review_content=content,
+            rating=rating,
+            location=dumps_json(location_list),
+            menu_name=dumps_json(menu_en_list),
             member_id=member_id,
-            upload=img,
-            sort_order=idx,
+            available=True,
+            review_items=dumps_json(member_item_ids),
         )
+        db.add(review)
+        db.flush()
 
-        db.add(
-            ImgFile(
-                origin_name=stored.org_file_name,
-                storage_key=stored.stored_file_name,
-                storage_path=stored.storage_path,
-                mime_type=stored.mime_type,
-                file_size=stored.size_bytes,
-                sort_order=idx,
+        image_urls: List[str] = []
+
+        for idx, img in enumerate(images):
+            stored = await save_permanent_asset(
                 owner_type="review",
+                owner_id=review.review_id,
                 member_id=member_id,
-                review_id=review.review_id,
-                community_id=None,
+                upload=img,
+                sort_order=idx,
             )
-        )
-        image_urls.append(stored.storage_path)
 
-    db.commit()
+            db.add(
+                ImgFile(
+                    origin_name=stored.org_file_name,
+                    storage_key=stored.stored_file_name,
+                    storage_path=stored.storage_path,
+                    mime_type=stored.mime_type,
+                    file_size=stored.size_bytes,
+                    sort_order=idx,
+                    owner_type="review",
+                    member_id=member_id,
+                    review_id=review.review_id,
+                    community_id=None,
+                )
+            )
+            image_urls.append(stored.storage_path)
 
-    # receipt 세션은 review create 완료 후 삭제 (정책에 맞게)
-    ReceiptSessionService.delete(receipt_id=receipt_id)
+        db.commit()
 
-    return {"review_id": review.review_id, "image_urls": image_urls}
+        # ✅ 성공한 경우에만 세션 삭제
+        ReceiptSessionService.delete(receipt_id=receipt_id)
+
+        return {"review_id": review.review_id, "image_urls": image_urls}
+
+    finally:
+        ReceiptSessionService.release_create_lock(receipt_id=receipt_id, token=lock_token)
+
 
 # 전체 조회 / 본인 리스트 조회 한번에 처리
 def list_reviews(db: Session, *, member_id: Optional[int] = None, active_only: bool = True,) -> List[Dict[str, Any]]:
