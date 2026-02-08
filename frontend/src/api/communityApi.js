@@ -10,5 +10,5 @@ export const CommunityAPI = {
   detail: (id) => api.get(`/community/${id}`),
   create: (payload) => api.post("/community", payload),
   update: (id, payload) => api.put(`/community/${id}`, payload),
-  recommend: (id) => api.post(`/community/${id}/recommend`),
+  // recommend: (id) => api.post(`/community/${id}/recommend`),
 };

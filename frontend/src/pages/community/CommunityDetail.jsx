@@ -20,9 +20,9 @@ export default function CommunityDetail() {
   const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
-  const [recommendLoading, setRecommendLoading] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [localRecommend, setLocalRecommend] = useState(0);
+  // const [recommendLoading, setRecommendLoading] = useState(false);
+  // const [liked, setLiked] = useState(false);
+  // const [localRecommend, setLocalRecommend] = useState(0);
 
   // 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
   useEffect(() => {
@@ -52,12 +52,12 @@ export default function CommunityDetail() {
   const d = stateCommunity.detail;
 
   // detail 데이터가 바뀌면 liked / recommend 로컬 상태 동기화
-  useEffect(() => {
-    if (d) {
-      setLiked(!!d.liked);
-      setLocalRecommend(d.recommend ?? 0);
-    }
-  }, [d]);
+  // useEffect(() => {
+  //   if (d) {
+  //     setLiked(!!d.liked);
+  //     setLocalRecommend(d.recommend ?? 0);
+  //   }
+  // }, [d]);
 
   if (stateAuth.loading || !d) return <div className="loading">Loading...</div>;
 
@@ -75,28 +75,28 @@ export default function CommunityDetail() {
   };
 
   // 좋아요(recommend) 토글 — 인스타 스타일
-  const handleRecommend = async () => {
-    if (recommendLoading) return;
-    setRecommendLoading(true);
+  // const handleRecommend = async () => {
+  //   if (recommendLoading) return;
+  //   setRecommendLoading(true);
 
-    // 낙관적 업데이트
-    const prevLiked = liked;
-    const prevCount = localRecommend;
-    setLiked(!prevLiked);
-    setLocalRecommend(prevLiked ? Math.max(prevCount - 1, 0) : prevCount + 1);
+  //   // 낙관적 업데이트
+  //   const prevLiked = liked;
+  //   const prevCount = localRecommend;
+  //   setLiked(!prevLiked);
+  //   setLocalRecommend(prevLiked ? Math.max(prevCount - 1, 0) : prevCount + 1);
 
-    try {
-      await communityActions.recommend(id);
-      // 서버 실제 값으로 갱신
-      communityActions.fetchDetail(id);
-    } catch {
-      // 실패 시 원복
-      setLiked(prevLiked);
-      setLocalRecommend(prevCount);
-    } finally {
-      setRecommendLoading(false);
-    }
-  };
+  //   try {
+  //     await communityActions.recommend(id);
+  //     // 서버 실제 값으로 갱신
+  //     communityActions.fetchDetail(id);
+  //   } catch {
+  //     // 실패 시 원복
+  //     setLiked(prevLiked);
+  //     setLocalRecommend(prevCount);
+  //   } finally {
+  //     setRecommendLoading(false);
+  //   }
+  // };
 
   // 댓글 제출
   const handleCommentSubmit = async (e) => {
@@ -144,7 +144,7 @@ export default function CommunityDetail() {
           <div className="authorAvatar">{nickname.charAt(0)}</div>
           <div className="authorInfo">
             <span className="authorName">{nickname}</span>
-            <button
+            {/* <button
               className={`authorLike recommendBtn ${liked ? "liked" : ""}`}
               onClick={handleRecommend}
               disabled={recommendLoading}
@@ -153,7 +153,7 @@ export default function CommunityDetail() {
                 {liked ? "♥" : "♡"}
               </span>
               {localRecommend}
-            </button>
+            </button> */}
           </div>
         </div>
 

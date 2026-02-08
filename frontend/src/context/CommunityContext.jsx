@@ -77,10 +77,10 @@ export function CommunityProvider({ children }) {
     },
 
     // 좋아요(recommend) +1
-    recommend: async (id) => {
-      const r = await CommunityAPI.recommend(id);
-      return r.data;
-    },
+    // recommend: async (id) => {
+    //   const r = await CommunityAPI.recommend(id);
+    //   return r.data;
+    // },
   };
 
   return (
