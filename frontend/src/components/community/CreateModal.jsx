@@ -23,14 +23,26 @@ export default function CreateModal({
   // 여기서부터 list로 사용 (서버에서 내것만 내려줌)
   const myReviews = useMemo(() => stateReview.list ?? [], [stateReview.list]);
   console.log("community :: ", myReviews)
-  const isReviewActive = (r) =>
-    (r.available ?? r.is_active ?? r.isActive) === true;
 
-  // active도 내 리뷰(myList) 기준
+  // 0/1, true/false, "1"/"0" 등 다 커버
+  const toBool = (v) => v === true || v === 1 || v === "1" || v === "true";
+
+  // temp1
+  const isReviewActive = (r) =>
+    toBool(r.available ?? r.is_active ?? r.isActive) === true;
+
+  // temp2
+  const allIds = useMemo(() => {
+    return myReviews
+      .map((r) => r.review_id ?? r.id)
+      .filter((v) => v !== null && v !== undefined);
+  }, [myReviews]);
+
+  // active도 내 리뷰(myList) 기준 temp1사용
   const activeReviews = useMemo(() => myReviews.filter(isReviewActive), [myReviews]);
 
   const activeIds = useMemo(
-    () => activeReviews.map((r) => r.review_id ?? r.id),
+    () => activeReviews.map((r) => r.review_id ?? r.id).filter(Boolean),
     [activeReviews]
   );
 
@@ -58,9 +70,13 @@ export default function CreateModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    if (templateId === 2) setSelectedIds(activeIds);
-    else setSelectedIds([]);
-  }, [templateId, activeIds.join(","), isOpen]);
+    if (templateId === 2) {
+
+        setSelectedIds(allIds);
+    } else {
+        setSelectedIds([]);
+    }
+  }, [templateId, allIds.join(","), isOpen]);
 
   const toggleSelect = (id, isActive) => {
     if (!isActive) return;
@@ -77,7 +93,7 @@ export default function CreateModal({
   const canSubmit =
     templateId === 1
       ? activeReviews.length >= 3 && selectedIds.length === 3
-      : activeIds.length >= 3;
+      : allIds.length >= 3;
 
   const handleConfirm = () => {
 
@@ -85,7 +101,7 @@ export default function CreateModal({
 
     if (!canSubmit || saving) return;
 
-    const reviewIds = templateId === 2 ? activeIds : selectedIds;
+    const reviewIds = templateId === 2 ? allIds : selectedIds;
     console.log("버튼 클릭 :: ", reviewIds)
     onConfirm?.({ templateId, reviewIds });
   };

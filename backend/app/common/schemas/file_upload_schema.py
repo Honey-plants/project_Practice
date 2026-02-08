@@ -21,6 +21,6 @@ class MenuUploadResponse(UploadInputResponse):
     rectified_path: str
     translate_json_path: str
 
-    # ✅ 프론트가 실제로 접근할 URL (중요)
+    # 프론트가 실제로 접근할 URL (중요)
     rectified_url: str
     translate_json_url: str

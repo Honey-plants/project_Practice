@@ -102,9 +102,9 @@ def run_cmd(cmd: list, env=None, cwd=None):
         shell=False,
         env=env,
         cwd=str(cwd) if cwd else None,
-        stdout=subprocess.PIPE,          # ✅ 핵심
-        stderr=subprocess.STDOUT,        # ✅ stderr도 stdout으로 합침
-        text=True,                       # ✅ 문자열로 받기
+        stdout=subprocess.PIPE,          # 핵심
+        stderr=subprocess.STDOUT,        # stderr도 stdout으로 합침
+        text=True,                       # 문자열로 받기
     )
 
     if p.returncode != 0:
@@ -253,7 +253,7 @@ class Step6Options:
 
 
 class PipelineOrchestrator:
-    def __init__(self, runs_root: Path, data_dir: Optional[Path] = None):  # ✅ Non -> None
+    def __init__(self, runs_root: Path, data_dir: Optional[Path] = None):  # Non -> None
         self.runs_root = runs_root
 
         # ✅ backend에서 넘겨준 data_dir을 우선 사용 (없으면 기존처럼 runs_root.parent)

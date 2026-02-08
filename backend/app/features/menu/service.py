@@ -22,7 +22,7 @@ def run_menu_ai(
 
     menu_data_dir = (config.PROJECT_ROOT / "AI" / "menu_assistant" / "data").resolve()
 
-    # ✅ runs_root는 router에서 넘겨준 tmp 경로를 그대로 사용
+    # runs_root는 router에서 넘겨준 tmp 경로를 그대로 사용
     # 예: C:\...\uploads\tmp\menu\<job_id>\ai_runs
     runs_root = Path(runs_root).resolve()
     runs_root.mkdir(parents=True, exist_ok=True)

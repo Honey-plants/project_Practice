@@ -16,5 +16,15 @@ export const MemberAPI = {
 
   register: (payload) => api.post("/member", payload),
 
-//  getCategoriesWithItems: () => api.get("/member/categories-with-items"),
+  // 회원 탈퇴
+  withdraw: async () => {
+    // 백엔드가 /member/me DELETE로 구현되어 있다고 가정
+    try {
+      return await api.delete("/member/me");
+    } catch (e) {
+      // 만약 백엔드가 /members/me로 되어있으면 fallback
+      if (e?.response?.status === 404) return await api.delete("/members/me");
+      throw e;
+    }
+  },
 };

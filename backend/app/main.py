@@ -70,7 +70,7 @@ async def _tmp_cleanup_loop():
     while True:
         token = None
         try:
-            # ✅ token 방식 락
+            # token 방식 락
             token = acquire_lock(redis_client, lock_key, lock_ttl)
             if token:
                 cleanup_receipt_tmp(config.LOCAL_TMP_ROOT, config.TMP_TTL_SECONDS)

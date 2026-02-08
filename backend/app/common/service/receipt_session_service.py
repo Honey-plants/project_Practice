@@ -44,7 +44,7 @@ class ReceiptSessionService:
         key = cls.KEY_SESSION.format(rid=receipt_id)
         redis_client.delete(key)
 
-    # ✅ 추가: receipt 단위 락(리뷰 생성 동시성 방지)
+    # 추가: receipt 단위 락(리뷰 생성 동시성 방지)
     @classmethod
     def acquire_create_lock(cls, *, receipt_id: str) -> Optional[str]:
         key = cls.KEY_LOCK.format(rid=receipt_id)
