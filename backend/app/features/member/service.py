@@ -11,6 +11,12 @@ from backend.app.models.restrictions.member_restriction import MemberRestriction
 # password hash 작업
 from backend.app.core.security.password import hash_password
 
+# img_file 삭제 처리
+from backend.app.models.img_file import ImgFile
+import os
+from pathlib import Path
+from backend.app.core import config
+
 import json
 
 # 등록
@@ -188,8 +194,16 @@ def delete_member(db: Session, member_id: int) -> None:
         if not m:
             raise HTTPException(status_code=404, detail="Member not found")
 
-        # 추가적인 img 삭제 로직 추가 가능성
+        # 1) member가 업로드한 img_file의 storage_path 전부 조회 후 실제 파일 삭제
+        img_paths = db.execute(
+            select(ImgFile.storage_path).where(ImgFile.member_id == member_id)
+        ).scalars().all()
 
+        if config.STORAGE_BACKEND == "local":
+            for sp in img_paths:
+                _try_delete_local_file_by_storage_path(sp)
+
+        # 2) DB 삭제 (FK CASCADE로 review/community/comment/refresh_token/... 연쇄 삭제)
         db.delete(m)
         db.commit()
         return
@@ -201,6 +215,49 @@ def delete_member(db: Session, member_id: int) -> None:
         db.rollback()
         raise
 
+# 삭제 시 저장소 저장된 이미지 파일 삭제 처리
+def _try_delete_local_file_by_storage_path(storage_path: str) -> None:
+    """
+    storage_path 예: /static/perm/review/10/review_10_0_xxx.jpg
+    FastAPI에서 /static -> LOCAL_UPLOAD_ROOT로 mount 되어있으니,
+    실제 파일 경로는 LOCAL_UPLOAD_ROOT / (storage_path에서 /static/ 제거한 나머지)
+    """
+    if not storage_path:
+        return
+    if not storage_path.startswith("/static/"):
+        return  # local 기준은 /static/... 만 처리
+
+    rel = storage_path[len("/static/"):]  # perm/review/...
+    real_path = (config.LOCAL_UPLOAD_ROOT / rel).resolve()
+
+    # uploads 폴더 바깥 삭제 방지
+    try:
+        root = config.LOCAL_UPLOAD_ROOT.resolve()
+        if root not in real_path.parents and real_path != root:
+            return
+    except Exception:
+        return
+
+    try:
+        if real_path.exists() and real_path.is_file():
+            real_path.unlink(missing_ok=True)
+    except Exception:
+        pass
+
+    # 폴더 정리(비어있으면 위로 올라가며 삭제) - perm까지만
+    try:
+        p = real_path.parent
+        stop = (config.LOCAL_UPLOAD_ROOT / "perm").resolve()
+        while True:
+            if p == stop or p == config.LOCAL_UPLOAD_ROOT.resolve():
+                break
+            if p.exists() and p.is_dir() and not any(p.iterdir()):
+                p.rmdir()
+                p = p.parent
+            else:
+                break
+    except Exception:
+        pass
 
 # NickName 체크 로직 // True / False
 def is_nickname_available(db: Session, nickname: str) -> bool:

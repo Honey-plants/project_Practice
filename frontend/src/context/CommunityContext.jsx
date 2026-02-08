@@ -66,21 +66,23 @@ export function CommunityProvider({ children }) {
 
     create: async (payload) => (await CommunityAPI.create(payload)).data,
     update: async (id, payload) => (await CommunityAPI.update(id, payload)).data,
-    remove: async (id) => (await CommunityAPI.remove(id)).data,
+//     remove: async (id) => (await CommunityAPI.remove(id)).data,
 
-    // 공개/비공개 토글 후 상세 상태 갱신
-    toggleActive: async (id, active) => {
-      const r = await CommunityAPI.update(id, { community_active: active });
-      // 로컬 detail 상태도 바로 갱신
-      dispatch({ type: "SET_DETAIL", payload: { ...r.data, community_active: active } });
-      return r.data;
+
+    /**
+     * 추천 토글
+     * - 여기서는 "토글 요청 + 응답 반환"만 수행
+     * - 화면 반영은 CommunityList/Detail에서 fetchList/fetchDetail로 확정 갱신
+     */
+    recommendToggle: async (communityId) => {
+      try {
+        const r = await CommunityAPI.recommendToggle(communityId);
+        return r.data; // { recommended: boolean, recommend: number } 기대
+      } catch (e) {
+        dispatch({ type: "ERROR", payload: e.message });
+        throw e;
+      }
     },
-
-    // 좋아요(recommend) +1
-    // recommend: async (id) => {
-    //   const r = await CommunityAPI.recommend(id);
-    //   return r.data;
-    // },
   };
 
   return (

@@ -81,7 +81,7 @@ def refresh_rotate_tokens(db: Session, refresh_token: str) -> tuple[str, str]:
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
-    # ✅ 2) 동시 refresh 방지: member 단위 락
+    # 2) 동시 refresh 방지: member 단위 락
     lock_key = f"lock:auth:refresh:{member_id}"
     lock_token = acquire_lock(redis_client, lock_key, ttl_seconds=10)
     if not lock_token:
@@ -131,7 +131,7 @@ def refresh_rotate_tokens(db: Session, refresh_token: str) -> tuple[str, str]:
 
 def logout(db: Session, access_token: str) -> None:
     """
-    ✅ logout도 refresh와 같은 member 락을 잡아두면
+    logout도 refresh와 같은 member 락을 잡아두면
     - refresh 도중 logout
     - logout 도중 refresh
     의 경쟁조건이 줄어듦

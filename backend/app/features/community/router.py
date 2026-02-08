@@ -28,13 +28,18 @@ async def create_community(payload: CommunityCreate, db: Session = Depends(get_d
         result = await service.create_step2(db, total_data)
         print("result :: ", result)
 
-        # 3. AI 성공 후 REVIEW available 처리
-        print("AI 처리 후 REVIEW AVAILABLE ", payload.review_ids)
-        ok = availavble_review(db, payload.review_ids)
+        # 3. AI 성공 후 TEMP1만 REVIEW available 처리
+        if int(payload.template_id) == 1:
+            ok = availavble_review(db, payload.review_ids)
+            if not ok:
+                raise HTTPException(status_code=500, detail="Failed to update review availability")
 
-        if not ok:
-            # 여기서 실패하면 절대 성공 리턴하면 안됨(데이터 정합성 깨짐)
-            raise HTTPException(status_code=500, detail="Failed to update review availability")
+        # # 3. AI 성공 후 REVIEW available 처리
+        # print("AI 처리 후 REVIEW AVAILABLE ", payload.review_ids)
+        # ok = availavble_review(db, payload.review_ids)
+        # if not ok:
+        #     # 여기서 실패하면 절대 성공 리턴하면 안됨(데이터 정합성 깨짐)
+        #     raise HTTPException(status_code=500, detail="Failed to update review availability")
 
         # step1/step2에서 DB write가 있었다면 여기서 한 번에 커밋
         # step2 commit 주석처리 완
@@ -84,24 +89,9 @@ def get_community(community_id: int, db: Session = Depends(get_db), current=Depe
 
     return service.get_community_detail(db, community_id, current_member_id=current.member_id)
 
-
-@router.put("/{community_id}", response_model=CommunityRead)
-def update_community(community_id: int, payload: CommunityUpdate, db: Session = Depends(get_db), current=Depends(get_current_member)):
-    """공개/비공개 토글 (community_active: 1=공개, 0=비공개)"""
-    return service.update_community(db, community_id, current.member_id, payload)
-
-
-# @router.post("/{community_id}/recommend")
-# def toggle_recommend(community_id: int, db: Session = Depends(get_db), current=Depends(get_current_member)):
-#     """좋아요 +1 토글"""
-#     return service.toggle_recommend(db, community_id, current.member_id)
-
-#
-# @router.delete("/{community_id}")
-# def delete_community(community_id: int, db: Session = Depends(get_db)):
-#     c = db.query(model).filter(model.community_id == community_id).first()
-#     if not c:
-#         raise HTTPException(status_code=404, detail="Community not found")
-#     db.delete(c)
-#     db.commit()
-#     return {"deleted": True, "community_id": community_id}
+# 좋아요 로직
+@router.post("/{community_id}/recommend")
+def recommend_toggle(community_id: int, db: Session = Depends(get_db), current=Depends(get_current_member)):
+    out = service.toggle_recommend(db, community_id=community_id, member_id=current.member_id)
+    db.commit()
+    return out

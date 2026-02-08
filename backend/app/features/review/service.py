@@ -109,7 +109,7 @@ async def verify_receipt(*, member_id: int, file: UploadFile, receipt_id: str) -
     finally:
         cleanup()
         #  정책: receipt는 결과를 temp에 담아둘 것이므로 prefix 삭제하지 않는다.
-        # delete_prefix(prefix_key=tmp_prefix)  # ❌ 하면 안됨`
+        # delete_prefix(prefix_key=tmp_prefix)  # 하면 안됨`
 
 
 async def create_review_from_receipt(
@@ -129,7 +129,7 @@ async def create_review_from_receipt(
     if int(session.get("member_id") or 0) != int(member_id):
         raise HTTPException(status_code=403, detail="forbidden")
 
-    # ✅ 동시 생성 방지 락
+    # 동시 생성 방지 락
     lock_token = ReceiptSessionService.acquire_create_lock(receipt_id=receipt_id)
     if not lock_token:
         raise HTTPException(status_code=409, detail="receipt is being processed (try again)")
@@ -208,7 +208,7 @@ async def create_review_from_receipt(
 
         db.commit()
 
-        # ✅ 성공한 경우에만 세션 삭제
+        # 성공한 경우에만 세션 삭제
         ReceiptSessionService.delete(receipt_id=receipt_id)
 
         return {"review_id": review.review_id, "image_urls": image_urls}
@@ -438,7 +438,7 @@ def availavble_review(db: Session, review_ids: List[int]):
         return True
 
     try:
-        # 🔥 available 컬럼 타입에 맞게 둘 중 하나만 사용
+        # available 컬럼 타입에 맞게 둘 중 하나만 사용
         # 1) bool 컬럼이면:
         # res = db.execute(
         #     update(Review)

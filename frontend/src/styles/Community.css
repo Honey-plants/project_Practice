@@ -1,0 +1,350 @@
+body{
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+}
+
+.container{
+    margin: 0 auto;
+    padding: 30px;
+    width: 80%;
+    max-width: 850px;
+    border: 1px solid #ddd;
+    border-radius: 40px;
+}
+
+.ctn_box{
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.ai_img {
+    background-color: #eee;
+    width: 100%;
+    height: 500px;
+    border-radius: 10px;
+    text-align: center;
+    line-height: 500px;
+    font-size: 14px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.left {
+  flex: 0 0 50%;
+  flex-direction: column;
+  flex: 1;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.right-top,
+.right-bottom,
+.left-top,
+.left-bottom {
+  flex: 1;
+}
+
+.right-top{
+    margin-left: auto;
+}
+
+.icon .profile {
+    display: inline-block;
+    background: #333;
+    width: 80px;
+    height: 80px;
+    border-radius: 40px;
+    color: white;
+    text-align: center;
+    line-height: 80px;
+}
+
+.comment .icon .profile{
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 12px;
+}
+
+.icon .nickname {
+    display: inline-block;
+    font-size: 20px;
+    margin-left: 10px;
+}
+
+.comment .icon .nickname {
+    font-size: 12px;
+    text-align: right;
+}
+
+.comment .left {
+    font-size: 14px;
+}
+.like {
+    margin-right: 10px;
+    text-align: right;
+    font-size: 15px;
+}
+
+.like .text{
+    margin: 0 10px;    
+}
+
+.create_img{
+    text-align: right;
+}
+
+button{
+    margin: 10px 0;
+    border: none;
+    background: #333;
+    color: #fff;
+    padding: 5px 20px;
+    border-radius: 30px;
+}
+
+.notice{
+    border: 1px solid #eee;
+    background: #f3f3f3;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom:20px;
+}
+
+.text p{
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+}
+
+.text span{
+    font-size: 14px;
+}
+
+/**
+추가 0207
+**/
+
+/* ---------------------------
+   Community List - Card UI
+   (기존 파일 안에서 추가만)
+---------------------------- */
+
+.communityCardList {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.communityCard {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    background: #fff;
+    text-decoration: none;
+    color: inherit;
+}
+
+.communityCard:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.communityCardThumb {
+    width: 120px;      /* ✅ review 카드 썸네일과 동일 */
+    height: 90px;      /* ✅ review 카드 썸네일과 동일 */
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f3f3f3;
+    flex: 0 0 auto;
+}
+
+.communityCardThumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.communityCardThumbPlaceholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #888;
+}
+
+.communityCardBody {
+    flex: 1;
+    min-width: 0;
+}
+
+.communityCardMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.communityCardNickname {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.communityCardDate {
+    font-size: 12px;
+    color: #777;
+    white-space: nowrap;
+}
+
+.communityCardComment {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.communityCardCommentLabel {
+    font-size: 12px;
+    color: #666;
+    flex: 0 0 auto;
+}
+
+.communityCardCommentText {
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---------------------------
+   Community Detail + Comments
+---------------------------- */
+
+.communityDetailCard {
+    border: 1px solid #eee;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.communityDetailThumb {
+    height: 320px;   /* ✅ 리뷰 상세와 동일하게 */
+}
+
+.communityDetailThumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.communityDetailMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    padding: 12px;
+}
+
+.commentBox {
+    margin-top: 16px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff;
+}
+
+.commentHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.commentPager {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.commentList {
+    display: grid;
+    gap: 10px;
+}
+
+.commentItem {
+    border: 1px solid #f0f0f0;
+    border-radius: 10px;
+    padding: 10px;
+    background: #fafafa;
+}
+
+.commentItemMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+    gap: 10px;
+}
+
+.commentNick {
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.commentDate {
+    font-size: 12px;
+    color: #777;
+    white-space: nowrap;
+}
+
+.commentText {
+    font-size: 13px;
+    white-space: pre-wrap;
+}
+
+.commentForm {
+    margin-top: 12px;
+    display: grid;
+    gap: 8px;
+}
+
+.commentForm textarea {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px;
+    resize: vertical;
+}
+
+.commentHint {
+    font-size: 12px;
+    color: #777;
+}
+
+
+.communityCardThumb {
+    width: 120px;      /* ✅ review 카드 썸네일과 동일 */
+    height: 90px;      /* ✅ review 카드 썸네일과 동일 */
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f3f3f3;
+    flex: 0 0 auto;
+}
+
+.communityDetailThumb {
+    height: 320px;   /* ✅ 리뷰 상세와 동일하게 */
+}

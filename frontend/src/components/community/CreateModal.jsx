@@ -18,11 +18,31 @@ export default function CreateModal({
   const [selectedIds, setSelectedIds] = useState([]);
 
   const myReviews = useMemo(() => stateReview.list ?? [], [stateReview.list]);
+<<<<<<< HEAD
   const isReviewActive = (r) => (r.available ?? r.is_active ?? r.isActive) === true;
 
+=======
+  console.log("community :: ", myReviews)
+
+  // 0/1, true/false, "1"/"0" 등 다 커버
+  const toBool = (v) => v === true || v === 1 || v === "1" || v === "true";
+
+  // temp1
+  const isReviewActive = (r) =>
+    toBool(r.available ?? r.is_active ?? r.isActive) === true;
+
+  // temp2
+  const allIds = useMemo(() => {
+    return myReviews
+      .map((r) => r.review_id ?? r.id)
+      .filter((v) => v !== null && v !== undefined);
+  }, [myReviews]);
+
+  // active도 내 리뷰(myList) 기준 temp1사용
+>>>>>>> a9cf38138538424ebd67e1139dcdf995158b189d
   const activeReviews = useMemo(() => myReviews.filter(isReviewActive), [myReviews]);
   const activeIds = useMemo(
-    () => activeReviews.map((r) => r.review_id ?? r.id),
+    () => activeReviews.map((r) => r.review_id ?? r.id).filter(Boolean),
     [activeReviews]
   );
 
@@ -41,8 +61,19 @@ export default function CreateModal({
 
   useEffect(() => {
     if (!isOpen) return;
+<<<<<<< HEAD
     setSelectedIds(templateId === 2 ? activeIds : []);
   }, [templateId, activeIds.join(","), isOpen]);
+=======
+
+    if (templateId === 2) {
+
+        setSelectedIds(allIds);
+    } else {
+        setSelectedIds([]);
+    }
+  }, [templateId, allIds.join(","), isOpen]);
+>>>>>>> a9cf38138538424ebd67e1139dcdf995158b189d
 
   const toggleSelect = (id, isActive) => {
     if (!isActive || templateId === 2) return;
@@ -55,11 +86,24 @@ export default function CreateModal({
   };
 
   const canSubmit =
+<<<<<<< HEAD
     templateId === 1 ? activeReviews.length >= 3 && selectedIds.length === 3 : activeIds.length > 0;
+=======
+    templateId === 1
+      ? activeReviews.length >= 3 && selectedIds.length === 3
+      : allIds.length >= 3;
+>>>>>>> a9cf38138538424ebd67e1139dcdf995158b189d
 
   const handleConfirm = () => {
     if (!canSubmit || saving) return;
+<<<<<<< HEAD
     onConfirm?.({ templateId, reviewIds: templateId === 2 ? activeIds : selectedIds });
+=======
+
+    const reviewIds = templateId === 2 ? allIds : selectedIds;
+    console.log("버튼 클릭 :: ", reviewIds)
+    onConfirm?.({ templateId, reviewIds });
+>>>>>>> a9cf38138538424ebd67e1139dcdf995158b189d
   };
 
   return (
