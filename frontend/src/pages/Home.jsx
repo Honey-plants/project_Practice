@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import "./Home.css";
 
-const LOGO_SRC = "/example_logo.png";
+const LOGO_SRC = "/food_ray_logo.png";
 
 /* ── SVG 아이콘 ── */
 const CameraIcon = () => (

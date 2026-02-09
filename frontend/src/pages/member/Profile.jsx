@@ -4,6 +4,7 @@ import { ReviewContext } from "../../context/ReviewContext";
 import { CommunityContext } from "../../context/CommunityContext";
 import ProfileSidebar from "../../components/profile/ProfileSidebar";
 import RestrictionsSection from "../../components/profile/RestrictionsSection";
+import FoodMapSection from "../../components/profile/FoodMapSection";
 import ReviewSection from "../../components/profile/ReviewSection";
 import CommunitySection from "../../components/profile/CommunitySection";
 import styles from "./Profile.module.css";
@@ -75,6 +76,8 @@ export default function Profile() {
           {stateMember?.error && <div className={styles.error}>{stateMember.error}</div>}
 
           <RestrictionsSection selectedIds={selectedIds} />
+
+          <FoodMapSection communities={myCommunities} />
 
           <ReviewSection
             reviews={myReviews}

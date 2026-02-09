@@ -85,10 +85,10 @@ export default function ReviewDetailPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2 className={styles.title}>리뷰 상세</h2>
+        <h2 className={styles.title}>Review Details</h2>
 
         <button onClick={() => nav("/review")} className={styles.backButton}>
-          목록으로
+          List
         </button>
       </div>
 
@@ -100,7 +100,7 @@ export default function ReviewDetailPage() {
 
       {stateReview.loading && (
         <div className={styles.loading}>
-          로딩 중...
+          Loading...
         </div>
       )}
 

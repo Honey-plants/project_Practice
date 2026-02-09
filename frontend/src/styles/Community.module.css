@@ -1,7 +1,12 @@
 .container{
     margin: 0 auto;
     padding: 20px;
-    max-width: 1200px;
+    max-width: 420px;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: calc(100vh - 106px);
+    display: flex;
+    flex-direction: column;
 }
 
 .ctn_box{
@@ -184,6 +189,19 @@
     background: #1B5E20;
     border-color: #1B5E20;
     color: #FFFFFF;
+}
+
+/* ===== 로그인 안내 배너 ===== */
+.loginGuideBox {
+    padding: 14px 18px;
+    background: #E8F5E9;
+    border: 1px solid #81C784;
+    color: #2E7D32;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
 }
 
 /* ===== 에러 메시지 ===== */
