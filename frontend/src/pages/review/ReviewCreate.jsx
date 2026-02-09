@@ -53,24 +53,46 @@ export default function ReviewCreateInline({ onCreated }) {
         setLoadingVerify(true);
         try {
             const r = await ReviewAPI.verifyReceipt(receiptFile);
-            setReceiptId(r.data?.receipt_id);
-            const ext = r.data?.extracted || null;
-            setExtracted(ext);
-            // OCR 결과에서 메뉴 목록 파싱하여 state에 저장
-            if (ext?.menu_en) {
-                const raw = ext.menu_en;
-                const parsed = Array.isArray(raw)
-                    ? raw.map((m) =>
-                          String(m)
-                              .replace(/["[\]]/g, "")
-                              .trim(),
-                      )
-                    : raw
-                          .split(",")
-                          .map((m) => m.replace(/["[\]]/g, "").trim());
-                setMenuList(parsed.filter(Boolean));
+            const jobId = r?.data?.job_id || r?.data?.receipt_id || null;
+
+            const applyExtracted = (ext) => {
+                setExtracted(ext);
+                // OCR ?????? ??? ??? ?????? state??????
+                if (ext?.menu_en) {
+                    const raw = ext.menu_en;
+                    const parsed = Array.isArray(raw)
+                        ? raw.map((m) =>
+                              String(m)
+                                  .replace(/["[\]]/g, "")
+                                  .trim(),
+                          )
+                        : raw
+                              .split(",")
+                              .map((m) => m.replace(/["[\]]/g, "").trim());
+                    setMenuList(parsed.filter(Boolean));
+                }
+            };
+
+            // Async queue flow (202/PENDING) -> poll job status
+            if (jobId && (r?.status === 202 || r?.data?.status === "PENDING")) {
+                setReceiptId(jobId);
+                const jobRes = await ReviewAPI.waitReceiptJob(jobId);
+                const jobStatus = jobRes?.data?.status;
+                if (jobStatus !== "DONE") {
+                    const errObj = jobRes?.data?.error;
+                    const errMsg =
+                        errObj?.message || errObj?.detail || "???????? ???";
+                    throw new Error(errMsg);
+                }
+                applyExtracted(jobRes?.data?.extracted || null);
+                setMsg("???????? ???. ??????????????.");
+                return;
             }
-            setMsg("영수증 인증 완료. 메뉴를 확인해주세요.");
+
+            // Legacy sync flow
+            setReceiptId(jobId);
+            applyExtracted(r?.data?.extracted || null);
+            setMsg("???????? ???. ??????????????.");
         } catch (e) {
             setErr(e?.response?.data?.detail || e?.message || "???????? ???");
         } finally {

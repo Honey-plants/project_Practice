@@ -15,6 +15,9 @@ env:
     QUEUE_NAME_MENU_ASSISTANT: "cicdex:jobs:menu_assistant"
     QUEUE_NAME_JOURNAL: "cicdex:jobs:journal"
     QUEUE_NAME_REVIEW: "cicdex:jobs:review"
+    COOKIE_DOMAIN: ".foodray.net"
+    COOKIE_SECURE: "true"
+    COOKIE_SAMESITE: "none"
 
 secret:
     enabled: false
