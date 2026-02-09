@@ -66,7 +66,23 @@ export function CommunityProvider({ children }) {
 
     create: async (payload) => (await CommunityAPI.create(payload)).data,
     update: async (id, payload) => (await CommunityAPI.update(id, payload)).data,
-    remove: async (id) => (await CommunityAPI.remove(id)).data,
+//     remove: async (id) => (await CommunityAPI.remove(id)).data,
+
+
+    /**
+     * 추천 토글
+     * - 여기서는 "토글 요청 + 응답 반환"만 수행
+     * - 화면 반영은 CommunityList/Detail에서 fetchList/fetchDetail로 확정 갱신
+     */
+    recommendToggle: async (communityId) => {
+      try {
+        const r = await CommunityAPI.recommendToggle(communityId);
+        return r.data; // { recommended: boolean, recommend: number } 기대
+      } catch (e) {
+        dispatch({ type: "ERROR", payload: e.message });
+        throw e;
+      }
+    },
   };
 
   return (

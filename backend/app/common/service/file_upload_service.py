@@ -18,7 +18,7 @@ _WORK_DIR.mkdir(parents=True, exist_ok=True)
 # --------------------------------------------------------------------
 def build_temp_prefix(*, upload_type: str, scope_id: str) -> str:
     """
-    ✅ 임시 저장 폴더(prefix) 생성 규칙을 "한 군데"에서 통일
+    임시 저장 폴더(prefix) 생성 규칙을 "한 군데"에서 통일
     - local:  <LOCAL_TMP_ROOT>/<upload_type>/<scope_id>
     - s3:     upload/<S3_PREFIX_TMP>/<upload_type>/<scope_id>
     """
@@ -84,7 +84,7 @@ def delete_input_file(*, file_key: str) -> None:
 
 def delete_prefix(*, prefix_key: str) -> None:
     """
-    ✅ 폴더(prefix) 단위 삭제
+    폴더(prefix) 단위 삭제
     - local: 디렉토리 rmtree
     - s3: prefix 하위 오브젝트 삭제
     """
@@ -171,7 +171,7 @@ async def save_permanent_bytes(
     sort_order: int = 0,
 ) -> StoredAsset:
     """
-    ✅ AI 등에서 생성된 bytes를 영구 저장할 때 사용
+    AI 등에서 생성된 bytes를 영구 저장할 때 사용
     - local: uploads/perm/{owner_type}/{owner_id}/...
             storage_path=/static/perm/{owner_type}/{owner_id}/...
     - s3:    upload/<perm prefix>/{owner_type}/{owner_id}/... (지원 시)

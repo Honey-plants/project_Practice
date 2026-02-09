@@ -7,8 +7,10 @@ export default function ReviewCreateInline({ onCreated }) {
   const navigate = useNavigate();
   // Step1
   const [receiptFile, setReceiptFile] = useState(null);
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState(null);
   const [receiptId, setReceiptId] = useState(null);
   const [extracted, setExtracted] = useState(null);
+  const [menuList, setMenuList] = useState([]);
   const [menuConfirmed, setMenuConfirmed] = useState(false);
 
   // Step2
@@ -46,16 +48,25 @@ export default function ReviewCreateInline({ onCreated }) {
   const verify = async () => {
     setErr("");
     setMsg("");
-    if (!receiptFile) return setErr("Select image");
+    if (!receiptFile) return setErr("영수증 이미지를 선택해줘");
 
     setLoadingVerify(true);
     try {
       const r = await ReviewAPI.verifyReceipt(receiptFile);
       setReceiptId(r.data?.receipt_id);
-      setExtracted(r.data?.extracted || null);
+      const ext = r.data?.extracted || null;
+      setExtracted(ext);
+      // OCR 결과에서 메뉴 목록 파싱하여 state에 저장
+      if (ext?.menu_en) {
+        const raw = ext.menu_en;
+        const parsed = Array.isArray(raw)
+          ? raw.map((m) => String(m).replace(/["[\]]/g, '').trim())
+          : raw.split(',').map((m) => m.replace(/["[\]]/g, '').trim());
+        setMenuList(parsed.filter(Boolean));
+      }
       setMsg("영수증 인증 완료. 메뉴를 확인해주세요.");
     } catch (e) {
-      setErr(e?.response?.data?.detail || e?.message || "Receipt Detection failed");
+      setErr(e?.response?.data?.detail || e?.message || "영수증 인증 실패");
     } finally {
       setLoadingVerify(false);
     }
@@ -69,10 +80,17 @@ export default function ReviewCreateInline({ onCreated }) {
   const cancelMenu = () => {
     setReceiptId(null);
     setExtracted(null);
+    setMenuList([]);
     setReceiptFile(null);
+    if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+    setReceiptPreviewUrl(null);
     setMenuConfirmed(false);
     setMsg("");
     setErr("");
+  };
+
+  const removeMenu = (idx) => {
+    setMenuList((prev) => prev.filter((_, i) => i !== idx));
   };
 
   //  이미지 추가(append) + 3장 제한 + input reset
@@ -105,10 +123,10 @@ export default function ReviewCreateInline({ onCreated }) {
     setErr("");
     setMsg("");
 
-    if (!receiptId) return setErr("Verify receipt");
-    if (!title.trim()) return setErr("Title is missing");
-    if (!content.trim()) return setErr("Content is missing");
-    if (images.length > 3) return setErr("Upto 3 images");
+    if (!receiptId) return setErr("먼저 영수증 인증을 해줘");
+    if (!title.trim()) return setErr("title 입력해줘");
+    if (!content.trim()) return setErr("content 입력해줘");
+    if (images.length > 3) return setErr("이미지는 최대 3장");
 
     setLoadingCreate(true);
     try {
@@ -117,20 +135,24 @@ export default function ReviewCreateInline({ onCreated }) {
         title,
         content,
         rating,
+        menu_name: JSON.stringify(menuList),
         images, //  File[] 그대로
       });
 
       setMsg("리뷰 생성 완료");
 
-      // 리뷰 페이지로 이동
-      navigate("/review");
+      // 리뷰 페이지로 이동 (내 리뷰만 필터 활성화)
+      navigate("/review?mine=true");
 
       onCreated?.(r.data);
 
       // 초기화
       setReceiptFile(null);
+      if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+      setReceiptPreviewUrl(null);
       setReceiptId(null);
       setExtracted(null);
+      setMenuList([]);
       setMenuConfirmed(false);
       setTitle("");
       setContent("");
@@ -145,57 +167,83 @@ export default function ReviewCreateInline({ onCreated }) {
 
   return (
   <div className={styles.reviewCreateContainer}>
+      {loadingVerify && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingBox}>
+            <div className={styles.loadingSpinner} />
+            <p className={styles.loadingText}>영수증 인증 중...</p>
+          </div>
+        </div>
+      )}
       <h2 className={styles.reviewCreateTitle}>리뷰 등록</h2>
 
       {/* Step 1: 영수증 인증 */}
       {!receiptId && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>1) Verify receipt</div>
+          <div className={styles.stepHeader}>1) 영수증 인증</div>
           <div className={styles.receiptUpload}>
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+              disabled={loadingVerify}
+              onChange={(e) => {
+                const f = e.target.files?.[0] || null;
+                setReceiptFile(f);
+                if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+                setReceiptPreviewUrl(f ? URL.createObjectURL(f) : null);
+              }}
               className={styles.fileInput}
             />
             <button onClick={verify} disabled={loadingVerify} className={styles.btnPrimary}>
               {loadingVerify ? "⏳" : "✔"}
             </button>
           </div>
+          {receiptPreviewUrl && (
+            <div className={styles.receiptPreview}>
+              <img
+                src={receiptPreviewUrl}
+                alt="영수증 미리보기"
+                className={styles.receiptPreviewImage}
+              />
+            </div>
+          )}
         </div>
       )}
  
       {/* Step 2: 메뉴 확인 */}
       {receiptId && extracted && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>2) Confirm Receipt Details</div>
-          <p>{extracted.store_name} / {extracted.store_name_en}</p>
+          <div className={styles.stepHeader}>2) 메뉴 확인</div>
           <div className={styles.menuConfirmSection}>
-            {!menuConfirmed && <p className={styles.menuConfirmText}>Please select menus you consumed</p>}
+            {!menuConfirmed && <p className={styles.menuConfirmText}>다음 메뉴들이 맞나요?</p>}
             <div className={styles.menuList}>
-              {extracted.menu_en && (
-                Array.isArray(extracted.menu_en)
-                  ? extracted.menu_en.map((menu, idx) => (
-                      <div key={idx} className={styles.menuItem}>
-                        <span className={styles.menuIcon}>🍽️</span>
-                        <span className={styles.menuName}>{String(menu).replace(/["[\]]/g, '').trim()}</span>
-                      </div>
-                    ))
-                  : extracted.menu_en.split(',').map((menu, idx) => (
-                      <div key={idx} className={styles.menuItem}>
-                        <span className={styles.menuIcon}>🍽️</span>
-                        <span className={styles.menuName}>{menu.replace(/["[\]]/g, '').trim()}</span>
-                      </div>
-                    ))
-              )}
+              {menuList.length > 0
+                ? menuList.map((menu, idx) => (
+                    <div key={idx} className={styles.menuItem}>
+                      <span className={styles.menuIcon}>🍽️</span>
+                      <span className={styles.menuName}>{menu}</span>
+                      {!menuConfirmed && (
+                        <button
+                          type="button"
+                          onClick={() => removeMenu(idx)}
+                          className={styles.btnRemoveMenu}
+                          title="메뉴 삭제"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))
+                : <p className={styles.menuConfirmText}>메뉴가 없습니다.</p>
+              }
             </div>
             {!menuConfirmed && (
               <div className={styles.menuConfirmButtons}>
-                <button onClick={confirmMenu} className={styles.btnConfirm}>
-                  Confirm
+                <button onClick={confirmMenu} disabled={menuList.length === 0} className={styles.btnConfirm}>
+                  확인
                 </button>
                 <button onClick={cancelMenu} className={styles.btnCancel}>
-                  Cancel
+                  취소
                 </button>
               </div>
             )}
@@ -206,32 +254,32 @@ export default function ReviewCreateInline({ onCreated }) {
       {/* Step 3: 리뷰 작성 */}
       {receiptId && menuConfirmed && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>3) Write review</div>
+          <div className={styles.stepHeader}>3) 리뷰 작성</div>
 
           <div className={styles.reviewForm}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Title</label>
+              <label className={styles.formLabel}>제목</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter review title"
+                placeholder="리뷰 제목을 입력해주세요"
                 className={styles.formInput}
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Content</label>
+              <label className={styles.formLabel}>내용</label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Enter review content"
+                placeholder="리뷰 내용을 입력해주세요"
                 rows={6}
                 className={styles.formTextarea}
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Rating</label>
+              <label className={styles.formLabel}>별점</label>
               <div className={styles.ratingSelect}>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <span
@@ -246,7 +294,7 @@ export default function ReviewCreateInline({ onCreated }) {
             </div>
  
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Add FOOD image (3 max)</label>
+              <label className={styles.formLabel}>추가 이미지 (최대 3장)</label>
               <input
                 ref={imageInputRef}
                 type="file"
@@ -257,7 +305,7 @@ export default function ReviewCreateInline({ onCreated }) {
                 className={styles.fileInput}
               />
               <div className={styles.imageCount}>
-                Images {images.length}/3
+                추가 이미지 {images.length}/3
               </div>
 
               {previewUrls.length > 0 && (

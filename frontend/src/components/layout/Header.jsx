@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { MemberContext } from "../../context/MemberContext";
 import styles from "./Header.module.css";
@@ -16,12 +16,16 @@ const LogoutIcon = () => (
   </svg>
 );
 
+
 export default function Header() {
+  const nav = useNavigate();
+
   const { stateAuth, authActions } = useContext(AuthContext);
   const { stateMember } = useContext(MemberContext);
 
   const handleLogout = async () => {
     await authActions.logout();
+    nav("/");
   };
 
   return (

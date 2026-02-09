@@ -18,7 +18,7 @@ def _ext(filename: str) -> str:
 
 class S3UploadStorage:
     """
-    ✅ config 기준으로 통일:
+    config 기준으로 통일:
     - base_prefix: 보통 "upload" (고정)
     - tmp:  upload/<S3_PREFIX_TMP>/...
     - perm: upload/<S3_PREFIX_PERM>/...
