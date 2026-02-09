@@ -53,6 +53,8 @@ class ConfirmedMenu:
     menu: str
     ingredients_ko: List[str]
     alg_tags: List[str]
+    # ✅ NEW: short Korean description (optional)
+    menu_description_ko: str = ""
 
 
 class ChromaMenuRetriever:
@@ -129,6 +131,7 @@ class ChromaMenuRetriever:
                         menu=menu_md,
                         ingredients_ko=_split_csv_like(md0.get("ingredients_ko")),
                         alg_tags=_split_csv_like(md0.get("alg_tags")),
+                        menu_description_ko=str(md0.get("menu_description_ko") or "").strip(),
                     )
         except Exception:
             pass
@@ -149,6 +152,7 @@ class ChromaMenuRetriever:
                         menu=menu_md,
                         ingredients_ko=_split_csv_like(md.get("ingredients_ko")),
                         alg_tags=_split_csv_like(md.get("alg_tags")),
+                        menu_description_ko=str(md.get("menu_description_ko") or "").strip(),
                     )
         except Exception:
             pass
@@ -192,5 +196,7 @@ def match_exact(menu_norm: str) -> Dict[str, Any]:
             "menu": hit.menu,
             "ingredients_ko": hit.ingredients_ko,
             "alg_tags": hit.alg_tags,
+            # ✅ NEW: short Korean description (optional)
+            "menu_description_ko": hit.menu_description_ko,
         },
     }

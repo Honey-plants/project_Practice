@@ -88,6 +88,11 @@ def run_step(run_dir: Path) -> Path:
             "menu_norm": menu_norm,
             "match_status": match_status,
             "confirmed": res.get("confirmed") if match_status == "exact" else None,
+            # ✅ NEW (additive): convenience field for downstream steps
+            "menu_description_ko": (
+                (res.get("confirmed") or {}).get("menu_description_ko", "")
+                if match_status == "exact" else ""
+            ),
         }
 
         out_items.append(out_item)

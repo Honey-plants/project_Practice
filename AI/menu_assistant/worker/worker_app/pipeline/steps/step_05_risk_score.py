@@ -302,6 +302,19 @@ def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, An
         if not menu_name or poly is None:
             continue
 
+        # ✅ carry risk_difficulty computed by decision_rules (exact items may skip LLM)
+        rd_raw = it.get("risk_difficulty")
+        risk_difficulty = None
+        try:
+            if isinstance(rd_raw, bool):
+                risk_difficulty = None
+            elif isinstance(rd_raw, (int, float)):
+                risk_difficulty = int(rd_raw)
+            elif isinstance(rd_raw, str) and rd_raw.strip():
+                risk_difficulty = int(rd_raw.strip())
+        except Exception:
+            risk_difficulty = None
+
         out.append(
             {
                 "item_id": item_id.strip(),
@@ -309,6 +322,7 @@ def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, An
                 "menu_name": menu_name,
                 "poly": poly,
                 "evidence": evidence,
+                "risk_difficulty": risk_difficulty,
                 "user_risk_match": it.get("user_risk_match") if isinstance(it.get("user_risk_match"), dict) else None,
                 "comment_ko": it.get("comment_ko") if isinstance(it.get("comment_ko"), list) else None,
                 "confirmed": it.get("confirmed") if isinstance(it.get("confirmed"), dict) else None,
@@ -462,6 +476,16 @@ def main() -> None:
 
     llm_items = _normalize_llm_input_items(raw_items)
 
+    # ✅ B안: exact는 LLM 스킵, unknown만 LLM 호출
+    exact_items: List[Dict[str, Any]] = []
+    unknown_items: List[Dict[str, Any]] = []
+    for it in llm_items:
+        s = (it.get("status") or "").lower().strip()
+        if s == "unknown":
+            unknown_items.append(it)
+        else:
+            exact_items.append(it)
+
     llm_input_payload = {
         "schema_version": "v1",
         "run_id": args.run_id,
@@ -471,20 +495,22 @@ def main() -> None:
     llm_input_meta = {
         "run_id": args.run_id,
         "decision_rules": rules_meta,
-        "kept_for_llm": len(llm_items),
+        "kept_for_llm_total": len(llm_items),
+        "kept_for_llm_unknown_only": len(unknown_items),
+        "kept_for_llm_exact_skipped": len(exact_items),
     }
 
     _write_json(llm_dir / "llm_input.json", llm_input_payload)
     _write_json(llm_dir / "llm_input_meta.json", llm_input_meta)
 
-    if not llm_items:
-        print(f"[STEP05] No items to send to LLM. saved: {llm_dir / 'llm_input.json'}")
+    if not unknown_items:
+        print(f"[STEP05] No unknown items to send to LLM (exact skipped). saved: {llm_dir / 'llm_input.json'}")
         from menu_assistant.worker.worker_app.llm.services.finalizer import merge_llm_output_to_final
 
         final_obj = merge_llm_output_to_final(
             run_id=args.run_id,
             user_profile=user_profile,
-            llm_input_items=[],
+            llm_input_items=llm_items,
             llm_output_items=[],
         )
         _write_json(final_json_path, final_obj)
@@ -494,6 +520,9 @@ def main() -> None:
     # -------------------------
     # ✅ chunk / parallel / cache
     # -------------------------
+
+    # ✅ LLM 대상은 unknown만
+    items_for_llm = unknown_items
     chunk_size = int(args.chunk_size) if int(args.chunk_size or 0) > 0 else 0
     workers = max(1, int(args.workers or 1))
     use_cache = bool(args.use_cache)
@@ -506,20 +535,20 @@ def main() -> None:
         obj = _call_llm_for_chunk(
             run_id=args.run_id,
             user_profile=user_profile,
-            items_chunk=llm_items,
+            items_chunk=items_for_llm,
             llm_dir=llm_dir,
             include_debug=args.include_debug,
             max_retries=int(args.max_retries),
             chunk_index=0,
             cache=cache,
-            cache_key=_sha256_json({"run_id": args.run_id, "user_profile": user_profile, "items": llm_items}),
+            cache_key=_sha256_json({"run_id": args.run_id, "user_profile": user_profile, "items": items_for_llm}),
         )
         merged_obj = obj
 
     else:
         # split into chunks
         chunks: List[List[Dict[str, Any]]] = [
-            llm_items[i:i + chunk_size] for i in range(0, len(llm_items), chunk_size)
+            items_for_llm[i:i + chunk_size] for i in range(0, len(items_for_llm), chunk_size)
         ]
 
         t_all = time.time()

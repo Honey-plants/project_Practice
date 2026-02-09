@@ -9,6 +9,7 @@ ChromaDB 인덱스 빌드 스크립트.
   - ingredients_ko (csv str 또는 list)
   - alg_tags (csv str 또는 list)
   - source (str)
+- ✅ (NEW) menu_description_ko (str) : 메뉴 한국어 간단 설명(옵션)
 - 임베딩 모델/컬렉션/퍼시스트 디렉터리는 build와 retrieval이 동일해야 합니다.
 
 기본 경로 정책
@@ -63,6 +64,14 @@ def _safe_str_list(x: Any) -> List[str]:
         return [str(v).strip() for v in x if str(v).strip()]
     s = str(x).strip()
     return [s] if s else []
+
+
+def _safe_str(x: Any) -> str:
+    if x is None:
+        return ""
+    if isinstance(x, str):
+        return x.strip()
+    return str(x).strip()
 
 
 def _chunked(n: int, size: int):
@@ -175,6 +184,9 @@ def main() -> None:
         alg_tags = _safe_str_list(item.get("alg_tags") or item.get("ALG_TAG"))
         variants = _safe_str_list(item.get("variants"))
 
+        # ✅ NEW: 메뉴 간단 설명(있으면 저장)
+        menu_description_ko = _safe_str(item.get("menu_description_ko"))
+
         rid = str(item.get("id") or f"menu_{idx}")
         doc = " ".join([menu] + variants).strip()
 
@@ -189,6 +201,8 @@ def main() -> None:
                 "ingredients_ko": ", ".join(ingredients),
                 "alg_tags": ", ".join(alg_tags),
                 "source": source,
+                # ✅ NEW
+                "menu_description_ko": menu_description_ko,
             }
         )
 
@@ -222,6 +236,8 @@ def main() -> None:
     metas = sample.get("metadatas") or []
     print("[SAMPLE] ids:", sample.get("ids"))
     print("[SAMPLE] menus:", [m.get("menu") for m in metas])
+    # ✅ NEW: 샘플에 description도 찍어 확인
+    print("[SAMPLE] menu_description_ko:", [m.get("menu_description_ko") for m in metas])
 
     print("[SUCCESS] Chroma index build complete.")
 

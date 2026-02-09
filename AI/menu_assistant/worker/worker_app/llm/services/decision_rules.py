@@ -176,6 +176,28 @@ def _compute_user_risk_match(
     }
 
 
+
+
+def _compute_risk_difficulty_exact(*, risk_match: Dict[str, Any]) -> int:
+    """Exact-only risk_difficulty (0/1/2)
+
+    Rule (user request):
+      - 2: allergy_tag_hits OR religion_hits has at least one element
+      - 1: only avoid_food_hits has at least one element
+      - 0: no hits
+    """
+    if not isinstance(risk_match, dict):
+        return 0
+    allergy_hits = risk_match.get("allergy_tag_hits") or []
+    religion_hits = risk_match.get("religion_hits") or []
+    avoid_hits = risk_match.get("avoid_food_hits") or []
+
+    if allergy_hits or religion_hits:
+        return 2
+    if avoid_hits:
+        return 1
+    return 0
+
 def _build_comment_exact(
     *,
     confirmed: Dict[str, Any],
@@ -359,6 +381,7 @@ class DecisionRules:
         # user_risk_match + comment (프로필 없으면 기본값)
         risk_match = _compute_user_risk_match(user_profile=self.user_profile, confirmed=confirmed)
         comment_ko = _build_comment_exact(confirmed=confirmed, risk_match=risk_match, user_profile=self.user_profile)
+        risk_difficulty = _compute_risk_difficulty_exact(risk_match=risk_match)
 
         # ✅ Step4 스키마 기반 필드 (네가 요청한 핵심)
         out: Dict[str, Any] = {
@@ -372,6 +395,7 @@ class DecisionRules:
             # 프론트 표시용(추후 step05 finalizer/translate로 carry)
             "user_risk_match": risk_match,
             "comment_ko": comment_ko,
+            "risk_difficulty": risk_difficulty,
         }
 
         # ✅ 레거시/Step05 호환 키도 같이 유지(필요 시 prompt_builder가 그대로 사용 가능)
@@ -379,16 +403,22 @@ class DecisionRules:
             {
                 "status": "exact",
                 "menu_name": confirmed.get("menu"),
+                "risk_difficulty": risk_difficulty,
                 "evidence": {
                     "menu_id": confirmed.get("menu_id"),
+                "menu_description_ko": confirmed.get("menu_description_ko") or "",
                     "ingredients_ko": _as_list(confirmed.get("ingredients_ko")),
                     "alg_tags": _as_list(confirmed.get("alg_tags")),
+                "menu_description_ko": confirmed.get("menu_description_ko") or "",
+                "risk_difficulty": risk_difficulty,
                 },
                 # trace(기존 step05 normalize에서 사용)
                 "menu": confirmed.get("menu"),
                 "menu_id": confirmed.get("menu_id"),
                 "ingredients_ko": _as_list(confirmed.get("ingredients_ko")),
                 "alg_tags": _as_list(confirmed.get("alg_tags")),
+                "menu_description_ko": confirmed.get("menu_description_ko") or "",
+                "risk_difficulty": risk_difficulty,
             }
         )
 
