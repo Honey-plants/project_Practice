@@ -7,8 +7,10 @@ export default function ReviewCreateInline({ onCreated }) {
   const navigate = useNavigate();
   // Step1
   const [receiptFile, setReceiptFile] = useState(null);
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState(null);
   const [receiptId, setReceiptId] = useState(null);
   const [extracted, setExtracted] = useState(null);
+  const [menuList, setMenuList] = useState([]);
   const [menuConfirmed, setMenuConfirmed] = useState(false);
 
   // Step2
@@ -52,7 +54,16 @@ export default function ReviewCreateInline({ onCreated }) {
     try {
       const r = await ReviewAPI.verifyReceipt(receiptFile);
       setReceiptId(r.data?.receipt_id);
-      setExtracted(r.data?.extracted || null);
+      const ext = r.data?.extracted || null;
+      setExtracted(ext);
+      // OCR 결과에서 메뉴 목록 파싱하여 state에 저장
+      if (ext?.menu_en) {
+        const raw = ext.menu_en;
+        const parsed = Array.isArray(raw)
+          ? raw.map((m) => String(m).replace(/["[\]]/g, '').trim())
+          : raw.split(',').map((m) => m.replace(/["[\]]/g, '').trim());
+        setMenuList(parsed.filter(Boolean));
+      }
       setMsg("영수증 인증 완료. 메뉴를 확인해주세요.");
     } catch (e) {
       setErr(e?.response?.data?.detail || e?.message || "영수증 인증 실패");
@@ -69,10 +80,17 @@ export default function ReviewCreateInline({ onCreated }) {
   const cancelMenu = () => {
     setReceiptId(null);
     setExtracted(null);
+    setMenuList([]);
     setReceiptFile(null);
+    if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+    setReceiptPreviewUrl(null);
     setMenuConfirmed(false);
     setMsg("");
     setErr("");
+  };
+
+  const removeMenu = (idx) => {
+    setMenuList((prev) => prev.filter((_, i) => i !== idx));
   };
 
   //  이미지 추가(append) + 3장 제한 + input reset
@@ -117,20 +135,24 @@ export default function ReviewCreateInline({ onCreated }) {
         title,
         content,
         rating,
+        menu_name: JSON.stringify(menuList),
         images, //  File[] 그대로
       });
 
       setMsg("리뷰 생성 완료");
 
-      // 리뷰 페이지로 이동
-      navigate("/review");
+      // 리뷰 페이지로 이동 (내 리뷰만 필터 활성화)
+      navigate("/review?mine=true");
 
       onCreated?.(r.data);
 
       // 초기화
       setReceiptFile(null);
+      if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+      setReceiptPreviewUrl(null);
       setReceiptId(null);
       setExtracted(null);
+      setMenuList([]);
       setMenuConfirmed(false);
       setTitle("");
       setContent("");
@@ -145,6 +167,14 @@ export default function ReviewCreateInline({ onCreated }) {
 
   return (
   <div className={styles.reviewCreateContainer}>
+      {loadingVerify && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingBox}>
+            <div className={styles.loadingSpinner} />
+            <p className={styles.loadingText}>영수증 인증 중...</p>
+          </div>
+        </div>
+      )}
       <h2 className={styles.reviewCreateTitle}>리뷰 등록</h2>
 
       {/* Step 1: 영수증 인증 */}
@@ -155,13 +185,28 @@ export default function ReviewCreateInline({ onCreated }) {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+              disabled={loadingVerify}
+              onChange={(e) => {
+                const f = e.target.files?.[0] || null;
+                setReceiptFile(f);
+                if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+                setReceiptPreviewUrl(f ? URL.createObjectURL(f) : null);
+              }}
               className={styles.fileInput}
             />
             <button onClick={verify} disabled={loadingVerify} className={styles.btnPrimary}>
               {loadingVerify ? "⏳" : "✔"}
             </button>
           </div>
+          {receiptPreviewUrl && (
+            <div className={styles.receiptPreview}>
+              <img
+                src={receiptPreviewUrl}
+                alt="영수증 미리보기"
+                className={styles.receiptPreviewImage}
+              />
+            </div>
+          )}
         </div>
       )}
  
@@ -172,25 +217,29 @@ export default function ReviewCreateInline({ onCreated }) {
           <div className={styles.menuConfirmSection}>
             {!menuConfirmed && <p className={styles.menuConfirmText}>다음 메뉴들이 맞나요?</p>}
             <div className={styles.menuList}>
-              {extracted.menu_en && (
-                Array.isArray(extracted.menu_en)
-                  ? extracted.menu_en.map((menu, idx) => (
-                      <div key={idx} className={styles.menuItem}>
-                        <span className={styles.menuIcon}>🍽️</span>
-                        <span className={styles.menuName}>{String(menu).replace(/["[\]]/g, '').trim()}</span>
-                      </div>
-                    ))
-                  : extracted.menu_en.split(',').map((menu, idx) => (
-                      <div key={idx} className={styles.menuItem}>
-                        <span className={styles.menuIcon}>🍽️</span>
-                        <span className={styles.menuName}>{menu.replace(/["[\]]/g, '').trim()}</span>
-                      </div>
-                    ))
-              )}
+              {menuList.length > 0
+                ? menuList.map((menu, idx) => (
+                    <div key={idx} className={styles.menuItem}>
+                      <span className={styles.menuIcon}>🍽️</span>
+                      <span className={styles.menuName}>{menu}</span>
+                      {!menuConfirmed && (
+                        <button
+                          type="button"
+                          onClick={() => removeMenu(idx)}
+                          className={styles.btnRemoveMenu}
+                          title="메뉴 삭제"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))
+                : <p className={styles.menuConfirmText}>메뉴가 없습니다.</p>
+              }
             </div>
             {!menuConfirmed && (
               <div className={styles.menuConfirmButtons}>
-                <button onClick={confirmMenu} className={styles.btnConfirm}>
+                <button onClick={confirmMenu} disabled={menuList.length === 0} className={styles.btnConfirm}>
                   확인
                 </button>
                 <button onClick={cancelMenu} className={styles.btnCancel}>

@@ -1,105 +1,188 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import Modal from "../common/Modal";
 import styles from "../../styles/CreateModal.module.css";
+import templateStyles from "../../styles/TemplateRadioCard.module.css";
+import TemplateRadioCard from "./TemplateRadioCard";
+
+import { MemberContext } from "../../context/MemberContext";
 
 export default function CreateModal({
   isOpen,
   onClose,
   stateReview,
   reviewActions,
-  templateId,
-  initialSelectedIds = [],
   onConfirm,
   saving = false,
 }) {
+  // 로그인 사용자 정보
+  const { stateMember } = useContext(MemberContext);
+  const myMemberId = stateMember?.me?.member_id;
+
+  const [templateId, setTemplateId] = useState(1);
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // 여기서부터 list로 사용 (서버에서 내것만 내려줌)
   const myReviews = useMemo(() => stateReview.list ?? [], [stateReview.list]);
+  console.log("community :: ", myReviews)
 
-  const activeReviews = useMemo(
-    () =>
-      myReviews.filter(
-        (r) => (r.available ?? r.is_active ?? r.isActive) === true
-      ),
-    [myReviews]
+  // 0/1, true/false, "1"/"0" 등 다 커버
+  const toBool = (v) => v === true || v === 1 || v === "1" || v === "true";
+
+  // temp1
+  const isReviewActive = (r) =>
+    toBool(r.available ?? r.is_active ?? r.isActive) === true;
+
+  // temp2
+  const allIds = useMemo(() => {
+    return myReviews
+      .map((r) => r.review_id ?? r.id)
+      .filter((v) => v !== null && v !== undefined);
+  }, [myReviews]);
+
+  // active도 내 리뷰(myList) 기준 temp1사용
+  const activeReviews = useMemo(() => myReviews.filter(isReviewActive), [myReviews]);
+
+  const activeIds = useMemo(
+    () => activeReviews.map((r) => r.review_id ?? r.id).filter(Boolean),
+    [activeReviews]
   );
 
   useEffect(() => {
     if (!isOpen) return;
 
-    // only Template 2 uses selection
-    if (templateId !== 1) {
+    // 로그인 안 됐으면 호출하지 않음
+    if (!myMemberId) {
+      setTemplateId(1);
       setSelectedIds([]);
       return;
     }
 
-    if (!stateReview.loading) {
+    // ✅ 내 리스트가 비어있으면 /review/me 호출
+    if (myReviews.length === 0 && !stateReview.loading) {
+      // ⚠️ ReviewContext에 fetchMyList가 있어야 함
       reviewActions.fetchMyList();
     }
 
-    setSelectedIds(initialSelectedIds);
+    setTemplateId(1);
+    setSelectedIds([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, templateId]);
+  }, [isOpen, myMemberId]);
 
-  const toggleSelect = (id) => {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (templateId === 2) {
+
+        setSelectedIds(allIds);
+    } else {
+        setSelectedIds([]);
+    }
+  }, [templateId, allIds.join(","), isOpen]);
+
+  const toggleSelect = (id, isActive) => {
+    if (!isActive) return;
+    if (templateId === 2) return;
+
     setSelectedIds((prev) => {
-      if (prev.includes(id)) return prev.filter((v) => v !== id);
+      const has = prev.includes(id);
+      if (has) return prev.filter((v) => v !== id);
       if (prev.length >= 3) return prev;
       return [...prev, id];
     });
   };
 
-  const canSubmit = templateId === 1 && selectedIds.length > 0;
+  const canSubmit =
+    templateId === 1
+      ? activeReviews.length >= 3 && selectedIds.length === 3
+      : allIds.length >= 3;
 
   const handleConfirm = () => {
+
+      console.log("나 버튼 눌렀다.")
+
     if (!canSubmit || saving) return;
-    onConfirm?.({ reviewIds: selectedIds });
+
+    const reviewIds = templateId === 2 ? allIds : selectedIds;
+    console.log("버튼 클릭 :: ", reviewIds)
+    onConfirm?.({ templateId, reviewIds });
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Select Reviews">
-      {templateId !== 1 ? (
-        <div className={styles.empty}>
-          Review selection is only available for Template 2.
+    <Modal isOpen={isOpen} onClose={onClose} title="AI 이미지 생성">
+      <p className={styles.desc}>Choose a template</p>
+
+      <div className={templateStyles.templateGrid}>
+        <TemplateRadioCard
+          value={1}
+          checked={templateId === 1}
+          onChange={setTemplateId}
+          imgSrc="/template1.png"
+          title="Template 1 (Journal)"
+          description="Select exactly 3 ACTIVE reviews"
+        />
+
+        <TemplateRadioCard
+          value={2}
+          checked={templateId === 2}
+          onChange={setTemplateId}
+          imgSrc="/template2.png"
+          title="Template 2 (Map)"
+          description="Uses ALL ACTIVE reviews"
+        />
+      </div>
+
+      <div className={styles.section} style={{ marginTop: 12 }}>
+        <div className={styles.sectionTitle}>
+          Total reviews ({myReviews.length}) / ACTIVE ({activeReviews.length})
         </div>
-      ) : (
-        <>
-          <p className={styles.desc}>Select ACTIVE reviews</p>
 
-          <div className="section">
-            <div className="sectionTitle">
-              ACTIVE reviews ({activeReviews.length})
-            </div>
+        {!myMemberId && (
+          <div className={styles.empty}>로그인이 필요합니다.</div>
+        )}
 
-            {stateReview.loading && (
-              <div className={styles.loading}>리뷰 불러오는 중...</div>
-            )}
+        {myMemberId && stateReview.loading && (
+          <div className={styles.loading}>리뷰 불러오는 중...</div>
+        )}
 
-            {!stateReview.loading && activeReviews.length === 0 && (
-              <div className={styles.empty}>ACTIVE 리뷰가 없습니다.</div>
-            )}
+        {myMemberId && !stateReview.loading && myReviews.length === 0 && (
+          <div className={styles.empty}>리뷰가 없습니다.</div>
+        )}
 
-            {!stateReview.loading && activeReviews.length > 0 && (
+        {myMemberId && !stateReview.loading && myReviews.length > 0 && (
+          <>
+            {templateId === 1 && (
               <>
                 <div className={styles.hint}>
-                  Selected ({selectedIds.length})
+                  Chosen 3 reviews will be used ({selectedIds.length}/3)
                 </div>
 
-                <ul className="reviewList">
-                  {activeReviews.map((r) => {
+                <ul className={styles.reviewList}>
+                  {myReviews.map((r) => {
                     const id = r.review_id ?? r.id;
                     const title = r.review_title ?? r.title ?? "(no title)";
+                    const isActive = isReviewActive(r);
                     const checked = selectedIds.includes(id);
 
                     return (
-                      <li key={id} className={styles.reviewItem}>
-                        <label className="checkboxRow">
+                      <li
+                        key={id}
+                        className={`${styles.reviewItem} ${
+                          !isActive ? styles.inactive : ""
+                        }`}
+                      >
+                        <label className={styles.checkboxRow}>
                           <input
                             type="checkbox"
                             checked={checked}
-                            onChange={() => toggleSelect(id)}
+                            disabled={!isActive}
+                            onChange={() => toggleSelect(id, isActive)}
                           />
-                          <span className="reviewTitle">{title}</span>
+                          <span className={styles.reviewTitle}>
+                            {title}
+                            {!isActive && (
+                              <span className={styles.inactiveTag}> (INACTIVE)</span>
+                            )}
+                          </span>
                         </label>
                       </li>
                     );
@@ -107,22 +190,30 @@ export default function CreateModal({
                 </ul>
               </>
             )}
-          </div>
 
-          <div className={styles.actions}>
-            <button onClick={onClose} className={styles.btnGhost}>
-              Back
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={!canSubmit || saving}
-              className={styles.btnPrimary}
-            >
-              Select Reviews
-            </button>
-          </div>
-        </>
-      )}
+            {templateId === 2 && (
+              <div className={styles.hint}>
+                Template 2 uses the location of ALL ACTIVE reviews to create a roadmap.
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <div className={styles.actions}>
+        <button type="button" onClick={onClose} className={styles.btnGhost}>
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={handleConfirm}
+          disabled={!canSubmit || saving}
+          className={styles.btnPrimary}
+        >
+          {saving ? "Creating..." : "Create"}
+        </button>
+      </div>
     </Modal>
   );
 }

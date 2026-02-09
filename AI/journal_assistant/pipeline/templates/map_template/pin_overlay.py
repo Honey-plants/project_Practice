@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
+import time
+import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -93,7 +96,7 @@ def render_pinned_map_bytes(
     scale = float(calib["scale"])
 
     # 최정규 2222
-    print(places_raw)
+
     print("pin_overlay 여긴 언제 오는걸까?")
 
     # ✅ icon load once
@@ -115,8 +118,11 @@ def render_pinned_map_bytes(
     buf = BytesIO()
     base.save(buf, format="PNG")
 
-    # debug 저장
-    Path("debug_out").mkdir(parents=True, exist_ok=True)
-    Path("debug_out/map_with_pin.png").write_bytes(buf.getvalue())
+    # debug 저장 (✅ 동시성 안전)
+    if os.getenv("AI_DEBUG_SAVE", "0") == "1":
+        out_dir = Path(os.getenv("AI_DEBUG_DIR", "debug_out"))
+        out_dir.mkdir(parents=True, exist_ok=True)
+        fname = f"map_with_pin_{int(time.time()*1000)}_{uuid.uuid4().hex[:8]}.png"
+        (out_dir / fname).write_bytes(buf.getvalue())
 
     return buf.getvalue()

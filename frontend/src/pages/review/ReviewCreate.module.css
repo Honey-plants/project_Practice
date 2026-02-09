@@ -1,11 +1,51 @@
 /* ===== Review Create Container ===== */
 .reviewCreateContainer {
+  position: relative;
   max-width: 800px;
   margin: 0 auto;
   padding: 24px;
-  background: #FFFFFF; /* 흰색 배경 */
+  background: #FFFFFF;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Loading Overlay (OCR 중 전체 차단) ===== */
+.loadingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+}
+
+.loadingBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.loadingSpinner {
+  width: 52px;
+  height: 52px;
+  border: 5px solid #DDDDDD;
+  border-top-color: #2E7D32;
+  border-radius: 50%;
+  animation: rcSpin 0.7s linear infinite;
+}
+
+@keyframes rcSpin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  color: #2E7D32;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
 }
 
 .reviewCreateTitle {
@@ -46,6 +86,20 @@
   font-size: 14px;
   background: #FFFFFF;
   color: #333333;
+}
+
+/* ===== Receipt Preview ===== */
+.receiptPreview {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.receiptPreviewImage {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 2px solid #DDDDDD;
 }
 
 /* ===== Buttons ===== */
@@ -118,6 +172,33 @@
   font-size: 13px;
   font-weight: 500;
   color: #333333; /* 다크 그레이 */
+  flex: 1;
+}
+
+/* 메뉴 X 삭제 버튼 */
+.btnRemoveMenu {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: #E53935;
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  padding: 0;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.btnRemoveMenu:hover {
+  background: #C62828;
+  transform: scale(1.15);
 }
 
 /* ===== Menu Confirm Buttons ===== */

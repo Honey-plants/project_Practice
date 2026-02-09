@@ -19,6 +19,9 @@ class Community(Base):
 
     member_id: Mapped[int] = mapped_column(ForeignKey("member.member_id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 
+    # 추가: journal/map 구분 (review는 제외하고 None 유지 가능)
+    community_type: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, server_default=None)
+
     # 관계 모델 / 테이블
     member: Mapped["Member"] = relationship("Member", back_populates="community")
     comment: Mapped[List["Comment"]] = relationship("Comment", back_populates="community", passive_deletes=True)

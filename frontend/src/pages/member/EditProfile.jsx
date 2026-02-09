@@ -1,8 +1,7 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { MemberContext } from "../../context/MemberContext";
 import { MetaContext } from "../../context/MetaContext";
-import { MemberAPI } from "../../api/memberApi";
 import RestrictionsPicker from "../../components/restrictions/RestrictionsPicker";
 import styles from "./EditProfile.module.css";
 
@@ -17,10 +16,10 @@ export default function EditProfile() {
   const { stateMeta, metaActions } = useContext(MetaContext);
 
   const me = stateMember.me;
-  const categories = useMemo(
-    () => stateMeta?.restrictions || [],
-    [stateMeta?.restrictions]
-  );
+
+  // ✅ 새로고침/직접 진입: me가 없으면 1회만 불러오기
+  const requestedMeRef = useRef(false);
+  const categories = useMemo(() => stateMeta?.restrictions || [], [stateMeta?.restrictions]);
 
   // Form state
   const [form, setForm] = useState({
@@ -44,6 +43,16 @@ export default function EditProfile() {
     setDislikes(Array.isArray(me.dislike_tags) ? me.dislike_tags : []);
   }, [me]);
 
+  // ✅ me가 없고 로딩도 아니면 1회만 loadMe
+  useEffect(() => {
+    if (me) return;
+    if (stateMember?.loading) return;
+    if (requestedMeRef.current) return;
+    requestedMeRef.current = true;
+    memberActions?.loadMe?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me, stateMember?.loading]);
+
   // meta 데이터 로드
   useEffect(() => {
     if (!stateMeta?.loading && categories.length === 0) {
@@ -60,7 +69,8 @@ export default function EditProfile() {
   const handleToggleItem = (id) => {
     setForm((prev) => {
       const itemSet = new Set(prev.item_ids || []);
-      itemSet.has(id) ? itemSet.delete(id) : itemSet.add(id);
+      if (itemSet.has(id)) itemSet.delete(id);
+      else itemSet.add(id);
       return { ...prev, item_ids: Array.from(itemSet) };
     });
   };
@@ -106,8 +116,9 @@ export default function EditProfile() {
         dislike_tags: dislikes,
       };
 
-      await MemberAPI.updateMe(payload);
-      await memberActions.loadMe();
+      // ✅ updateMe 안에서 update + loadMe까지 처리 (중복 호출 방지)
+      await memberActions.updateMe(payload);
+
       nav("/member/profile");
     } catch (error) {
       const errorMsg =

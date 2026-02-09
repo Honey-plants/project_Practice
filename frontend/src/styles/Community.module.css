@@ -1,11 +1,7 @@
 .container{
     margin: 0 auto;
-    padding: 30px;
-    width: 80%;
-    max-width: 850px;
-    border: 1px solid #DDDDDD;
-    border-radius: 40px;
-    background: #FFFFFF; /* 흰색 배경 */
+    padding: 20px;
+    max-width: 1200px;
 }
 
 .ctn_box{
@@ -138,4 +134,65 @@
 .text span{
     font-size: 14px;
     color: #666666; /* 미디엄 그레이 */
+}
+
+/* ===== 타이틀 ===== */
+.title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #333333;
+}
+
+/* ===== 버튼 행 (AI Image + 리뷰작성하기) ===== */
+.buttonRow {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+/* ===== 필터 행 (전체 / 내 저널) ===== */
+.filterRow {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.filterBtn {
+    background: transparent;
+    border: 1px solid #DDDDDD;
+    color: #666666;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filterBtn:hover {
+    border-color: #81C784;
+    color: #2E7D32;
+}
+
+.filterActive {
+    background: #2E7D32;
+    border-color: #2E7D32;
+    color: #FFFFFF;
+}
+
+.filterActive:hover {
+    background: #1B5E20;
+    border-color: #1B5E20;
+    color: #FFFFFF;
+}
+
+/* ===== 에러 메시지 ===== */
+.errorMsg {
+    background: #FFFFFF;
+    border: 1px solid #D32F2F;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #D32F2F;
+    font-size: 14px;
+    margin-bottom: 12px;
 }

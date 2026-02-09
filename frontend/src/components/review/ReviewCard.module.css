@@ -157,22 +157,39 @@
   white-space: nowrap;
 }
 
-/* ===== 제한사항 아이템 태그 컨테이너 ===== */
-.itemLabelsContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
+/* ===== 작성자 식습관 영역 ===== */
+.habitHeader {
+  padding: 10px 14px 8px;
+  background: #F1F8E9;
+  border-bottom: 1px solid #E0E0E0;
 }
 
-.itemLabelTag {
+.habitTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 6px;
+}
+
+.habitNickname {
+  color: #2E7D32;
+  font-weight: 700;
+}
+
+.habitItemTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.habitItemTag {
   padding: 4px 10px;
-  background: #FFEBEE; /* 연한 레드 배경 */
-  color: #D32F2F; /* 레드 텍스트 - 알레르기/주의 */
+  background: #FFFFFF;
+  color: #2E7D32;
+  border: 1px solid #C8E6C9;
   border-radius: 12px;
   font-size: 11px;
-  font-weight: 500;
-  border: 1px solid #FFCDD2;
+  font-weight: 600;
 }
 
 /* ===== 작성일 ===== */
