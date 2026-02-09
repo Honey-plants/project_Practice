@@ -1,4 +1,3 @@
-# AI/review/app/pipeline/step_2_ocr/deskew_from_ocr.py
 from __future__ import annotations
 
 import math
@@ -154,7 +153,7 @@ def deskew_image_and_polys(
     if angle is None or abs(angle) < cfg.min_abs_angle_deg:
         return image_bgr, items, meta
 
-    # 🔑 normalize (거꾸로 도는 거 방지)
+    # normalize (거꾸로 도는 거 방지)
     if angle > 90:
         angle -= 180
     if angle < -90:

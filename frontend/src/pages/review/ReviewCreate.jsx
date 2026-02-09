@@ -171,16 +171,16 @@ export default function ReviewCreateInline({ onCreated }) {
         <div className={styles.loadingOverlay}>
           <div className={styles.loadingBox}>
             <div className={styles.loadingSpinner} />
-            <p className={styles.loadingText}>영수증 인증 중...</p>
+            <p className={styles.loadingText}>Detecting Receipt...</p>
           </div>
         </div>
       )}
-      <h2 className={styles.reviewCreateTitle}>리뷰 등록</h2>
+      <h2 className={styles.reviewCreateTitle}>Create Review</h2>
 
       {/* Step 1: 영수증 인증 */}
       {!receiptId && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>1) 영수증 인증</div>
+          <div className={styles.stepHeader}>1) Verify Receipt</div>
           <div className={styles.receiptUpload}>
             <input
               type="file"
@@ -213,9 +213,10 @@ export default function ReviewCreateInline({ onCreated }) {
       {/* Step 2: 메뉴 확인 */}
       {receiptId && extracted && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>2) 메뉴 확인</div>
+          <div className={styles.stepHeader}>2) Confirm Receipt Details</div>
+          <p>{extracted.store_name} / {extracted.store_name_en}</p>
           <div className={styles.menuConfirmSection}>
-            {!menuConfirmed && <p className={styles.menuConfirmText}>다음 메뉴들이 맞나요?</p>}
+            {!menuConfirmed && <p className={styles.menuConfirmText}>Please only select your menu</p>}
             <div className={styles.menuList}>
               {menuList.length > 0
                 ? menuList.map((menu, idx) => (
@@ -240,10 +241,10 @@ export default function ReviewCreateInline({ onCreated }) {
             {!menuConfirmed && (
               <div className={styles.menuConfirmButtons}>
                 <button onClick={confirmMenu} disabled={menuList.length === 0} className={styles.btnConfirm}>
-                  확인
+                  Confirm
                 </button>
                 <button onClick={cancelMenu} className={styles.btnCancel}>
-                  취소
+                  Cancel
                 </button>
               </div>
             )}
@@ -254,32 +255,32 @@ export default function ReviewCreateInline({ onCreated }) {
       {/* Step 3: 리뷰 작성 */}
       {receiptId && menuConfirmed && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>3) 리뷰 작성</div>
+          <div className={styles.stepHeader}>3) Review Details</div>
 
           <div className={styles.reviewForm}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>제목</label>
+              <label className={styles.formLabel}>Title</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="리뷰 제목을 입력해주세요"
+                placeholder="Enter review title"
                 className={styles.formInput}
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>내용</label>
+              <label className={styles.formLabel}>Content</label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="리뷰 내용을 입력해주세요"
+                placeholder="Enter review content"
                 rows={6}
                 className={styles.formTextarea}
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>별점</label>
+              <label className={styles.formLabel}>Rating</label>
               <div className={styles.ratingSelect}>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <span
@@ -294,7 +295,7 @@ export default function ReviewCreateInline({ onCreated }) {
             </div>
  
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>추가 이미지 (최대 3장)</label>
+              <label className={styles.formLabel}>추가 이미지 (max 3)</label>
               <input
                 ref={imageInputRef}
                 type="file"
@@ -332,7 +333,7 @@ export default function ReviewCreateInline({ onCreated }) {
             </div>
 
             <button onClick={create} disabled={loadingCreate} className={styles.btnSubmit}>
-              {loadingCreate ? "생성중..." : "리뷰 생성"}
+              {loadingCreate ? "Creating..." : "Review Saved"}
             </button>
           </div>
         </div>

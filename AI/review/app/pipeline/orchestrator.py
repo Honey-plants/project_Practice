@@ -1,23 +1,20 @@
-# AI/review/app/pipeline/orchestrator.py
 from __future__ import annotations
+
+import json
+import uuid
+import cv2
+import time
 
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Dict, Any
 from datetime import datetime
-import json
-import uuid
 from copy import deepcopy
-
-import cv2  # ✅ used for deskew image load/save
 
 from AI.review.app.domain.schemas import PipelineContext
 
 # step0
-from AI.review.app.pipeline.step_1_rectify.step0_preprocess import (
-    run_step0_preprocess,
-    Step0PreprocessConfig,
-)
+from AI.review.app.pipeline.step_1_rectify.step0_preprocess import run_step0_preprocess, Step0PreprocessConfig
 
 # step1
 from AI.review.app.pipeline.step_1_rectify.step_1_rectify import run_step1_rectify
@@ -27,14 +24,6 @@ from AI.review.app.pipeline.step_1_rectify.run_rectify import RectifyConfig
 from AI.review.app.pipeline.step_2_ocr.step_2_ocr import run_step2_ocr
 from AI.review.app.pipeline.step_2_ocr.ocr_model import OCRConfig
 from AI.review.app.pipeline.step_2_ocr.access_ocr_quality import assess_ocr_quality, is_bad_quality
-
-# ✅ deskew (DO NOT create new file; assumes this module already exists in your repo)
-from AI.review.app.pipeline.step_2_ocr.deskew_from_ocr import (
-    DeskewFromOCRConfig,
-    deskew_image_and_polys,
-
-)
-from AI.review.app.pipeline.step_2_ocr.ocr_overlay import draw_poly_overlay
 
 # step3
 from AI.review.app.pipeline.step_3_normalize.step_3_normalize import run_step3_normalize, NormalizeConfig
@@ -93,11 +82,17 @@ class PipelineConfig:
     # OCR gate
     ocr_low_cut: float = 0.6
 
-    # ✅ Deskew gate
+    #  Deskew gate
     deskew_min_abs_angle_deg: float = 2.0
 
+def _print_elapsed(step: str, start: float):
+    elapsed = time.perf_counter() - start
+    print(f"[time] {step}: {elapsed:.2f}s")
 
 def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any]:
+    t0 = time.perf_counter()  # orchestrator start
+    print("[time] orchestrator start (0.00s)")
+
     run_dir = make_run_dir(base=cfg.test_base_dir, name=cfg.run_name)
 
     step0_dir = run_dir / "step0_preprocess"
@@ -125,6 +120,8 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
     if cfg.mode == "debug":
         ctx.debug.jsons["step0_meta"] = str(step0_dir / "meta.json")
         ctx.debug.images["step0_pre_ocr"] = pre_ocr_path
+
+    _print_elapsed("step0_preprocess", t0)
 
     # =========================
     # Step2 pass1: OCR on preprocessed
@@ -206,16 +203,19 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
 
             rotated = rotate_image_keep_size(img, apply_angle)
 
-            # ✅ "새 파일 만들지 말라" -> 기존 OCR 소스 이미지를 덮어쓰기
+            # "새 파일 만들지 말라" -> 기존 OCR 소스 이미지를 덮어쓰기
             cv2.imwrite(str(ocr_img_path), rotated)
 
-            # ✅ 이미지가 바뀌었으니 OCR도 다시 돌려서 ctx.ocr.items를 '정방향' 결과로 갱신
+            # 이미지가 바뀌었으니 OCR도 다시 돌려서 ctx.ocr.items를 '정방향' 결과로 갱신
             ctx = run_step2_ocr(
                 ctx,
                 out_dir=step2_dir / "pass1_pre",  # 기존 폴더 그대로 사용(새 폴더 생성 X)
                 cfg=cfg.ocr_cfg,
                 image_path=str(ocr_img_path),
             )
+
+    _print_elapsed("step2_ocr", t0)
+
     # =========================
     # Step3
     # =========================
@@ -228,7 +228,9 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
         encoding="utf-8",
     )
 
-    # =========================
+    _print_elapsed("step3_normalize", t0)
+
+    # =========================a
     # Step4
     # =========================
     if not cfg.gemini_api_key:
@@ -245,6 +247,8 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
         encoding="utf-8",
     )
 
+    _print_elapsed("step4_enrich", t0)
+
     # =========================
     # Step5
     # =========================
@@ -258,5 +262,6 @@ def run_pipeline(*, input_image_path: str, cfg: PipelineConfig) -> Dict[str, Any
         json.dumps(final_payload, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+    _print_elapsed("step5_finalize", t0)
 
     return {"run_dir": str(run_dir), "final": final_payload}

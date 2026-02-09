@@ -10,11 +10,7 @@ def normalize_receipt_data(
     *,
     y_threshold: int = 15,
 ) -> Dict[str, Any]:
-    """
-    Pure normalize step:
-    OCR items -> lines, phone, menu
-    (NO ctx, NO file, NO side effects)
-    """
+
 
     lines = normalize_lines(
         ocr_items,

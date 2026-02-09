@@ -9,7 +9,7 @@ STOP_KEYWORDS = ["소 계","소계","부가세", "합계", "결제", "신용", "
 
 BANNED_MENU = set(START_KEYWORDS + STOP_KEYWORDS)
 
-# ✅ "포함되면 무조건 제외" (라벨류는 여기로)
+# "포함되면 무조건 제외" (라벨류는 여기로)
 BLOCK_CONTAINS = [
     "상품명", "품명", "메뉴", "수량", "단가", "금액",  # 컬럼 라벨
 ]
@@ -59,7 +59,7 @@ def extract_menu_items(lines: List[str]) -> List[str]:
         if any(k in line for k in STOP_KEYWORDS):
             break
 
-        # ✅ 라벨/헤더/컬럼 포함 줄은 무조건 제외 (포함이면 빼기)
+        # 라벨/헤더/컬럼 포함 줄은 무조건 제외 (포함이면 빼기)
         if _blocked_by_contains(line):
             continue
 
@@ -70,7 +70,7 @@ def extract_menu_items(lines: List[str]) -> List[str]:
             name = re.sub(r"[^가-힣 ]", "", name).strip()
             name = _clean_menu_name(name)
 
-            # ✅ name도 포함필터 한번 더
+            # name도 포함필터 한번 더
             if name and not _blocked_by_contains(name) and name not in BANNED_MENU and re.search(r"[가-힣]{2,}", name):
                 menu_items.append(name)
                 continue
@@ -80,7 +80,7 @@ def extract_menu_items(lines: List[str]) -> List[str]:
                 prev = re.sub(r"[^가-힣 ]", "", lines[i - 1]).strip()
                 prev = _clean_menu_name(prev)
 
-                # ✅ prev도 포함필터 적용 (여기가 핵심)
+                # prev도 포함필터 적용 (여기가 핵심)
                 if prev and not _blocked_by_contains(prev) and prev not in BANNED_MENU and re.search(r"[가-힣]{2,}", prev):
                     menu_items.append(prev)
             continue
@@ -89,7 +89,7 @@ def extract_menu_items(lines: List[str]) -> List[str]:
         name_tokens = re.sub(r"[^가-힣 ]", "", line).strip()
         name_tokens = _clean_menu_name(name_tokens)
 
-        # ✅ name_tokens도 포함필터
+        # name_tokens도 포함필터
         if name_tokens and not _blocked_by_contains(name_tokens) and name_tokens not in BANNED_MENU and re.search(r"[가-힣]{2,}", name_tokens):
             menu_items.append(name_tokens)
 
@@ -100,3 +100,7 @@ def extract_menu_items(lines: List[str]) -> List[str]:
             out.append(m)
 
     return out
+
+
+
+
