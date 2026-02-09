@@ -1,23 +1,35 @@
 import React, { useContext, useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ReviewContext } from "../../context/ReviewContext";
+import { AuthContext } from "../../context/AuthContext";
 import ReviewItem from "../../components/review/ReviewCard";
 import { MetaAPI } from "../../api/metaApi";
 import styles from "./ReviewList.module.css";
 
 export default function ReviewList() {
   const { stateReview, reviewActions } = useContext(ReviewContext);
+  const { stateAuth } = useContext(AuthContext);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedItemIds, setSelectedItemIds] = useState([]); // 선택된 아이템 ID 배열
+  // 로그인 안된 상태에서 ?mine=true 이면 무시
+  const [showMyOnly, setShowMyOnly] = useState(() =>
+    searchParams.get("mine") === "true" && stateAuth.accessToken ? true : false
+  );
+  const [loginGuide, setLoginGuide] = useState(false); // "로그인을 해주세요" 안내 표시 플래그
 
   // 카테고리 및 리뷰 목록 로드
   useEffect(() => {
-    reviewActions.fetchList();
+    if (showMyOnly) {
+      reviewActions.fetchMyList();
+    } else {
+      reviewActions.fetchList();
+    }
     loadCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [showMyOnly]);
 
   const loadCategories = async () => {
     try {
@@ -41,10 +53,37 @@ export default function ReviewList() {
     });
   };
 
+  // "내 리뷰만" 토글
+  const toggleMyOnly = () => {
+    // 현재 활성 상태가 아닌 경우(켜려는 경우) 로그인 체크
+    if (!showMyOnly && !stateAuth.accessToken) {
+      setLoginGuide(true); // 안내문구 표시
+      return;
+    }
+    setLoginGuide(false);
+    setShowMyOnly(prev => {
+      const next = !prev;
+      if (next) {
+        setSearchParams({ mine: "true" });
+      } else {
+        setSearchParams({});
+      }
+      return next;
+    });
+    // 카테고리/아이템 필터 초기화
+    setSelectedCategory(null);
+    setSelectedItemIds([]);
+  };
+
   // 필터 초기화
   const clearFilters = () => {
     setSelectedCategory(null);
     setSelectedItemIds([]);
+    setLoginGuide(false);
+    if (showMyOnly) {
+      setShowMyOnly(false);
+      setSearchParams({});
+    }
   };
 
   // 선택된 카테고리 또는 아이템으로 필터링된 리뷰 목록
@@ -65,12 +104,12 @@ export default function ReviewList() {
       }
 
       // 아이템이 선택되지 않고 카테고리만 선택되었으면 해당 카테고리의 아이템 중 하나라도 포함된 리뷰 표시
-      if (selectedCategory) {
-        const categoryItems = selectedCategory.items || [];
-        return categoryItems.some(catItem =>
-          reviewItemIds.includes(catItem.item_id)
-        );
-      }
+      // if (selectedCategory) {
+      //   const categoryItems = selectedCategory.items || [];
+      //   return categoryItems.some(catItem =>
+      //     reviewItemIds.includes(catItem.item_id)
+      //   );
+      // }
 
       // 필터가 없으면 전체 표시
       return true;
@@ -96,11 +135,19 @@ export default function ReviewList() {
           {/* 헤더 */}
           <div className={styles.filterHeader}>
             <div className={styles.filterTitle}>Filter</div>
-            {(selectedCategory || selectedItemIds.length > 0) && (
-              <button onClick={clearFilters} className={styles.clearButton}>
-                Filter reset
+            <div className={styles.filterHeaderButtons}>
+              <button
+                onClick={toggleMyOnly}
+                className={`${styles.myOnlyButton} ${showMyOnly ? styles.myOnlyActive : ''}`}
+              >
+                내 리뷰만
               </button>
-            )}
+              {(selectedCategory || selectedItemIds.length > 0 || showMyOnly) && (
+                <button onClick={clearFilters} className={styles.clearButton}>
+                  Filter reset
+                </button>
+              )}
+            </div>
           </div>
 
           {/* 카테고리 선택 */}
@@ -125,7 +172,7 @@ export default function ReviewList() {
           </div>
 
           {/* 선택된 아이템 표시 (다른 카테고리에서 선택한 것들) */}
-          {selectedItemIds.length > 0 && (
+          {/* {selectedItemIds.length > 0 && (
             <div className={styles.itemSection}>
               <div className={styles.itemLabel}>Selected ({selectedItemIds.length})</div>
               <div className={styles.itemButtons}>
@@ -142,7 +189,7 @@ export default function ReviewList() {
                   ))}
               </div>
             </div>
-          )}
+          )} */}
 
           {/* 아이템 선택 (카테고리가 선택되었을 때만 표시) */}
           {selectedCategory && selectedCategory.items && selectedCategory.items.length > 0 && (
@@ -169,8 +216,14 @@ export default function ReviewList() {
           )}
 
           {/* 필터 상태 표시 */}
-          {(selectedCategory || selectedItemIds.length > 0) && (
+          {(selectedCategory || selectedItemIds.length > 0 || showMyOnly) && (
             <div className={styles.filterStatus}>
+              {showMyOnly && (
+                <span>내 리뷰만 표시 중</span>
+              )}
+              {showMyOnly && (selectedItemIds.length > 0 || selectedCategory) && (
+                <span> · </span>
+              )}
               {selectedItemIds.length > 0 ? (
                 <>
                   <strong>{selectedItemIds.length} </strong> Displaying selected Details
@@ -185,9 +238,19 @@ export default function ReviewList() {
         </div>
       )}
 
+      {/* 로그인 안내문구 (내 리뷰만 클릭 시 로그인 안된 경우) */}
+      {loginGuide && (
+        <div className={styles.loginGuideBox}>
+          로그인을 해주세요
+        </div>
+      )}
+
       {displayError && (
         <div className={styles.errorBox}>
-          <strong>오류 발생:</strong> {displayError}
+          {displayError.includes("No access token after refresh")
+            ? "로그인을 해주세요"
+            : <><strong>오류 발생:</strong> {displayError}</>
+          }
         </div>
       )}
 

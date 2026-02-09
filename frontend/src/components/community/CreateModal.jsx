@@ -1,6 +1,9 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import Modal from "../common/Modal";
 import styles from "../../styles/CreateModal.module.css";
+import templateStyles from "../../styles/TemplateRadioCard.module.css";
+import TemplateRadioCard from "./TemplateRadioCard";
+
 import { MemberContext } from "../../context/MemberContext";
 
 export default function CreateModal({
@@ -11,32 +14,53 @@ export default function CreateModal({
   onConfirm,
   saving = false,
 }) {
+  // 로그인 사용자 정보
   const { stateMember } = useContext(MemberContext);
   const myMemberId = stateMember?.me?.member_id;
 
   const [templateId, setTemplateId] = useState(1);
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // 여기서부터 list로 사용 (서버에서 내것만 내려줌)
   const myReviews = useMemo(() => stateReview.list ?? [], [stateReview.list]);
-  const isReviewActive = (r) => (r.available ?? r.is_active ?? r.isActive) === true;
+  console.log("community :: ", myReviews)
 
+  // 0/1, true/false, "1"/"0" 등 다 커버
+  const toBool = (v) => v === true || v === 1 || v === "1" || v === "true";
+
+  // temp1
+  const isReviewActive = (r) =>
+    toBool(r.available ?? r.is_active ?? r.isActive) === true;
+
+  // temp2
+  const allIds = useMemo(() => {
+    return myReviews
+      .map((r) => r.review_id ?? r.id)
+      .filter((v) => v !== null && v !== undefined);
+  }, [myReviews]);
+
+  // active도 내 리뷰(myList) 기준 temp1사용
   const activeReviews = useMemo(() => myReviews.filter(isReviewActive), [myReviews]);
+
   const activeIds = useMemo(
-    () => activeReviews.map((r) => r.review_id ?? r.id),
+    () => activeReviews.map((r) => r.review_id ?? r.id).filter(Boolean),
     [activeReviews]
   );
 
   useEffect(() => {
     if (!isOpen) return;
 
+    // 로그인 안 됐으면 호출하지 않음
     if (!myMemberId) {
       setTemplateId(1);
       setSelectedIds([]);
       return;
     }
 
+    // ✅ 내 리스트가 비어있으면 /review/me 호출
     if (myReviews.length === 0 && !stateReview.loading) {
-      reviewActions.fetchMyList?.();
+      // ⚠️ ReviewContext에 fetchMyList가 있어야 함
+      reviewActions.fetchMyList();
     }
 
     setTemplateId(1);
@@ -46,11 +70,19 @@ export default function CreateModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    setSelectedIds(templateId === 2 ? activeIds : []);
-  }, [templateId, activeIds.join(","), isOpen]);
+
+    if (templateId === 2) {
+
+        setSelectedIds(allIds);
+    } else {
+        setSelectedIds([]);
+    }
+  }, [templateId, allIds.join(","), isOpen]);
 
   const toggleSelect = (id, isActive) => {
-    if (!isActive || templateId === 2) return;
+    if (!isActive) return;
+    if (templateId === 2) return;
+
     setSelectedIds((prev) => {
       const has = prev.includes(id);
       if (has) return prev.filter((v) => v !== id);
@@ -60,97 +92,111 @@ export default function CreateModal({
   };
 
   const canSubmit =
-    templateId === 1 ? activeReviews.length >= 3 && selectedIds.length === 3 : activeIds.length > 0;
+    templateId === 1
+      ? activeReviews.length >= 3 && selectedIds.length === 3
+      : allIds.length >= 3;
 
   const handleConfirm = () => {
+
+      console.log("나 버튼 눌렀다.")
+
     if (!canSubmit || saving) return;
-    onConfirm?.({ templateId, reviewIds: templateId === 2 ? activeIds : selectedIds });
+
+    const reviewIds = templateId === 2 ? allIds : selectedIds;
+    console.log("버튼 클릭 :: ", reviewIds)
+    onConfirm?.({ templateId, reviewIds });
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="AI 이미지 생성">
       <p className={styles.desc}>Choose a template</p>
 
-      {/* ✅ Template 선택 UI (컴포넌트 없이 inline) */}
-      <div className={styles.templateRow}>
-        <label className={`${styles.templateItem} ${templateId === 1 ? styles.active : ""}`}>
-          <input
-            type="radio"
-            name="tpl"
-            checked={templateId === 1}
-            onChange={() => setTemplateId(1)}
-          />
-          <img src="/template2.png" alt="Template 1" />
-          <div>
-            <b>Template 1 (Journal)</b>
-            <div className={styles.small}>Select exactly 3 ACTIVE reviews</div>
-          </div>
-        </label>
+      <div className={templateStyles.templateGrid}>
+        <TemplateRadioCard
+          value={1}
+          checked={templateId === 1}
+          onChange={setTemplateId}
+          imgSrc="/template1.png"
+          title="Template 1 (Journal)"
+          description="Select exactly 3 ACTIVE reviews"
+        />
 
-        <label className={`${styles.templateItem} ${templateId === 2 ? styles.active : ""}`}>
-          <input
-            type="radio"
-            name="tpl"
-            checked={templateId === 2}
-            onChange={() => setTemplateId(2)}
-          />
-          <img src="/template1.png" alt="Template 2" />
-          <div>
-            <b>Template 2 (Map)</b>
-            <div className={styles.small}>Uses ALL ACTIVE reviews</div>
-          </div>
-        </label>
+        <TemplateRadioCard
+          value={2}
+          checked={templateId === 2}
+          onChange={setTemplateId}
+          imgSrc="/template2.png"
+          title="Template 2 (Map)"
+          description="Uses ALL ACTIVE reviews"
+        />
       </div>
 
-      <div className="section" style={{ marginTop: 12 }}>
-        <div className="sectionTitle">
+      <div className={styles.section} style={{ marginTop: 12 }}>
+        <div className={styles.sectionTitle}>
           Total reviews ({myReviews.length}) / ACTIVE ({activeReviews.length})
         </div>
 
-        {!myMemberId && <div className={styles.empty}>로그인이 필요합니다.</div>}
-        {myMemberId && stateReview.loading && <div className={styles.loading}>리뷰 불러오는 중...</div>}
+        {!myMemberId && (
+          <div className={styles.empty}>로그인이 필요합니다.</div>
+        )}
+
+        {myMemberId && stateReview.loading && (
+          <div className={styles.loading}>리뷰 불러오는 중...</div>
+        )}
+
         {myMemberId && !stateReview.loading && myReviews.length === 0 && (
           <div className={styles.empty}>리뷰가 없습니다.</div>
         )}
 
-        {myMemberId && !stateReview.loading && myReviews.length > 0 && templateId === 1 && (
+        {myMemberId && !stateReview.loading && myReviews.length > 0 && (
           <>
-            <div className={styles.hint}>
-              Chosen 3 reviews will be used ({selectedIds.length}/3)
-            </div>
+            {templateId === 1 && (
+              <>
+                <div className={styles.hint}>
+                  Chosen 3 reviews will be used ({selectedIds.length}/3)
+                </div>
 
-            <ul className="reviewList">
-              {myReviews.map((r) => {
-                const id = r.review_id ?? r.id;
-                const title = r.review_title ?? r.title ?? "(no title)";
-                const isActive = isReviewActive(r);
-                const checked = selectedIds.includes(id);
+                <ul className={styles.reviewList}>
+                  {myReviews.map((r) => {
+                    const id = r.review_id ?? r.id;
+                    const title = r.review_title ?? r.title ?? "(no title)";
+                    const isActive = isReviewActive(r);
+                    const checked = selectedIds.includes(id);
 
-                return (
-                  <li key={id} className={`${styles.reviewItem} ${!isActive ? styles.inactive : ""}`}>
-                    <label className="checkboxRow">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        disabled={!isActive}
-                        onChange={() => toggleSelect(id, isActive)}
-                      />
-                      <span className="reviewTitle">
-                        {title}
-                        {!isActive && <span className="inactiveTag"> (INACTIVE)</span>}
-                      </span>
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
+                    return (
+                      <li
+                        key={id}
+                        className={`${styles.reviewItem} ${
+                          !isActive ? styles.inactive : ""
+                        }`}
+                      >
+                        <label className={styles.checkboxRow}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={!isActive}
+                            onChange={() => toggleSelect(id, isActive)}
+                          />
+                          <span className={styles.reviewTitle}>
+                            {title}
+                            {!isActive && (
+                              <span className={styles.inactiveTag}> (INACTIVE)</span>
+                            )}
+                          </span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
+
+            {templateId === 2 && (
+              <div className={styles.hint}>
+                Template 2 uses the location of ALL ACTIVE reviews to create a roadmap.
+              </div>
+            )}
           </>
-        )}
-
-        {myMemberId && !stateReview.loading && myReviews.length > 0 && templateId === 2 && (
-          <div className={styles.hint}>
-            Template 2 uses the location of ALL ACTIVE reviews to create a roadmap. ({activeIds.length}개)
-          </div>
         )}
       </div>
 
