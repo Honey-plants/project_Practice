@@ -33,23 +33,28 @@ export default function CommunitySection({ communities, currentPage, onPageChang
       ) : (
         <>
           <div className={styles.itemList}>
-            {communitiesToShow.map((community) => (
-              <Link
-                key={community.community_id}
-                to={`/community/${community.community_id}`}
-                className={`${styles.item} ${styles.communityItem}`}
-              >
-                <p className={styles.itemContent}>
-                  {community.community_content || "내용 없음"}
-                </p>
-                <div className={styles.itemFooter}>
-                  <span>👍 {community.recommend || 0}</span>
-                  <span>
-                    {new Date(community.create_at).toLocaleDateString()}
-                  </span>
-                </div>
-              </Link>
-            ))}
+            {communitiesToShow.map((community, idx) => {
+              const globalIdx = currentPage * itemsPerPage + idx;
+              const postNumber = communities.length - globalIdx;
+              const dateStr = community.created_at || community.create_at;
+              return (
+                <Link
+                  key={community.community_id}
+                  to={`/community/${community.community_id}`}
+                  className={`${styles.item} ${styles.communityItem}`}
+                >
+                  <p className={styles.itemContent}>
+                    게시글 {postNumber}
+                  </p>
+                  <div className={styles.itemFooter}>
+                    <span>🧡 {community.recommend || 0}</span>
+                    <span>
+                      {dateStr ? new Date(dateStr).toLocaleDateString() : "-"}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
 
           {totalPages > 1 && (

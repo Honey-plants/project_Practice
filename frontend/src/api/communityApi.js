@@ -27,4 +27,7 @@ export const CommunityAPI = {
   recommendToggle: (community_id) =>
   api.post(`/community/${community_id}/recommend`),
 
+  toggleActive: (community_id) =>
+  api.patch(`/community/${community_id}/active`),
+
 };

@@ -16,7 +16,7 @@ import EditProfile from "./pages/member/EditProfile";
 
 import CommunityDetail from "./pages/community/CommunityDetail";
 import CommunityCreate from "./pages/community/CommunityCreate";
-import CommunityEdit from "./pages/community/CommunityEdit";
+// import CommunityEdit from "./pages/community/CommunityEdit";
 import Community from "./pages/community/Community";
 
 import ReviewList from "./pages/review/ReviewList";
@@ -46,12 +46,16 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* 커뮤니티 - 목록/상세 공개 */}
+          {/* 커뮤니티 - 목록/상세 공개, 작성/수정은 로그인 필수 */}
           <Route path="/community" element={<Community />} />
+          <Route path="/community/new" element={<ProtectedRoute excludeRoles={["ADMIN"]}><CommunityCreate /></ProtectedRoute>} />
+          {/* <Route path="/community/:id/edit" element={<ProtectedRoute excludeRoles={["ADMIN"]}><CommunityEdit /></ProtectedRoute>} /> */}
           <Route path="/community/:id" element={<CommunityDetail />} />
 
-          {/* 리뷰 - 목록/상세 공개 */}
+          {/* 리뷰 - 목록/상세 공개, 작성/수정은 로그인 필수 */}
           <Route path="/review" element={<ReviewList />} />
+          <Route path="/review/new" element={<ProtectedRoute excludeRoles={["ADMIN"]}><ReviewCreate /></ProtectedRoute>} />
+          <Route path="/review/:id/edit" element={<ProtectedRoute excludeRoles={["ADMIN"]}><ReviewEdit /></ProtectedRoute>} />
           <Route path="/review/:id" element={<ReviewDetail />} />
 
           {/* 관리자 페이지 */}
@@ -83,84 +87,6 @@ export default function App() {
             }
           />
 
-          {/* community - 작성/수정은 로그인 필수 */}
-          {/* community */}
-          <Route
-            path="/community"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <Community />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/community/:id"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <CommunityDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/community/new"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <CommunityCreate />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/community/:id/edit"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <CommunityEdit />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* review */}
-          <Route
-            path="/review"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <ReviewList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/review/:id"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <ReviewDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/review/new"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <ReviewCreate />
-              </ProtectedRoute>
-            }
-          />
-{/*
-          <Route
-            path="/review/test"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <ReviewTestCreate />
-              </ProtectedRoute>
-            }
-          /> */}
-
-          <Route
-            path="/review/:id/edit"
-            element={
-              <ProtectedRoute excludeRoles={["ADMIN"]}>
-                <ReviewEdit />
-              </ProtectedRoute>
-            }
-          />
 
           {/* upload */}
           <Route

@@ -18,7 +18,8 @@ export default function CommunityList({ list = [], loading = false, error = "" }
         {list.map((row) => {
           const id = row.community_id ?? row.id;
           const imgUrl = row.image_urls?.[0] || null;
-          const nickname = row.member_id === myMemberId && myNickname ? myNickname : `#${row.member_id}`;
+          const nickname = row.nickname || row.author_nickname || row.member_nickname
+            || (row.member_id === myMemberId && myNickname ? myNickname : `익명`);
 
           return (
             <li key={id} className={styles.listItem}>
@@ -42,7 +43,12 @@ export default function CommunityList({ list = [], loading = false, error = "" }
                 </div>
 
                 {/* 최신 댓글 */}
-                <div className={styles.cardComment}>최신 댓글 없음</div>
+                <div className={styles.cardComment}>
+                  
+                  {row.latest_comment_text
+                    ? row.latest_comment_text
+                    : "최신 댓글 없음"}
+                </div>
               </Link>
             </li>
           );

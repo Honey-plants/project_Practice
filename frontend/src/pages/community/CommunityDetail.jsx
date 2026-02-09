@@ -1,10 +1,9 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { CommunityContext } from "../../context/CommunityContext";
 import { MemberContext } from "../../context/MemberContext";
 import { CommunityAPI } from "../../api/communityApi";
-import "../../styles/Community.css";
-import "../../styles/CommunityDetail.css";
+import styles from "./CommunityDetail.module.css";
 
 function formatDate(v) {
   if (!v) return "-";
@@ -12,14 +11,10 @@ function formatDate(v) {
   if (Number.isNaN(d.getTime())) return String(v);
   return d.toLocaleString();
 }
-import { AuthContext } from "../../context/AuthContext";
-import { MemberContext } from "../../context/MemberContext";
-import api from "../../api/axiosInstance";
-import "../../styles/CommunityDetail.css";
 
 export default function CommunityDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const nav = useNavigate();
   const { stateCommunity, communityActions } = useContext(CommunityContext);
 
   const { stateMember } = useContext(MemberContext);
@@ -37,22 +32,10 @@ export default function CommunityDetail() {
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
   const [editingSaving, setEditingSaving] = useState(false);
+  const [activeToggling, setActiveToggling] = useState(false);
 
   useEffect(() => {
-    if (!stateAuth.accessToken) return;
     communityActions.fetchDetail(id);
-    setComments([]);
-    setCommentInput("");
-
-    // 댓글 목록 조회 시도 (백엔드 comment API 준비 시 실제 동작)
-    api.get(`/community/${id}/comments`)
-      .then((r) => {
-        const list = Array.isArray(r.data) ? r.data : r.data?.items ?? [];
-        setComments(list);
-      })
-      .catch(() => {
-        // 엔드포인트 미준비 → 빈 목록 유지
-      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -88,8 +71,17 @@ export default function CommunityDetail() {
     };
   }, [id, limit, offset]);
 
-  const onDelete = async () => {
-    alert("삭제는 현재 API 연결이 주석처리되어 있습니다.");
+  const onToggleActive = async () => {
+    if (activeToggling) return;
+    setActiveToggling(true);
+    try {
+      await CommunityAPI.toggleActive(id);
+      await communityActions.fetchDetail(id);
+    } catch (e) {
+      alert(e?.response?.data?.detail || e?.message || "공개 설정 변경 실패");
+    } finally {
+      setActiveToggling(false);
+    }
   };
 
   const onSubmitComment = async () => {
@@ -148,16 +140,31 @@ export default function CommunityDetail() {
 
   const d = stateCommunity.detail;
 
-  const img = d?.image_urls?.[0] ?? d?.imageUrl ?? d?.image_url ?? "";
+  const imageUrls = d?.image_urls ?? (d?.imageUrl ? [d.imageUrl] : d?.image_url ? [d.image_url] : []);
   const nickname = d?.nickname ?? "-";
   const createdAt = formatDate(d?.created_at ?? d?.createdAt);
   const recommend = d?.recommend ?? 0;
+  const communityActive = d?.community_active ?? true;
+  const ownerId = d?.member_id ?? null;
+  const isMine = myMemberId != null && ownerId != null && Number(myMemberId) === Number(ownerId);
 
-  // ✅ 추천 클릭 -> 토글 -> 상세 재조회
+  const [liked, setLiked] = useState(false);
+  const [heartAnim, setHeartAnim] = useState(false);
+
+  useEffect(() => {
+    if (d) setLiked(d?.liked ?? d?.recommended ?? false);
+  }, [d]);
+
   const onRecommend = async () => {
     try {
       const out = await communityActions.recommendToggle(id);
       console.log("recommendToggle response(detail):", out);
+      const nowLiked = out?.data?.recommended ?? !liked;
+      setLiked(nowLiked);
+      if (nowLiked) {
+        setHeartAnim(true);
+        setTimeout(() => setHeartAnim(false), 600);
+      }
       await communityActions.fetchDetail(id);
     } catch (e) {
       alert(e?.response?.data?.detail || e?.message || "추천 실패");
@@ -165,75 +172,80 @@ export default function CommunityDetail() {
   };
 
   return (
-    <div className="container">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>Community Detail</h1>
-        <div style={{ display: "flex", gap: 8 }}>
-          <Link to={`/community/${id}/edit`}>Edit</Link>
-          <button onClick={onDelete}>Delete</button>
-        </div>
-
-        {/* 공개/비공개 ON/OFF 스위치 — 작성자에게만 표시 */}
-        {isOwner && (
-          <div className="switchRow">
-            <span className="switchLabel">{isActive ? "공개" : "비공개"}</span>
-            <div
-              className={`switchTrack ${isActive ? "switchOn" : "switchOff"}`}
-              onClick={toggleLoading ? undefined : handleToggleActive}
-              role="switch"
-              aria-checked={isActive}
-            >
-              <div className="switchThumb" />
-            </div>
-          </div>
-        )}
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1>{d ? `${nickname}님의 게시글` : "로딩 중..."}</h1>
       </div>
 
-      {stateCommunity.error && <div className="errorBox">{stateCommunity.error}</div>}
+      {stateCommunity.error && <div className={styles.errorBox}>{stateCommunity.error}</div>}
       {!d ? (
         <div>Loading...</div>
       ) : (
         <>
-          <div className="communityDetailCard">
-            <div className="communityDetailThumb">
-              {img ? (
-                <img src={img} alt="community" />
-              ) : (
-                <div className="communityCardThumbPlaceholder">NO IMAGE</div>
-              )}
-            </div>
+          <div className={styles.communityDetailCard}>
+            {/* 모든 AI 생성 이미지 표시 */}
+            {imageUrls.length > 0 ? (
+              <div className={styles.communityDetailImages}>
+                {imageUrls.map((url, idx) => (
+                  <div key={idx} className={styles.communityDetailThumb}>
+                    <img src={url} alt={`community-${idx + 1}`} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.communityDetailThumb}>
+                <div className={styles.communityCardThumbPlaceholder}>NO IMAGE</div>
+              </div>
+            )}
 
-            <div className="communityDetailMeta">
-              <div className="communityCardNickname">{nickname}</div>
-              <div className="communityCardDate">{createdAt}</div>
+            <div className={styles.communityDetailMeta}>
+              <div className={styles.metaTop}>
+                <div className={styles.metaLeft}>
+                  <div className={styles.communityCardNickname}>{nickname}</div>
+                  <div className={styles.communityCardDate}>{createdAt}</div>
+                </div>
 
-              <div style={{ marginTop: 10 }}>
+                <div className={styles.metaRight}>
+                  {isMine && (
+                    <div
+                      className={styles.activeToggle}
+                      onClick={onToggleActive}
+                      style={{ cursor: activeToggling ? "not-allowed" : "pointer" }}
+                    >
+                      <span className={styles.activeToggleLabel}>공개</span>
+                      <div className={`${styles.toggleSwitch} ${communityActive ? styles.toggleOn : styles.toggleOff}`}>
+                        <div className={styles.toggleKnob} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.likeRow}>
                 <button
                   type="button"
                   onClick={onRecommend}
-                  style={{
-                    padding: "6px 10px",
-                    borderRadius: 10,
-                    border: "1px solid #ddd",
-                    background: "#fff",
-                    cursor: "pointer",
-                    fontSize: 12,
-                  }}
+                  className={styles.likeBtn}
                 >
-                  👍 {recommend}
+                  <span className={`${styles.heartIcon} ${liked ? styles.heartActive : ""} ${heartAnim ? styles.heartBounce : ""}`}>
+                    {liked ? "♥" : "♡"}
+                  </span>
                 </button>
+                <span className={styles.likeCount}>
+                  {recommend > 0 ? `좋아요 ${recommend}개` : ""}
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="commentBox">
-            <div className="commentHeader">
-              <h3 style={{ margin: 0 }}>댓글</h3>
-              <div className="commentPager">
+          <div className={styles.commentBox}>
+            <div className={styles.commentHeader}>
+              <h3>댓글</h3>
+              <div className={styles.commentPager}>
                 <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
                   이전
                 </button>
-                <span style={{ fontSize: 12, color: "#666" }}>{page + 1}</span>
+                <span>{page + 1}</span>
                 <button
                   onClick={() => setPage((p) => p + 1)}
                   disabled={commentLoading || comments.length < limit}
@@ -243,14 +255,14 @@ export default function CommunityDetail() {
               </div>
             </div>
 
-            {commentError && <div className="errorBox">{commentError}</div>}
+            {commentError && <div className={styles.errorBox}>{commentError}</div>}
             {commentLoading && <div>댓글 불러오는 중...</div>}
 
             {!commentLoading && !commentError && comments.length === 0 && (
-              <div className="notice">댓글이 없습니다.</div>
+              <div className={styles.notice}>댓글이 없습니다.</div>
             )}
 
-            <div className="commentList">
+            <div className={styles.commentList}>
               {comments.map((c) => {
                 const cid = c.comment_id ?? c.id;
                 const cnick = c.nickname ?? "-";
@@ -264,14 +276,14 @@ export default function CommunityDetail() {
                 const isEditing = editingId != null && Number(editingId) === Number(cid);
 
                 return (
-                  <div className="commentItem" key={cid}>
-                    <div className="commentItemMeta">
-                      <div className="commentNick">{cnick}</div>
+                  <div className={styles.commentItem} key={cid}>
+                    <div className={styles.commentItemMeta}>
+                      <div className={styles.commentNick}>{cnick}</div>
                       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <div className="commentDate">{cdate}</div>
+                        <div className={styles.commentDate}>{cdate}</div>
 
                         {isMine && !isEditing && (
-                          <button type="button" onClick={() => startEdit(c)} style={{ fontSize: 12 }}>
+                          <button type="button" onClick={() => startEdit(c)} className={styles.commentEditBtn}>
                             수정
                           </button>
                         )}
@@ -279,13 +291,13 @@ export default function CommunityDetail() {
                     </div>
 
                     {isEditing ? (
-                      <div style={{ display: "grid", gap: 8 }}>
+                      <div className={styles.commentEditArea}>
                         <textarea
                           rows={3}
                           value={editingText}
                           onChange={(e) => setEditingText(e.target.value)}
                         />
-                        <div style={{ display: "flex", gap: 8 }}>
+                        <div className={styles.commentEditActions}>
                           <button type="button" onClick={cancelEdit} disabled={editingSaving}>
                             취소
                           </button>
@@ -299,14 +311,14 @@ export default function CommunityDetail() {
                         </div>
                       </div>
                     ) : (
-                      <div className="commentText">{ctext}</div>
+                      <div className={styles.commentText}>{ctext}</div>
                     )}
                   </div>
                 );
               })}
             </div>
 
-            <div className="commentForm">
+            <div className={styles.commentForm}>
               <textarea
                 rows={3}
                 value={commentText}
@@ -314,10 +326,14 @@ export default function CommunityDetail() {
                 placeholder="댓글을 입력하세요"
                 disabled={editingId != null}
               />
-              <button onClick={onSubmitComment} disabled={!commentText.trim() || editingId != null}>
+              <button
+                onClick={onSubmitComment}
+                disabled={!commentText.trim() || editingId != null}
+                className={styles.commentFormSubmit}
+              >
                 댓글 등록
               </button>
-              <div className="commentHint">* 본인 댓글은 수정 가능합니다.</div>
+              <div className={styles.commentHint}>* 본인 댓글은 수정 가능합니다.</div>
             </div>
           </div>
         </>

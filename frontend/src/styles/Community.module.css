@@ -1,11 +1,7 @@
 .container{
     margin: 0 auto;
-    padding: 30px;
-    width: 80%;
-    max-width: 850px;
-    border: 1px solid #DDDDDD;
-    border-radius: 40px;
-    background: #FFFFFF; /* 흰색 배경 */
+    padding: 20px;
+    max-width: 1200px;
 }
 
 .ctn_box{
@@ -142,8 +138,9 @@
 
 /* ===== 타이틀 ===== */
 .title {
-    margin: 0 0 20px 0;
-    font-size: 24px;
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
     color: #333333;
 }
 
@@ -151,7 +148,7 @@
 .buttonRow {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 /* ===== 필터 행 (전체 / 내 저널) ===== */

@@ -87,11 +87,18 @@ def get_community(community_id: int, db: Session = Depends(get_db), current=Depe
 
     print("community 상세 조회 :: ", current.member_id)
 
-    return service.get_community_detail(db, community_id, current_member_id=current.member_id)
+    return service.get_community_detail(db, community_id, member_id=current.member_id)
 
 # 좋아요 로직
 @router.post("/{community_id}/recommend")
 def recommend_toggle(community_id: int, db: Session = Depends(get_db), current=Depends(get_current_member)):
     out = service.toggle_recommend(db, community_id=community_id, member_id=current.member_id)
+    db.commit()
+    return out
+
+# 공개 설정 토글
+@router.patch("/{community_id}/active")
+def toggle_active(community_id: int, db: Session = Depends(get_db), current=Depends(get_current_member)):
+    out = service.toggle_active(db, community_id=community_id, member_id=current.member_id)
     db.commit()
     return out

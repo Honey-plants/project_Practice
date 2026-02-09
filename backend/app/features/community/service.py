@@ -291,7 +291,7 @@ def list_community(
 # ---------------------------------------------------------------------
 # 상세
 # ---------------------------------------------------------------------
-def get_community_detail(db: Session, community_id: int) -> Dict[str, Any]:
+def get_community_detail(db: Session, community_id: int, *, member_id: Optional[int] = None) -> Dict[str, Any]:
 
     latest_comment_text_sq = (
         select(Comment.content)
@@ -319,12 +319,24 @@ def get_community_detail(db: Session, community_id: int) -> Dict[str, Any]:
         .order_by(ImgFile.sort_order.asc())
     ).scalars().all()
 
+    # 현재 사용자가 좋아요 했는지 확인
+    liked = False
+    if member_id is not None:
+        liked_row = db.execute(
+            select(CommunityRecommend.recommend_id).where(
+                CommunityRecommend.community_id == int(community_id),
+                CommunityRecommend.member_id == int(member_id),
+            )
+        ).scalar_one_or_none()
+        liked = liked_row is not None
+
     return {
         "community_id": c.community_id,
         "member_id": c.member_id,
-        "nickname": c.nickname,
+        "nickname": nickname,
         "community_active": bool(c.community_active),
         "recommend": int(c.recommend or 0),
+        "liked": liked,
         "created_at": c.create_at.isoformat() if getattr(c, "create_at", None) else None,
         "updated_at": c.update_at.isoformat() if getattr(c, "update_at", None) else None,
         "image_urls": [img.storage_path for img in imgs],
@@ -388,3 +400,26 @@ def toggle_recommend(db: Session, *, community_id: int, member_id: int) -> Dict[
         db.refresh(c)
 
         return {"recommended": False, "recommend": int(c.recommend or 0)}
+
+
+# ---------------------------------------------------------------------
+# 공개 설정 토글 (community_active)
+# ---------------------------------------------------------------------
+def toggle_active(db: Session, *, community_id: int, member_id: int) -> Dict[str, Any]:
+    c = db.get(Community, int(community_id))
+    if not c:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    if c.member_id != int(member_id):
+        raise HTTPException(status_code=403, detail="본인 게시글만 변경할 수 있습니다")
+
+    new_active = not c.community_active
+    db.execute(
+        update(Community)
+        .where(Community.community_id == int(community_id))
+        .values(community_active=new_active)
+    )
+    db.flush()
+    db.refresh(c)
+
+    return {"community_id": c.community_id, "community_active": bool(c.community_active)}

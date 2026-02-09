@@ -7,6 +7,7 @@ export default function ReviewCreateInline({ onCreated }) {
   const navigate = useNavigate();
   // Step1
   const [receiptFile, setReceiptFile] = useState(null);
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState(null);
   const [receiptId, setReceiptId] = useState(null);
   const [extracted, setExtracted] = useState(null);
   const [menuList, setMenuList] = useState([]);
@@ -81,6 +82,8 @@ export default function ReviewCreateInline({ onCreated }) {
     setExtracted(null);
     setMenuList([]);
     setReceiptFile(null);
+    if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+    setReceiptPreviewUrl(null);
     setMenuConfirmed(false);
     setMsg("");
     setErr("");
@@ -145,6 +148,8 @@ export default function ReviewCreateInline({ onCreated }) {
 
       // 초기화
       setReceiptFile(null);
+      if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+      setReceiptPreviewUrl(null);
       setReceiptId(null);
       setExtracted(null);
       setMenuList([]);
@@ -162,6 +167,14 @@ export default function ReviewCreateInline({ onCreated }) {
 
   return (
   <div className={styles.reviewCreateContainer}>
+      {loadingVerify && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingBox}>
+            <div className={styles.loadingSpinner} />
+            <p className={styles.loadingText}>영수증 인증 중...</p>
+          </div>
+        </div>
+      )}
       <h2 className={styles.reviewCreateTitle}>리뷰 등록</h2>
 
       {/* Step 1: 영수증 인증 */}
@@ -172,13 +185,28 @@ export default function ReviewCreateInline({ onCreated }) {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+              disabled={loadingVerify}
+              onChange={(e) => {
+                const f = e.target.files?.[0] || null;
+                setReceiptFile(f);
+                if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+                setReceiptPreviewUrl(f ? URL.createObjectURL(f) : null);
+              }}
               className={styles.fileInput}
             />
             <button onClick={verify} disabled={loadingVerify} className={styles.btnPrimary}>
               {loadingVerify ? "⏳" : "✔"}
             </button>
           </div>
+          {receiptPreviewUrl && (
+            <div className={styles.receiptPreview}>
+              <img
+                src={receiptPreviewUrl}
+                alt="영수증 미리보기"
+                className={styles.receiptPreviewImage}
+              />
+            </div>
+          )}
         </div>
       )}
  

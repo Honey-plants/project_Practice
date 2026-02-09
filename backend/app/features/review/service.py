@@ -149,8 +149,16 @@ async def create_review_from_receipt(
         y = coords.get("y")
         location_list = [x, y] if (x is not None and y is not None) else []
 
-        raw = final_payload.get("menu_name")
-        menu_en_list = ensure_list(raw) if raw else []
+        # 프론트에서 삭제한 메뉴가 반영된 menu_name_override 우선 사용
+        if menu_name_override:
+            try:
+                parsed = json.loads(menu_name_override)
+                menu_en_list = parsed if isinstance(parsed, list) else [parsed]
+            except (ValueError, TypeError):
+                menu_en_list = ensure_list(menu_name_override)
+        else:
+            raw = final_payload.get("menu_name")
+            menu_en_list = ensure_list(raw) if raw else []
 
         member_item_ids = db.execute(
             select(MemberRestrictions.item_id)
