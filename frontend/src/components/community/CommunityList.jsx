@@ -1,12 +1,24 @@
 import React, { useContext } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 import { MemberContext } from "../../context/MemberContext";
 import styles from "./CommunityList.module.css";
 
 export default function CommunityList({ list = [], loading = false, error = "" }) {
+  const nav = useNavigate();
+  const { stateAuth } = useContext(AuthContext);
   const { stateMember } = useContext(MemberContext);
   const myMemberId = stateMember?.me?.member_id;
   const myNickname = stateMember?.me?.nickname;
+
+  const handleCardClick = (e, id) => {
+    if (!stateAuth.accessToken) {
+      e.preventDefault();
+      nav("/login");
+      return;
+    }
+    nav(`/community/${id}`);
+  };
 
   if (error) return <div className={styles.errorBox}>{error}</div>;
   if (loading) return <div className={styles.loading}>Loading...</div>;
@@ -23,13 +35,12 @@ export default function CommunityList({ list = [], loading = false, error = "" }
 
           return (
             <li key={id} className={styles.listItem}>
-              <Link to={`/community/${id}`} className={styles.cardLink}>
-                {/* 상단 헤더: 닉네임(왼쪽) + 좋아요(오른쪽) */}
+              <div onClick={(e) => handleCardClick(e, id)} className={styles.cardLink} style={{ cursor: "pointer" }}>
+                {/* 상단 헤더: 프로필 아이콘 + 닉네임 */}
                 <div className={styles.cardHeader}>
-                  <div className={styles.cardNickname}>{nickname}</div>
-                  <div className={styles.cardLike}>
-                    <span className={styles.likeIcon}>♥</span>
-                    <span className={styles.likeCount}>{row.recommend ?? 0}</span>
+                  <div className={styles.headerLeft}>
+                    <div className={styles.avatar}>{nickname.charAt(0).toUpperCase()}</div>
+                    <div className={styles.cardNickname}>{nickname}</div>
                   </div>
                 </div>
 
@@ -38,18 +49,28 @@ export default function CommunityList({ list = [], loading = false, error = "" }
                   {imgUrl ? (
                     <img src={imgUrl} alt={`community-${id}`} className={styles.img} />
                   ) : (
-                    <div className={styles.imgPlaceholder}>이미지 없음</div>
+                    <div className={styles.imgPlaceholder}>No image</div>
                   )}
                 </div>
 
-                {/* 최신 댓글 */}
-                <div className={styles.cardComment}>
-                  
-                  {row.latest_comment_text
-                    ? row.latest_comment_text
-                    : "최신 댓글 없음"}
+                {/* 좋아요 + 액션 */}
+                <div className={styles.cardActions}>
+                  <span className={styles.likeIcon}>♥</span>
+                  <span className={styles.likeCount}>Like {row.recommend ?? 0}</span>
                 </div>
-              </Link>
+
+                {/* 작성자 닉네임 + 최신 댓글 */}
+                <div className={styles.cardComment}>
+                  {row.latest_comment_text ? (
+                    <>
+                      <span className={styles.commentNickname}>{nickname}</span>
+                      <span className={styles.commentText}>{row.latest_comment_text}</span>
+                    </>
+                  ) : (
+                    <span className={styles.commentText}>No comments</span>
+                  )}
+                </div>
+              </div>
             </li>
           );
         })}

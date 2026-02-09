@@ -8,24 +8,21 @@
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 28px;
 }
 
-/* ===== 카드 (리스트 아이템) ===== */
+/* ===== 카드 (리스트 아이템) — Instagram 스타일 ===== */
 .listItem {
   background: #FFFFFF;
   overflow: hidden;
-  border: 1px solid #DDDDDD;
-  border-radius: 12px;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #DBDBDB;
+  border-radius: 8px;
+  transition: box-shadow 0.2s;
 }
 
 .listItem:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.15);
-  border-color: #81C784;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* 카드 내부 링크 — 세로 스택 */
@@ -33,31 +30,50 @@
   text-decoration: none;
   color: inherit;
   display: flex;
-  flex-direction: column;     /* 세로로 쌓임 */
+  flex-direction: column;
 }
 
-/* ===== 상단 헤더: 닉네임(왼쪽) + 좋아요(오른쪽) ===== */
+/* ===== 상단 헤더: 프로필 아바타 + 닉네임 ===== */
 .cardHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
+  padding: 12px 14px;
 }
 
-/* ===== 이미지 영역 (AI 이미지 1200x820 비율) ===== */
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #37a364, #095c2e, #72a01c);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ===== 이미지 영역 (정사각형 비율 — 인스타 스타일) ===== */
 .cardImage {
   width: 100%;
-  aspect-ratio: 1200 / 820;
-  background: #F5F5F5;
+  aspect-ratio: 1 / 1;
+  background: #FAFAFA;
   overflow: hidden;
 }
 
 .img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
-  background: #F5F5F5;
 }
 
 .imgPlaceholder {
@@ -71,22 +87,24 @@
   background: #EFEFEF;
 }
 
-/* ===== 닉네임 & 좋아요 ===== */
+/* ===== 닉네임 ===== */
 .cardNickname {
   font-size: 14px;
-  font-weight: 700;           /* 인스타 스타일: 닉네임 볼드 */
+  font-weight: 600;
   color: #262626;
 }
 
-.cardLike {
+/* ===== 좋아요 액션 행 ===== */
+.cardActions {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  padding: 10px 14px 2px;
 }
 
 .likeIcon {
-  color: #E53935;
-  font-size: 15px;
+  color: #ED4956;
+  font-size: 18px;
 }
 
 .likeCount {
@@ -95,11 +113,25 @@
   color: #262626;
 }
 
-/* ===== 최신 댓글 ===== */
+/* ===== 최신 댓글 (닉네임 + 텍스트) ===== */
 .cardComment {
-  padding: 8px 16px 12px;
-  font-size: 13px;
-  color: #8E8E8E;
+  padding: 4px 14px 14px;
+  font-size: 14px;
+  color: #262626;
+  line-height: 1.5;
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.commentNickname {
+  font-weight: 600;
+  color: #262626;
+  flex-shrink: 0;
+}
+
+.commentText {
+  color: #262626;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

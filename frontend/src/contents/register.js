@@ -240,5 +240,4 @@ export const COUNTRY_OPTIONS = [
 export const GENDER = [
     { value:"Male", label: "Male"},
     { value:"Female", label: "Female"},
-    { value:"Unkwon", label: "Not select"}    
 ]

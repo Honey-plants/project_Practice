@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./ProfileSidebar.module.css";
 
@@ -29,7 +29,7 @@ export default function ProfileSidebar({ member }) {
     if (withdrawing) return;
 
     const ok = window.confirm(
-      "정말 회원 탈퇴하시겠습니까?\n탈퇴 시 작성한 데이터가 삭제될 수 있습니다."
+      "Are you sure you want to leave the membership?\nData created may be deleted when you leave."
     );
     if (!ok) return;
 
@@ -45,7 +45,7 @@ export default function ProfileSidebar({ member }) {
       // 멤버 상태 초기화
       memberActions.clear?.();
 
-      alert("회원 탈퇴가 완료되었습니다.");
+      alert("Your membership withdrawal has been completed.");
       nav("/");
     } catch (e) {
       alert(e?.message || "회원 탈퇴 실패");
@@ -111,7 +111,7 @@ export default function ProfileSidebar({ member }) {
             fontWeight: 700,
           }}
         >
-          {withdrawing ? "탈퇴 처리 중..." : "회원 탈퇴"}
+          {withdrawing ? "Processing withdrawal..." : "Membership Withdrawal"}
         </button>
       </div>
     </div>

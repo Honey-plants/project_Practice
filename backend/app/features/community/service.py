@@ -283,7 +283,7 @@ def list_community(
             "updated_at": c.update_at.isoformat() if getattr(c, "update_at", None) else None,
             "image_urls": img_map.get(c.community_id, []),
             "latest_comment_text": latest_comment_text,  # 댓글
-            # comment_count/latest_comment 쓰면 여기에 추가 merge
+            "community_type": c.community_type,
         })
     return out
 

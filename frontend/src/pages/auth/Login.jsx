@@ -11,7 +11,7 @@ export default function Login() {
 
   // URL param으로 전달된 안내 메시지 처리
   const paramMsg = searchParams.get("msg");
-  const guideMsg = paramMsg === "login_required" ? "로그인을 해주세요" : null;
+  const guideMsg = paramMsg === "login_required" ? "Please Sign in" : null;
 
   const [form, setForm] = useState({
     email: "",

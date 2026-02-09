@@ -124,7 +124,7 @@ function ResultContent({ result }) {
             onError={() => setImgBroken(true)}
           />
         ) : (
-          <p className="rp-empty">결과 이미지가 없습니다.</p>
+          <p className="rp-empty">No result image.</p>
         )}
 
         <PolygonOverlay
@@ -142,7 +142,7 @@ function ResultContent({ result }) {
       {/* 감지된 메뉴 목록 */}
       {Array.isArray(items) && items.length > 0 && (
         <div className="rp-menu-section">
-          <h3 className="rp-menu-title">Detected menus</h3>
+          <h3 className="rp-menu-title">Detected menus / choose the menu</h3>
           <div className="rp-menu-grid">
             {items.map((it, idx) => (
               <div key={it?.id || it?.item_id || idx} className="rp-menu-card">
@@ -157,10 +157,10 @@ function ResultContent({ result }) {
       )}
 
       {/* Result JSON */}
-      <div className="rp-json-wrap">
+      {/* <div className="rp-json-wrap">
         <h3 className="rp-json-title">Result JSON</h3>
         <pre className="rp-json-pre">{jsonText}</pre>
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -140,7 +140,7 @@ export default function ReviewList() {
                 onClick={toggleMyOnly}
                 className={`${styles.myOnlyButton} ${showMyOnly ? styles.myOnlyActive : ''}`}
               >
-                내 리뷰만
+                My Reviews
               </button>
               {(selectedCategory || selectedItemIds.length > 0 || showMyOnly) && (
                 <button onClick={clearFilters} className={styles.clearButton}>
@@ -157,7 +157,7 @@ export default function ReviewList() {
                 onClick={() => setSelectedCategory(null)}
                 className={`${styles.categoryButton} ${!selectedCategory ? styles.active : ''}`}
               >
-                전체
+                All
               </button>
               {categories.map((category) => (
                 <button
@@ -165,7 +165,7 @@ export default function ReviewList() {
                   onClick={() => setSelectedCategory(category)}
                   className={`${styles.categoryButton} ${selectedCategory?.category_id === category.category_id ? styles.active : ''}`}
                 >
-                  {category.category_label_ko || category.category_label_en || `Category #${category.category_id}`}
+                  {category.category_label_en || category.category_label_ko || `Category #${category.category_id}`}
                 </button>
               ))}
             </div>
@@ -195,7 +195,7 @@ export default function ReviewList() {
           {selectedCategory && selectedCategory.items && selectedCategory.items.length > 0 && (
             <div className={styles.itemSection}>
               <div className={styles.itemLabel}>
-                {selectedCategory.category_label_ko || selectedCategory.category_label_en} 세부 항목
+                {selectedCategory.category_label_en || selectedCategory.category_label_ko} Detail Items
               </div>
               <div className={styles.itemButtons}>
                 {selectedCategory.items.map((item) => {
@@ -207,7 +207,7 @@ export default function ReviewList() {
                       className={`${styles.itemButton} ${isSelected ? styles.selected : ''}`}
                     >
                       {isSelected && "✓ "}
-                      {item.item_label_ko || item.item_label_en || `Item #${item.item_id}`}
+                      {item.item_label_en || item.item_label_ko || `Item #${item.item_id}`}
                     </button>
                   );
                 })}
@@ -219,7 +219,7 @@ export default function ReviewList() {
           {(selectedCategory || selectedItemIds.length > 0 || showMyOnly) && (
             <div className={styles.filterStatus}>
               {showMyOnly && (
-                <span>내 리뷰만 표시 중</span>
+                <span>Showing my reviews only</span>
               )}
               {showMyOnly && (selectedItemIds.length > 0 || selectedCategory) && (
                 <span> · </span>
@@ -230,7 +230,7 @@ export default function ReviewList() {
                 </>
               ) : selectedCategory ? (
                 <>
-                  "<strong>{selectedCategory.category_label_ko || selectedCategory.category_label_en}</strong>" Displaying a review of a category
+                  "<strong>{selectedCategory.category_label_en || selectedCategory.category_label_ko}</strong>" Displaying reviews in this category
                 </>
               ) : null}
             </div>
@@ -241,15 +241,15 @@ export default function ReviewList() {
       {/* 로그인 안내문구 (내 리뷰만 클릭 시 로그인 안된 경우) */}
       {loginGuide && (
         <div className={styles.loginGuideBox}>
-          로그인을 해주세요
+          Please Sign in
         </div>
       )}
 
       {displayError && (
         <div className={styles.errorBox}>
           {displayError.includes("No access token after refresh")
-            ? "로그인을 해주세요"
-            : <><strong>오류 발생:</strong> {displayError}</>
+            ? "Please Sign in"
+            : <><strong>Error:</strong> {displayError}</>
           }
         </div>
       )}
@@ -257,15 +257,15 @@ export default function ReviewList() {
       {displayLoading && (
         <div className={styles.loadingContainer}>
           <div className={styles.spinner}></div>
-          <div className={styles.loadingText}>로딩 중...</div>
+          <div className={styles.loadingText}>Loading...</div>
         </div>
       )}
 
       {!displayLoading && displayList.length === 0 && (
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>📝</div>
-          <div className={styles.emptyTitle}>아직 리뷰가 없습니다</div>
-          <div className={styles.emptyDescription}>첫 번째 리뷰를 작성해보세요!</div>
+          <div className={styles.emptyTitle}>No reviews yet</div>
+          <div className={styles.emptyDescription}>Create your first review!</div>
         </div>
       )}
 

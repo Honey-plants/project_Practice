@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import styles from "../../styles/Community.module.css";
 import CommunityList from "../../components/community/CommunityList";
 import CreateModal from "../../components/community/CreateModal";
+import { AuthContext } from "../../context/AuthContext";
 import { CommunityContext } from "../../context/CommunityContext";
 import { ReviewContext } from "../../context/ReviewContext";
 
 export default function Community() {
   const nav = useNavigate();
+  const { stateAuth } = useContext(AuthContext);
   const { stateCommunity, communityActions } = useContext(CommunityContext);
   const { stateReview, reviewActions } = useContext(ReviewContext);
 
@@ -15,6 +17,7 @@ export default function Community() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [loginGuide, setLoginGuide] = useState(false);
 
   useEffect(() => {
     if (onlyMine) {
@@ -34,13 +37,23 @@ export default function Community() {
     setError("");
     setSaving(true);
     try {
-      await communityActions.create({
+      const result = await communityActions.create({
         template_id: templateId,
         review_ids: reviewIds,
       });
+
+      // template2(map) 생성 시 먹거리 지도 이미지를 localStorage에 저장
+      if (templateId === 2 && result?.image_urls?.length > 0) {
+        localStorage.setItem("foodmap_image_url", result.image_urls[0]);
+        if (result.community_id) {
+          localStorage.setItem("foodmap_community_id", String(result.community_id));
+        }
+        window.dispatchEvent(new Event("foodmap-updated"));
+      }
+
       setIsModalOpen(false);
       setOnlyMine(true);
-      communityActions.fetchMyList();
+      await communityActions.fetchMyList();
     } catch (e) {
       setError(e.message || "AI 이미지 생성에 실패했습니다.");
     } finally {
@@ -54,11 +67,14 @@ export default function Community() {
 
       {/* 버튼 영역 */}
       <div className={styles.buttonRow}>
-        <button className={styles.button} onClick={() => setIsModalOpen(true)}>
+        <button className={styles.button} onClick={() => {
+          if (!stateAuth.accessToken) { nav("/login"); return; }
+          setIsModalOpen(true);
+        }}>
           AI Image
         </button>
         <button className={styles.button} onClick={() => nav("/review/new")}>
-          리뷰작성하기
+          + New Review
         </button>
       </div>
 
@@ -68,15 +84,22 @@ export default function Community() {
       <div className={styles.filterRow}>
         <button
           className={`${styles.filterBtn} ${!onlyMine ? styles.filterActive : ""}`}
-          onClick={() => setOnlyMine(false)}
+          onClick={() => { setOnlyMine(false); setLoginGuide(false); }}
         >
-          전체
+          All
         </button>
         <button
           className={`${styles.filterBtn} ${onlyMine ? styles.filterActive : ""}`}
-          onClick={() => setOnlyMine(true)}
+          onClick={() => {
+            if (!stateAuth.accessToken) {
+              setLoginGuide(true);
+              return;
+            }
+            setLoginGuide(false);
+            setOnlyMine(true);
+          }}
         >
-          내 저널
+          My Journal
         </button>
       </div>
 
@@ -89,6 +112,10 @@ export default function Community() {
         onConfirm={handleConfirm}
         saving={saving}
       />
+
+      {loginGuide && (
+        <div className={styles.loginGuideBox}>Please Sign in</div>
+      )}
 
       <CommunityList list={stateCommunity.list} loading={stateCommunity.loading} error={stateCommunity.error} />
     </div>
