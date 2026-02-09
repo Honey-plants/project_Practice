@@ -117,7 +117,15 @@ export default function Community() {
         <div className={styles.loginGuideBox}>Please Sign in</div>
       )}
 
-      <CommunityList list={stateCommunity.list} loading={stateCommunity.loading} error={stateCommunity.error} />
+      <CommunityList
+        list={[...stateCommunity.list].sort((a, b) => {
+          const da = new Date(a.updated_at || a.created_at || 0);
+          const db = new Date(b.updated_at || b.created_at || 0);
+          return db - da;
+        })}
+        loading={stateCommunity.loading}
+        error={stateCommunity.error}
+      />
     </div>
   );
 }

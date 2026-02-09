@@ -1,7 +1,12 @@
 .container{
     margin: 0 auto;
     padding: 20px;
-    max-width: 1200px;
+    max-width: 420px;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: calc(100vh - 106px);
+    display: flex;
+    flex-direction: column;
 }
 
 .ctn_box{

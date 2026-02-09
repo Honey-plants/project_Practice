@@ -1,12 +1,16 @@
 /* ===== Community Create Container ===== */
 .container {
   padding: 30px;
-  max-width: 850px;
+  max-width: 420px;
   margin: 0 auto;
   background: #FFFFFF; /* 흰색 배경 */
   border: 1px solid #DDDDDD;
   border-radius: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  min-height: calc(100vh - 106px);
+  display: flex;
+  flex-direction: column;
 }
 
 .container h2 {

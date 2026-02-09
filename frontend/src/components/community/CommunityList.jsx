@@ -45,9 +45,9 @@ export default function CommunityList({ list = [], loading = false, error = "" }
                 </div>
 
                 {/* 이미지 영역 */}
-                <div className={styles.cardImage}>
+                <div className={row.community_type === "map" ? styles.cardImageMap : styles.cardImage}>
                   {imgUrl ? (
-                    <img src={imgUrl} alt={`community-${id}`} className={styles.img} />
+                    <img src={imgUrl} alt={`community-${id}`} className={row.community_type === "map" ? styles.imgMap : styles.img} />
                   ) : (
                     <div className={styles.imgPlaceholder}>No image</div>
                   )}

@@ -1,12 +1,16 @@
 /* ===== Review Create Container ===== */
 .reviewCreateContainer {
   position: relative;
-  max-width: 800px;
+  max-width: 420px;
   margin: 0 auto;
   padding: 24px;
   background: #FFFFFF;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  min-height: calc(100vh - 106px);
+  display: flex;
+  flex-direction: column;
 }
 
 /* ===== Loading Overlay (OCR 중 전체 차단) ===== */
