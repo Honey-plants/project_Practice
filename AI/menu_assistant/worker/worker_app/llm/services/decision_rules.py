@@ -28,6 +28,9 @@ ALG_TAG_KO_MAP = {
     "ALG_SULPHITES": "아황산류",
     "ALG_LUPIN": "루핀",
     "ALG_MOLLUSCS": "연체류(조개/굴/전복 등)",
+    # ✅ alias (user dataset 표기 호환)
+    "ALG_EGG": "계란",
+    "ALG_TREE_NUTS": "견과류",
 }
 
 # 사용자가 영어로 avoid를 넣는 경우를 위한 최소 사전(필요시 확장)
@@ -137,29 +140,28 @@ def _get_status(rec: Dict[str, Any]) -> str:
 
 
 def _extract_confirmed(rec: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """
-    Step4 exact일 때 confirmed를 정규화해서 반환.
-    confirmed가 없으면 None.
-    """
     c = rec.get("confirmed")
     if not isinstance(c, dict):
         return None
 
     menu_id = _safe_str(c.get("menu_id") or c.get("id"))
     menu = _safe_str(c.get("menu"))
-    ingredients_ko = _as_list(c.get("ingredients_ko"))
+    ingredients = _as_list(c.get("ingredients"))
     alg_tags = _as_list(c.get("alg_tags"))
+    menu_description_ko = _safe_str(c.get("menu_description_ko") or c.get("menu_description")) or ""
 
-    # 최소 menu는 있어야 confirmed로 의미가 있음
     if not menu:
         return None
 
     return {
         "menu_id": menu_id,
         "menu": menu,
-        "ingredients_ko": ingredients_ko,
+        "ingredients": ingredients,
         "alg_tags": alg_tags,
+        # ✅ 핵심: step5/finalizer가 읽을 수 있게 유지
+        "menu_description_ko": menu_description_ko,
     }
+
 
 
 # ------------------------------------------------------------
@@ -171,73 +173,53 @@ def _compute_user_risk_match(
     user_profile: Optional[Dict[str, Any]],
     confirmed: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """
-    exact 메뉴에 대해 user_profile과 confirmed(alg_tags/ingredients_ko/menu)를 비교해서
-    프론트에서 표시할 user_risk_match를 만든다.
-
-    user_profile minimal schema:
-      {
-        "allergy_tags": [...],
-        "avoid_foods": [...],
-        "religion": "islam_halal" | None
-      }
-    """
-    allergy_hits: List[str] = []
-    avoid_hits: List[str] = []
-    religion_hits: List[str] = []
-
     if not isinstance(user_profile, dict):
         return {
-            "allergy_tag_hits": [],
-            "avoid_food_hits": [],
-            "religion_hits": [],
-            "has_any_risk": False,
+            "allergy_tag_hits": None,
+            "avoid_food_hits": None,
+            "religion_hit": None,
+            "has_any_match": False,
+            "source": "exact",
         }
 
-    user_allergy = set([str(x).strip() for x in _as_list(user_profile.get("allergy_tags")) if str(x).strip()])
+    user_allergy = set(str(x).strip() for x in _as_list(user_profile.get("allergy_tags")) if str(x).strip())
     user_avoid = [str(x).strip() for x in _as_list(user_profile.get("avoid_foods")) if str(x).strip()]
     religion = _safe_str(user_profile.get("religion"))
 
-    conf_alg = set([str(x).strip() for x in _as_list(confirmed.get("alg_tags")) if str(x).strip()])
-    conf_ing = [str(x).strip() for x in _as_list(confirmed.get("ingredients_ko")) if str(x).strip()]
+    conf_alg = set(str(x).strip() for x in _as_list(confirmed.get("alg_tags")) if str(x).strip())
+    conf_ing = [str(x).strip() for x in _as_list(confirmed.get("ingredients")) if str(x).strip()]
     conf_menu = _safe_str(confirmed.get("menu")) or ""
 
-    # A) allergy tag exact intersection
     allergy_hits = sorted(list(user_allergy.intersection(conf_alg)))
 
-    # B) avoid foods heuristic (보수적으로: ingredients_ko / menu 문자열 포함 여부)
-    #    - ingredients_ko가 영문일 수도 있으니 일단 "부분문자열" 수준으로만 확인
     ing_blob = " ".join(conf_ing).lower()
     menu_blob = conf_menu.lower()
-
+    avoid_hits: List[str] = []
     for w in user_avoid:
         lw = w.lower()
         if lw and (lw in ing_blob or lw in menu_blob):
             avoid_hits.append(w)
 
-    # C) religion heuristic (MVP: islam_halal만)
+    religion_flags: List[str] = []
     if religion == "islam_halal":
-        # 알코올/돼지고기/라드 등 키워드 탐지(메뉴명+ingredients 기반)
         blob = (conf_menu + " " + " ".join(conf_ing)).lower()
-        alcohol_keys = ["술", "소주", "맥주", "와인", "럼", "브랜디", "청하", "막걸리", "alcohol", "wine", "beer", "soju"]
-        pork_keys = ["돼지", "삼겹", "족발", "보쌈", "pork"]
-        lard_keys = ["라드", "lard"]
+        if any(k in blob for k in ["술","소주","맥주","와인","럼","브랜디","청하","막걸리","alcohol","wine","beer","soju"]):
+            religion_flags.append("ALCOHOL_SUSPECT")
+        if any(k in blob for k in ["돼지","삼겹","족발","보쌈","pork"]):
+            religion_flags.append("PORK_SUSPECT")
+        if any(k in blob for k in ["라드","lard"]):
+            religion_flags.append("LARD_SUSPECT")
 
-        if any(k in blob for k in alcohol_keys):
-            religion_hits.append("ALCOHOL_SUSPECT")
-        if any(k in blob for k in pork_keys):
-            religion_hits.append("PORK_SUSPECT")
-        if any(k in blob for k in lard_keys):
-            religion_hits.append("LARD_SUSPECT")
-
-    has_any = bool(allergy_hits or avoid_hits or religion_hits)
+    has_any = bool(allergy_hits or avoid_hits or religion_flags)
 
     return {
-        "allergy_tag_hits": allergy_hits,
-        "avoid_food_hits": avoid_hits,
-        "religion_hits": religion_hits,
-        "has_any_risk": has_any,
+        "allergy_tag_hits": allergy_hits or None,
+        "avoid_food_hits": avoid_hits or None,
+        "religion_hit": ",".join(religion_flags) if religion_flags else None,
+        "has_any_match": has_any,
+        "source": "exact",
     }
+
 
 
 
@@ -497,27 +479,24 @@ class DecisionRules:
             "risk_difficulty": risk_difficulty,
         }
 
-        # ✅ 레거시/Step05 호환 키도 같이 유지(필요 시 prompt_builder가 그대로 사용 가능)
+        # _build_exact 내부 out.update(...) 부분만 정리
+
         out.update(
             {
                 "status": "exact",
                 "menu_name": confirmed.get("menu"),
-                "risk_difficulty": risk_difficulty,
                 "evidence": {
                     "menu_id": confirmed.get("menu_id"),
-                "menu_description_ko": confirmed.get("menu_description_ko") or "",
-                    "ingredients_ko": _as_list(confirmed.get("ingredients_ko")),
+                    "ingredients": _as_list(confirmed.get("ingredients")),
                     "alg_tags": _as_list(confirmed.get("alg_tags")),
-                "menu_description_ko": confirmed.get("menu_description_ko") or "",
-                "risk_difficulty": risk_difficulty,
+                    "menu_description_ko": confirmed.get("menu_description_ko") or "",
                 },
                 # trace(기존 step05 normalize에서 사용)
                 "menu": confirmed.get("menu"),
                 "menu_id": confirmed.get("menu_id"),
-                "ingredients_ko": _as_list(confirmed.get("ingredients_ko")),
+                "ingredients": _as_list(confirmed.get("ingredients")),
                 "alg_tags": _as_list(confirmed.get("alg_tags")),
                 "menu_description_ko": confirmed.get("menu_description_ko") or "",
-                "risk_difficulty": risk_difficulty,
             }
         )
 
@@ -551,7 +530,7 @@ class DecisionRules:
                 "menu_name": menu_norm,  # LLM이 이 텍스트를 보고 "메뉴인지/옵션인지/문구인지" 판별
                 "evidence": {
                     "menu_id": None,
-                    "ingredients_ko": [],
+                    "ingredients": [],
                     "alg_tags": [],
                 },
             }

@@ -13,8 +13,9 @@ from chromadb.utils import embedding_functions
 EXACT-ONLY Retriever
 
 Policy:
-- EXACT iff menu_norm == chromadb.metadata["menu"] (whitespace-normalized)
-- No variants / no jamo / no rerank / no thresholds
+- EXACT iff menu_norm matches chromadb.metadata["menu"] OR one of chromadb.metadata["variants"] (whitespace-normalized, csv/list)
+- No jamo / no rerank / no thresholds
+- Variants are treated as aliases that map to the canonical menu
 """
 
 # --------- ENV routing (keep project conventions) ----------
@@ -50,9 +51,11 @@ def _split_csv_like(v: Any) -> List[str]:
 @dataclass
 class ConfirmedMenu:
     menu_id: str
-    menu: str
-    ingredients_ko: List[str]
+    menu: str  # canonical
+    ingredients: List[str]
     alg_tags: List[str]
+    # optional: if exact hit was through variants, store the matched alias
+    matched_variant: str = ""
     # ✅ NEW: short Korean description (optional)
     menu_description_ko: str = ""
 
@@ -129,8 +132,9 @@ class ChromaMenuRetriever:
                     return ConfirmedMenu(
                         menu_id=str(ids[0]),
                         menu=menu_md,
-                        ingredients_ko=_split_csv_like(md0.get("ingredients_ko")),
+                        ingredients=_split_csv_like(md0.get("ingredients")),
                         alg_tags=_split_csv_like(md0.get("alg_tags")),
+                        matched_variant="",
                         menu_description_ko=str(md0.get("menu_description_ko") or "").strip(),
                     )
         except Exception:
@@ -145,13 +149,30 @@ class ChromaMenuRetriever:
                 if not isinstance(md, dict):
                     continue
                 menu_md = _norm_ws(str(md.get("menu", "")))
+
+                # ✅ 2-1) canonical menu exact
                 if menu_md == q:
                     menu_id = str(ids[i]) if i < len(ids) else f"idx_{i}"
                     return ConfirmedMenu(
                         menu_id=menu_id,
                         menu=menu_md,
-                        ingredients_ko=_split_csv_like(md.get("ingredients_ko")),
+                        ingredients=_split_csv_like(md.get("ingredients")),
                         alg_tags=_split_csv_like(md.get("alg_tags")),
+                        matched_variant="",
+                        menu_description_ko=str(md.get("menu_description_ko") or "").strip(),
+                    )
+
+                # ✅ 2-2) variants exact (alias -> canonical)
+                variants = _split_csv_like(md.get("variants"))
+                variants_norm = [_norm_ws(v) for v in variants]
+                if q in variants_norm:
+                    menu_id = str(ids[i]) if i < len(ids) else f"idx_{i}"
+                    return ConfirmedMenu(
+                        menu_id=menu_id,
+                        menu=menu_md,
+                        ingredients=_split_csv_like(md.get("ingredients")),
+                        alg_tags=_split_csv_like(md.get("alg_tags")),
+                        matched_variant=q,
                         menu_description_ko=str(md.get("menu_description_ko") or "").strip(),
                     )
         except Exception:
@@ -176,7 +197,7 @@ def match_exact(menu_norm: str) -> Dict[str, Any]:
       {
         "status": "exact" | "unknown",
         "used_query": <normalized menu_norm or None>,
-        "confirmed": {menu_id, menu, ingredients_ko, alg_tags} | None
+        "confirmed": {menu_id, menu, ingredients, alg_tags} | None
       }
     """
     q = _norm_ws(menu_norm)
@@ -194,8 +215,9 @@ def match_exact(menu_norm: str) -> Dict[str, Any]:
         "confirmed": {
             "menu_id": hit.menu_id,
             "menu": hit.menu,
-            "ingredients_ko": hit.ingredients_ko,
+            "ingredients": hit.ingredients,
             "alg_tags": hit.alg_tags,
+            "matched_variant": hit.matched_variant or None,
             # ✅ NEW: short Korean description (optional)
             "menu_description_ko": hit.menu_description_ko,
         },

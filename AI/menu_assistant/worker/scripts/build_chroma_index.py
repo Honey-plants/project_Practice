@@ -6,7 +6,7 @@ ChromaDB 인덱스 빌드 스크립트.
 - retrieval.py는 아래 메타데이터 키를 사용합니다.
   - menu (str)
   - variants (csv str 또는 list)
-  - ingredients_ko (csv str 또는 list)
+  - ingredients (csv str 또는 list)
   - alg_tags (csv str 또는 list)
   - source (str)
 - ✅ (NEW) menu_description_ko (str) : 메뉴 한국어 간단 설명(옵션)
@@ -52,7 +52,7 @@ DEFAULT_DATASET_PATH = (
     / "data"
     / "datasets"
     / "raw"
-    / "menu_seed_with_alg_tags_variants_v3.json"
+    / "menu_seed.json"
 )
 DEFAULT_CHROMA_DIR = BASE_DIR / "data" / "chroma"
 
@@ -179,7 +179,7 @@ def main() -> None:
         if not menu:
             continue
 
-        ingredients = _safe_str_list(item.get("ingredients_ko"))
+        ingredients = _safe_str_list(item.get("ingredients"))
         # 호환: alg_tags 또는 ALG_TAG
         alg_tags = _safe_str_list(item.get("alg_tags") or item.get("ALG_TAG"))
         variants = _safe_str_list(item.get("variants"))
@@ -198,7 +198,7 @@ def main() -> None:
                 # retrieval._split_csv는 csv string 또는 list 모두 처리 가능.
                 # 여기서는 csv string으로 저장하여 Chroma metadata 크기를 줄인다.
                 "variants": ", ".join(variants),
-                "ingredients_ko": ", ".join(ingredients),
+                "ingredients": ", ".join(ingredients),
                 "alg_tags": ", ".join(alg_tags),
                 "source": source,
                 # ✅ NEW

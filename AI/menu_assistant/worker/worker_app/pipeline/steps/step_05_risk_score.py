@@ -262,10 +262,10 @@ def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, An
             if mid is not None:
                 out["menu_id"] = mid
 
-        if "ingredients_ko" not in out:
-            ing = it.get("ingredients_ko")
+        if "ingredients" not in out:
+            ing = it.get("ingredients")
             if isinstance(ing, list):
-                out["ingredients_ko"] = ing
+                out["ingredients"] = ing
 
         if "alg_tags" not in out:
             tags = it.get("alg_tags")
@@ -278,8 +278,8 @@ def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, An
             if isinstance(bm, dict):
                 if "menu_id" not in out and bm.get("id") is not None:
                     out["menu_id"] = bm.get("id")
-                if "ingredients_ko" not in out and isinstance(bm.get("ingredients_ko"), list):
-                    out["ingredients_ko"] = bm.get("ingredients_ko")
+                if "ingredients" not in out and isinstance(bm.get("ingredients"), list):
+                    out["ingredients"] = bm.get("ingredients")
                 if "alg_tags" not in out and isinstance(bm.get("alg_tags"), list):
                     out["alg_tags"] = bm.get("alg_tags")
 
