@@ -1,4 +1,5 @@
 import React, { useContext, useState } from "react";
+import { safeSession } from "../../utils/storage";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { getJwtRole } from "../../utils/jwt";
@@ -40,7 +41,7 @@ export default function Login() {
       if (ok) {
         // ✅ memberActions.loadMe() 호출 제거
         // - MemberProvider가 accessToken 변경을 감지해 /member/me를 1회 자동 호출
-        const token = sessionStorage.getItem("access_token");
+        const token = safeSession.get("access_token");
         const role = getJwtRole(token);
         if (role === "ADMIN") {
           nav("/admin");

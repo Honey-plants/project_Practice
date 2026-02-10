@@ -1,4 +1,5 @@
 import axios from "axios";
+import { safeSession } from "../utils/storage";
 
 // ✅ 개발환경(CRA proxy 사용): baseURL을 "/"로 두면 package.json의 proxy를 탄다.
 // ✅ 배포/특정 환경: REACT_APP_API_BASE_URL이 있으면 기존처럼 그 값을 그대로 사용
@@ -19,15 +20,15 @@ const raw = axios.create({
     withCredentials: true,
 });
 
-// sessionStorage
+// sessionStorage (safe wrapper for blocked storage contexts)
 const SS_KEY = "access_token";
-export const getAccessToken = () => sessionStorage.getItem(SS_KEY);
+export const getAccessToken = () => safeSession.get(SS_KEY);
 
 let accessToken = getAccessToken();
 export const setAccessToken = (token) => {
     accessToken = token || null;
-    if (token) sessionStorage.setItem(SS_KEY, token);
-    else sessionStorage.removeItem(SS_KEY);
+    if (token) safeSession.set(SS_KEY, token);
+    else safeSession.remove(SS_KEY);
 };
 
 // refresh 싱글플라이트

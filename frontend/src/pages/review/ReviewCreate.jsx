@@ -46,37 +46,46 @@ export default function ReviewCreateInline({ onCreated }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [images]);
 
+    const resetReceiptState = () => {
+        setReceiptId(null);
+        setExtracted(null);
+        setMenuList([]);
+        setReceiptFile(null);
+        if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+        setReceiptPreviewUrl(null);
+        setMenuConfirmed(false);
+        if (receiptInputRef.current) receiptInputRef.current.value = "";
+    };
+
     const verify = async () => {
         setErr("");
         setMsg("");
-        if (!receiptFile)
-            return setErr("Please select the image of the receipt");
+        if (!receiptFile) return setErr("Please select the image of the receipt");
 
         setLoadingVerify(true);
         try {
-            const r = await ReviewAPI.verifyReceipt(receiptFile);
-            const ext = r.data?.extracted || null;
+            const start = await ReviewAPI.verifyReceipt(receiptFile);
+            const jobId = start.data?.job_id || start.data?.receipt_id;
+            if (!jobId) throw new Error("receipt job_id missing");
 
-            // location(coords) 검증: 상호 주소가 없으면 재선택 유도
-            const coords = ext?.coords;
-            if (!coords || coords.x == null || coords.y == null) {
-                alert("Please attach the receipt with the store address again");
-                // 이미지 선택 초기화
-                setReceiptFile(null);
-                if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
-                setReceiptPreviewUrl(null);
-                setReceiptId(null);
-                setExtracted(null);
-                setMenuList([]);
-                // 같은 파일 다시 선택 가능하도록 input reset
-                if (receiptInputRef.current) receiptInputRef.current.value = "";
+            const jobRes = await ReviewAPI.waitReceiptJob(jobId);
+            const status = jobRes.data?.status;
+            if (status !== "DONE") {
+                setErr(jobRes.data?.error || "Receipt authentication failed");
                 setLoadingVerify(false);
                 return;
             }
 
-            setReceiptId(r.data?.receipt_id);
+            const ext = jobRes.data?.extracted || null;
+            const coords = ext?.coords;
+            if (!coords || coords.x == null || coords.y == null) {
+                alert("Please attach the receipt with the store address again");
+                resetReceiptState();
+                return;
+            }
+
+            setReceiptId(jobId);
             setExtracted(ext);
-            // OCR 결과에서 메뉴 목록 파싱하여 state에 저장
             if (ext?.menu_en) {
                 const raw = ext.menu_en;
                 const parsed = Array.isArray(raw)
@@ -108,17 +117,9 @@ export default function ReviewCreateInline({ onCreated }) {
     };
 
     const cancelMenu = () => {
-        setReceiptId(null);
-        setExtracted(null);
-        setMenuList([]);
-        setReceiptFile(null);
-        if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
-        setReceiptPreviewUrl(null);
-        setMenuConfirmed(false);
+        resetReceiptState();
         setMsg("");
         setErr("");
-        // 같은 파일 다시 선택 가능하도록 input reset
-        if (receiptInputRef.current) receiptInputRef.current.value = "";
     };
 
     const removeMenu = (idx) => {

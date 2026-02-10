@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { MenuAPI } from "../../api/menuApi";
 import ResultPage from "../../pages/menuscan/ResultPage";
+import { safeLocal } from "../../utils/storage";
 
 /**
  * 백엔드 응답 형태 방어적 표준화
@@ -41,7 +42,7 @@ export default function MenuUploadInline() {
 
   useEffect(() => {
     // 새로고침 후에도 입력 유지(편의)
-    const saved = localStorage.getItem(LS_KEY);
+    const saved = safeLocal.get(LS_KEY);
     if (saved) setProfileText(saved);
   }, []);
 
@@ -72,7 +73,7 @@ export default function MenuUploadInline() {
       const profileObj = parseProfile();
 
       // ✅ 저장(파싱 성공 or 빈 값)
-      localStorage.setItem(LS_KEY, (profileText || "").trim());
+      safeLocal.set(LS_KEY, (profileText || "").trim());
 
       const r = await MenuAPI.uploadMenu(file, profileObj);
       const jobId = r?.data?.job_id;
@@ -108,7 +109,7 @@ export default function MenuUploadInline() {
 
   const onClearProfile = () => {
     setProfileText("");
-    localStorage.removeItem(LS_KEY);
+    safeLocal.remove(LS_KEY);
     setMsg("프로필 입력을 초기화했어 (다음 업로드는 기본 프로필로 분석됨)");
   };
 

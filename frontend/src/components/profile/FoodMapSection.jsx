@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import styles from "./Section.module.css";
 import mapStyles from "./FoodMapSection.module.css";
+import { safeLocal } from "../../utils/storage";
 
 /**
  * FoodMapSection
@@ -12,7 +13,7 @@ export default function FoodMapSection({ communities = [] }) {
   const [imageUrl, setImageUrl] = useState(null);
 
   useEffect(() => {
-    const url = localStorage.getItem("foodmap_image_url");
+    const url = safeLocal.get("foodmap_image_url");
     if (url) setImageUrl(url);
 
     // 다른 탭/컴포넌트에서 갱신될 때 반영
@@ -25,7 +26,7 @@ export default function FoodMapSection({ communities = [] }) {
 
     // 같은 탭 내 갱신 감지 (커스텀 이벤트)
     const onUpdate = () => {
-      const url = localStorage.getItem("foodmap_image_url");
+      const url = safeLocal.get("foodmap_image_url");
       if (url) setImageUrl(url);
     };
     window.addEventListener("foodmap-updated", onUpdate);
@@ -40,14 +41,14 @@ export default function FoodMapSection({ communities = [] }) {
   useEffect(() => {
     if (imageUrl || !communities.length) return;
 
-    const savedId = localStorage.getItem("foodmap_community_id");
+    const savedId = safeLocal.get("foodmap_community_id");
     if (savedId) {
       const match = communities.find(
         (c) => String(c.community_id) === savedId
       );
       if (match?.image_urls?.[0]) {
         setImageUrl(match.image_urls[0]);
-        localStorage.setItem("foodmap_image_url", match.image_urls[0]);
+        safeLocal.set("foodmap_image_url", match.image_urls[0]);
         return;
       }
     }
@@ -56,8 +57,8 @@ export default function FoodMapSection({ communities = [] }) {
     const mapCommunity = communities.find((c) => c.community_type === "map");
     if (mapCommunity?.image_urls?.[0]) {
       setImageUrl(mapCommunity.image_urls[0]);
-      localStorage.setItem("foodmap_image_url", mapCommunity.image_urls[0]);
-      localStorage.setItem("foodmap_community_id", String(mapCommunity.community_id));
+      safeLocal.set("foodmap_image_url", mapCommunity.image_urls[0]);
+      safeLocal.set("foodmap_community_id", String(mapCommunity.community_id));
     }
   }, [communities, imageUrl]);
 
