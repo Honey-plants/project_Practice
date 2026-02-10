@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
+import re
 
 
 # ------------------------------------------------------------
@@ -146,7 +147,7 @@ def _extract_confirmed(rec: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
     menu_id = _safe_str(c.get("menu_id") or c.get("id"))
     menu = _safe_str(c.get("menu"))
-    ingredients = _as_list(c.get("ingredients"))
+    ingredients_ko = _as_list(c.get("ingredients"))
     alg_tags = _as_list(c.get("alg_tags"))
     menu_description_ko = _safe_str(c.get("menu_description_ko") or c.get("menu_description")) or ""
 
@@ -156,7 +157,7 @@ def _extract_confirmed(rec: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     return {
         "menu_id": menu_id,
         "menu": menu,
-        "ingredients": ingredients,
+        "ingredients": ingredients_ko,
         "alg_tags": alg_tags,
         # ✅ 핵심: step5/finalizer가 읽을 수 있게 유지
         "menu_description_ko": menu_description_ko,
@@ -192,12 +193,25 @@ def _compute_user_risk_match(
 
     allergy_hits = sorted(list(user_allergy.intersection(conf_alg)))
 
-    ing_blob = " ".join(conf_ing).lower()
-    menu_blob = conf_menu.lower()
+    # ✅ avoid_food 매칭 정규화: 대소문자/공백/구두점 차이로 인한 누락 방지
+    def _norm(s: str) -> str:
+        s = (s or "").strip().casefold()
+        # 공백/구두점 최소 정리 (비교용)
+        return re.sub(r"[\s,./()\-+]+", "", s)
+
+    ing_tokens = {_norm(x) for x in conf_ing if _norm(x)}
+    menu_token = _norm(conf_menu)
     avoid_hits: List[str] = []
     for w in user_avoid:
-        lw = w.lower()
-        if lw and (lw in ing_blob or lw in menu_blob):
+        nw = _norm(w)
+        if not nw:
+            continue
+        # 1) 토큰 단위 일치 우선
+        if nw in ing_tokens:
+            avoid_hits.append(w)
+            continue
+        # 2) substring fallback (기존 동작 유지 성격)
+        if nw and (nw in menu_token or any(nw in t for t in ing_tokens)):
             avoid_hits.append(w)
 
     religion_flags: List[str] = []
