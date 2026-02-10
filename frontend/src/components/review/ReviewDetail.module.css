@@ -1,11 +1,11 @@
-/* ReviewDetail.module.css */
+/* ReviewDetail.module.css (iPhone 16 Pro Max Optimized) */
 
 .container {
   border: 1px solid #e0e0e0;
   border-radius: 12px;
-  padding: 24px;
+  padding: 16px;
   display: grid;
-  gap: 20px;
+  gap: 16px;
   background: white;
 }
 
@@ -21,29 +21,30 @@
 
 .title {
   margin: 0;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: #333333;
+  line-height: 1.3;
 }
 
 .meta {
-  margin-top: 8px;
-  font-size: 14px;
+  margin-top: 6px;
+  font-size: 12px;
   color: #666666;
 }
 
 .location {
-  margin-left: 16px;
+  margin-left: 12px;
 }
 
 .editButton {
-  padding: 8px 16px;
+  padding: 6px 12px;
   background: #2E7D32;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -52,34 +53,34 @@
 }
 
 .usedInContentBadge {
-  padding: 8px 16px;
+  padding: 6px 12px;
   background: #dc3545;
   color: white;
   border: 1px solid #dc3545;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
 }
 
 .ratingSection {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .ratingLabel {
-  font-size: 15px;
+  font-size: 14px;
   color: #333333;
   font-weight: 600;
 }
 
 .stars {
-  font-size: 20px;
+  font-size: 18px;
   color: #ffc107;
 }
 
 .ratingValue {
-  font-size: 14px;
+  font-size: 12px;
   color: #666666;
 }
 
@@ -89,16 +90,16 @@
 }
 
 .sectionTitle {
-  font-size: 15px;
+  font-size: 14px;
   color: #333333;
   font-weight: 600;
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .imageGrid {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .imageGrid.single {
@@ -115,7 +116,7 @@
 
 .imageWrapper {
   border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   aspect-ratio: 1 / 1;
   background: #f8f9fa;
@@ -127,45 +128,26 @@
   object-fit: cover;
 }
 
-.categoriesSection {
+/* Items section (simplified, no categories) */
+.itemsSection {
   display: flex;
   flex-direction: column;
-}
-
-.categoryList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.categoryCard {
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-}
-
-.categoryLabel {
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #333333;
-  font-size: 14px;
 }
 
 .itemTags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .itemTag {
-  padding: 6px 12px;
-  background: #fff3cd;
-  color: #dc3545;
-  border-radius: 16px;
-  font-size: 13px;
-  font-weight: 500;
-  border: 1px solid #dc3545;
+  padding: 5px 10px;
+  background: #f5e8e8;
+  color: #c00;
+  border: 1px solid #ffb4b4;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .menuSection {
@@ -176,16 +158,21 @@
 .menuTags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .menuTag {
+  display: inline-block;
+  width: fit-content;
   padding: 6px 12px;
   border: 1px solid #2E7D32;
-  border-radius: 16px;
-  font-size: 13px;
-  background: #81C784;
-  color: white;
+  border-radius: 8px;
+  font-size: 12px;
+  background: #c7e9c8;
+  color: #1B5E20;
+  font-weight: 500;
 }
 
 .contentSection {
@@ -194,13 +181,13 @@
 }
 
 .contentBox {
-  margin-top: 8px;
+  margin-top: 2px;
   white-space: pre-wrap;
-  line-height: 1.7;
-  font-size: 15px;
+  line-height: 1.6;
+  font-size: 14px;
   color: #333333;
-  padding: 16px;
-  background: #fafafa;
-  border-radius: 8px;
+  padding: 14px;
+  background: #c7e9c8;
+  border-radius: 10px;
   border: 1px solid #e0e0e0;
 }

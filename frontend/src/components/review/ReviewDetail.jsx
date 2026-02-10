@@ -62,18 +62,18 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
     return [];
   })();
 
-  // 리뷰에 포함된 카테고리 및 아이템 정보 추출
-  const reviewCategories = categories
-    .map(cat => {
-      const matchedItems = (cat.items || []).filter(item =>
-        reviewItemIds.includes(item.item_id)
-      );
-      if (matchedItems.length > 0) {
-        return { ...cat, matchedItems };
+  // 리뷰에 포함된 아이템 정보만 추출 (카테고리 제외)
+  const reviewItems = [];
+  categories.forEach(cat => {
+    (cat.items || []).forEach(item => {
+      if (reviewItemIds.includes(item.item_id)) {
+        reviewItems.push({
+          id: item.item_id,
+          label: item.item_label_en || item.item_label_ko || `Item #${item.item_id}`
+        });
       }
-      return null;
-    })
-    .filter(Boolean);
+    });
+  });
 
   return (
     <div className={styles.container}>
@@ -141,26 +141,17 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
         </div>
       )}
 
-      {/* 카테고리 및 아이템 정보 */}
-      {reviewCategories.length > 0 && (
-        <div className={styles.categoriesSection}>
+      {/* 아이템 정보 (카테고리 없이 아이템만 표시) */}
+      {reviewItems.length > 0 && (
+        <div className={styles.itemsSection}>
           <strong className={styles.sectionTitle}>
             Restrictions / Allergy Information
           </strong>
-          <div className={styles.categoryList}>
-            {reviewCategories.map((cat) => (
-              <div key={cat.category_id} className={styles.categoryCard}>
-                <div className={styles.categoryLabel}>
-                  {cat.category_label_en || cat.category_label_ko || `Category #${cat.category_id}`}
-                </div>
-                <div className={styles.itemTags}>
-                  {cat.matchedItems.map((item) => (
-                    <span key={item.item_id} className={styles.itemTag}>
-                      {item.item_label_en || item.item_label_ko || `Item #${item.item_id}`}
-                    </span>
-                  ))}
-                </div>
-              </div>
+          <div className={styles.itemTags}>
+            {reviewItems.map((item) => (
+              <span key={item.id} className={styles.itemTag}>
+                {item.label}
+              </span>
             ))}
           </div>
         </div>
@@ -170,7 +161,7 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
       {menuName && (
         <div className={styles.menuSection}>
           <strong className={styles.sectionTitle}>
-            a receipt menu
+            Menu
           </strong>
           <div className={styles.menuTags}>
             {(Array.isArray(menuName)
@@ -178,7 +169,7 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
               : menuName.split(',')
             ).map((m, idx) => (
               <span key={`${m}-${idx}`} className={styles.menuTag}>
-                🍽️ {String(m).replace(/["[\]]/g, '').trim()}
+                {String(m).replace(/["[\]]/g, '').trim()}
               </span>
             ))}
           </div>
