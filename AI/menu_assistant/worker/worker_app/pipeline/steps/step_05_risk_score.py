@@ -285,6 +285,40 @@ def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, An
 
         return out
 
+
+    def _pick_menu_description_ko(it: Dict[str, Any]) -> str:
+        # Keep dataset/confirmed description if available (exact should not degrade)
+        # Priority: explicit carried field -> confirmed -> evidence
+        for k in ("menu_description_ko", "menu_description"):
+            v = it.get(k)
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+
+        c = it.get("confirmed")
+        if isinstance(c, dict):
+            for k in ("menu_description_ko", "menu_description"):
+                v = c.get(k)
+                if isinstance(v, str) and v.strip():
+                    return v.strip()
+
+        ev = it.get("evidence")
+        if isinstance(ev, dict):
+            for k in ("menu_description_ko", "menu_description"):
+                v = ev.get(k)
+                if isinstance(v, str) and v.strip():
+                    return v.strip()
+
+        rm = it.get("rag_match")
+        if isinstance(rm, dict):
+            bm = rm.get("best_match")
+            if isinstance(bm, dict):
+                for k in ("menu_description_ko", "menu_description"):
+                    v = bm.get(k)
+                    if isinstance(v, str) and v.strip():
+                        return v.strip()
+
+        return ""
+
     out: List[Dict[str, Any]] = []
     for it in items:
         if not isinstance(it, dict):
@@ -298,6 +332,7 @@ def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, An
         menu_name = _pick_menu_name(it, status)
         poly = _pick_poly(it)
         evidence = _pick_evidence(it)
+        menu_description_ko = _pick_menu_description_ko(it)
 
         if not menu_name or poly is None:
             continue
@@ -320,6 +355,7 @@ def _normalize_llm_input_items(items: List[Dict[str, Any]]) -> List[Dict[str, An
                 "item_id": item_id.strip(),
                 "status": status or "unknown",
                 "menu_name": menu_name,
+                "menu_description_ko": menu_description_ko,
                 "poly": poly,
                 "evidence": evidence,
                 "risk_difficulty": risk_difficulty,
@@ -473,6 +509,35 @@ def main() -> None:
     rules = DecisionRules(require_poly=require_poly, user_profile=user_profile)
     raw_items, rules_meta = rules.build_llm_items(rag_match_json)
     print("[DEBUG] rules_meta:", rules_meta, "raw_items_len:", len(raw_items))
+
+    # ✅ PATCH: bring confirmed.menu_description_ko back into raw_items (DecisionRules가 drop하는 케이스 대비)
+    confirmed_by_id: Dict[str, Dict[str, Any]] = {}
+    try:
+        src_items = rag_match_json.get("items", [])
+        if isinstance(src_items, list):
+            for src in src_items:
+                if not isinstance(src, dict):
+                    continue
+                iid = src.get("item_id")
+                c = src.get("confirmed")
+                if isinstance(iid, str) and iid.strip() and isinstance(c, dict):
+                    confirmed_by_id[iid.strip()] = c
+    except Exception:
+        confirmed_by_id = {}
+
+    for it in raw_items:
+        if not isinstance(it, dict):
+            continue
+        iid = it.get("item_id")
+        if not isinstance(iid, str) or not iid.strip():
+            continue
+        c = confirmed_by_id.get(iid.strip())
+        if isinstance(c, dict):
+            # raw_items에 confirmed를 다시 달아줌
+            it["confirmed"] = c
+            # 선택: pick 우선순위 1번(직접 필드)로도 넣어두면 더 안전
+            if not str(it.get("menu_description_ko") or "").strip():
+                it["menu_description_ko"] = str(c.get("menu_description_ko") or "").strip()
 
     llm_items = _normalize_llm_input_items(raw_items)
 

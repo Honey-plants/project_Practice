@@ -8,6 +8,70 @@ from typing import Any, Dict, List, Optional, Tuple
 # Utility helpers
 # ------------------------------------------------------------
 
+# ------------------------------------------------------------
+# Human-friendly label helpers (KO)
+# ------------------------------------------------------------
+
+ALG_TAG_KO_MAP = {
+    # 주요 14대 알레르기 + 자주 쓰는 태그 기준(프로젝트 태그에 맞게 확장)
+    "ALG_CEREALS_GLUTEN": "글루텐(밀/보리/호밀 등)",
+    "ALG_CRUSTACEANS": "갑각류(새우/게 등)",
+    "ALG_EGGS": "계란",
+    "ALG_FISH": "생선",
+    "ALG_PEANUT": "땅콩",
+    "ALG_SOY": "대두(콩)",
+    "ALG_MILK": "우유/유제품",
+    "ALG_NUTS": "견과류",
+    "ALG_CELERY": "셀러리",
+    "ALG_MUSTARD": "겨자",
+    "ALG_SESAME": "참깨",
+    "ALG_SULPHITES": "아황산류",
+    "ALG_LUPIN": "루핀",
+    "ALG_MOLLUSCS": "연체류(조개/굴/전복 등)",
+}
+
+# 사용자가 영어로 avoid를 넣는 경우를 위한 최소 사전(필요시 확장)
+AVOID_WORD_KO_MAP = {
+    "pork": "돼지고기",
+    "beef": "소고기",
+    "chicken": "닭고기",
+    "lamb": "양고기",
+    "milk": "우유",
+    "cheese": "치즈",
+    "butter": "버터",
+    "cream": "크림",
+    "egg": "계란",
+    "shrimp": "새우",
+    "crab": "게",
+    "lobster": "랍스터",
+    "fish": "생선",
+    "shellfish": "해산물(조개/갑각류)",
+    "peanut": "땅콩",
+    "nuts": "견과류",
+    "wheat": "밀",
+    "gluten": "글루텐",
+    "alcohol": "알코올",
+}
+
+def _alg_tag_to_ko(tag: Any) -> str:
+    t = _safe_str(tag) or ""
+    return ALG_TAG_KO_MAP.get(t, t)  # 모르면 원문 유지
+
+def _avoid_word_to_ko_hint(word: Any) -> Optional[str]:
+    w = _safe_str(word)
+    if not w:
+        return None
+    lw = w.lower()
+    # 완전 일치 우선
+    if lw in AVOID_WORD_KO_MAP:
+        return AVOID_WORD_KO_MAP[lw]
+    # 부분 힌트(예: "pork broth" 같은 경우)
+    for k, ko in AVOID_WORD_KO_MAP.items():
+        if k in lw:
+            return ko
+    return None
+
+
 def _safe_str(v: Any) -> Optional[str]:
     if v is None:
         return None
@@ -217,12 +281,19 @@ def _build_comment_exact(
 
     # 1) allergy tag 기반 질문
     #    (태그->자연어 매핑은 추후 확장 가능. 지금은 태그 그대로 노출하되, 예시를 괄호로 붙이는 정도)
+    # 1) allergy tag 기반 질문
     for t in allergy_hits[:2]:
-        out.append(f"이 메뉴에 알러지 유발 성분({t})이 포함되나요? (Yes/No)")
+        t_ko = _alg_tag_to_ko(t)
+        # 한국 점원이 바로 이해하도록: 한글명 우선 + 태그코드는 괄호로 보조
+        out.append(f"저는 ({t_ko})알러지가 있는데 이 메뉴 먹어도 되나요? (Yes/No)")
 
     # 2) avoid food 기반 질문
     for w in avoid_hits[:2]:
-        out.append(f"이 메뉴에 '{w}'가 들어가나요? (Yes/No)")
+        ko_hint = _avoid_word_to_ko_hint(w)
+        if ko_hint:
+            out.append(f"저는 '{w}'({ko_hint})을/를 싫어하는데 빼고 주실수있나요? (Yes/No)")
+        else:
+            out.append(f"저는 '{w}'을/를 싫어하는데 빼고 주실수있나요? (Yes/No)")
 
     # 3) religion 기반 질문 (MVP: halal)
     if religion_hits:
@@ -234,7 +305,7 @@ def _build_comment_exact(
 
     # 4) 아무것도 없으면 보수적 확인 질문 1개
     if not out:
-        # user_profile이 있으면 그 중 대표 1~2개를 중심으로 묻기
+        # user_profile이 있으면 그 중 대표 1개를 중심으로 보수적으로 질문
         if isinstance(user_profile, dict):
             at = _as_list(user_profile.get("allergy_tags"))
             af = _as_list(user_profile.get("avoid_foods"))
@@ -242,15 +313,43 @@ def _build_comment_exact(
 
             # 우선순위: allergy_tags -> avoid_foods -> religion
             if at:
-                out.append(f"이 메뉴에 알러지 유발 성분({str(at[0])})이 포함되나요? (Yes/No)")
+                # ALG_TAG → 한글명으로 변환
+                t = at[0]
+                t_ko = _alg_tag_to_ko(t)
+                out.append(
+                    f"저는 알레르기({t_ko})가 있는데 이 메뉴를 먹어도 되나요? "
+                    f"(소스/육수/토핑 포함 여부 확인) (Yes/No)"
+                )
+
             elif af:
-                out.append(f"이 메뉴에 '{str(af[0])}'가 들어가나요? (Yes/No)")
+                w = af[0]
+                ko_hint = _avoid_word_to_ko_hint(w)
+                if ko_hint:
+                    out.append(
+                        f"이 메뉴에 '{w}'({ko_hint})가 들어가나요? "
+                        f"(소스/육수/토핑 포함) (Yes/No)"
+                    )
+                else:
+                    out.append(
+                        f"이 메뉴에 '{w}'가 들어가나요? "
+                        f"(소스/육수/토핑 포함) (Yes/No)"
+                    )
+
             elif rel == "islam_halal":
-                out.append("이 메뉴(또는 소스/육수)에 돼지고기/라드/알코올이 들어가나요? (Yes/No)")
+                out.append(
+                    "이 메뉴(또는 소스/육수)에 돼지고기, 라드, 알코올이 들어가나요? (Yes/No)"
+                )
+
             else:
-                out.append("이 메뉴에 알러지 유발 재료(견과류/유제품/계란/밀/해산물 등)가 포함되나요? (Yes/No)")
+                out.append(
+                    "이 메뉴에 알레르기 유발 재료(견과류, 유제품, 계란, 밀, 해산물 등)가 "
+                    "포함되나요? (소스/육수 포함) (Yes/No)"
+                )
         else:
-            out.append("이 메뉴에 알러지 유발 재료(견과류/유제품/계란/밀/해산물 등)가 포함되나요? (Yes/No)")
+            out.append(
+                "이 메뉴에 알레르기 유발 재료(견과류, 유제품, 계란, 밀, 해산물 등)가 "
+                "포함되나요? (소스/육수 포함) (Yes/No)"
+            )
 
     # 중복 제거(순서 유지)
     seen = set()

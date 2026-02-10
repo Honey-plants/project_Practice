@@ -6524,7 +6524,7 @@
     "variants": [
       "만두전골"
     ],
-    "ingredients_ko": ["banana"],
+    "ingredients_ko": [],
     "alg_tags": [],
     "menu_description_ko": "만두전골은 다양한 재료를 한 냄비에 넣어 끓여 먹는 전골 요리입니다."
   },
@@ -25509,7 +25509,7 @@
       "샤브용 고기"
     ],
     "ingredients_ko": [],
-    "alg_tags": ["ALG_MOLLUSCS"],
+    "alg_tags": [],
     "menu_description_ko": "샤브고기는 대표 재료를 활용한 메뉴입니다."
   },
   {
