@@ -20,6 +20,16 @@
   box-shadow: 0 12px 32px rgba(46, 125, 50, 0.25);
   border-top: 3px solid #2E7D32;   /* 모달 윗선 그린 강조 */
 }
+.ms-mdm__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(0,0,0,0.04);
+  font-size: 12px;
+  line-height: 1;
+}
 
 /* =========================
    Header
