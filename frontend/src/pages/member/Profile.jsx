@@ -62,7 +62,7 @@ export default function Profile() {
   if (!me) {
     return (
       <div className={styles.loading}>
-        <p>로딩 중...</p>
+        <p>Loading...</p>
       </div>
     );
   }
