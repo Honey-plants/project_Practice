@@ -32,7 +32,7 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
       const list = response.data?.data || response.data || [];
       setCategories(list);
     } catch (e) {
-      console.error("카테고리 로드 실패:", e);
+      console.error("Failed to load category:", e);
     }
   };
 
@@ -62,18 +62,18 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
     return [];
   })();
 
-  // 리뷰에 포함된 카테고리 및 아이템 정보 추출
-  const reviewCategories = categories
-    .map(cat => {
-      const matchedItems = (cat.items || []).filter(item =>
-        reviewItemIds.includes(item.item_id)
-      );
-      if (matchedItems.length > 0) {
-        return { ...cat, matchedItems };
+  // 리뷰에 포함된 아이템 정보만 추출 (카테고리 제외)
+  const reviewItems = [];
+  categories.forEach(cat => {
+    (cat.items || []).forEach(item => {
+      if (reviewItemIds.includes(item.item_id)) {
+        reviewItems.push({
+          id: item.item_id,
+          label: item.item_label_en || item.item_label_ko || `Item #${item.item_id}`
+        });
       }
-      return null;
-    })
-    .filter(Boolean);
+    });
+  });
 
   return (
     <div className={styles.container}>
@@ -81,10 +81,10 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
       <div className={styles.header}>
         <div className={styles.headerContent}>
           <h1 className={styles.title}>
-            {title || "(제목 없음)"}
+            {title || "(No title)"}
           </h1>
           <div className={styles.meta}>
-            <span>작성일: {formatDate(createdAt)}</span>
+            <span>Date of creation: {formatDate(createdAt)}</span>
             {location ? <span className={styles.location}>📍 {location}</span> : null}
           </div>
         </div>
@@ -92,21 +92,21 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
         {/* 수정 버튼 */}
         {canEdit && !isUsedInContent && onEdit && isOwner && (
           <button onClick={onEdit} className={styles.editButton}>
-            수정
+            Edit
           </button>
         )}
 
         {/* 컨텐츠에 사용 중일 때 수정 불가 메시지 */}
         {isUsedInContent && (
           <div className={styles.usedInContentBadge}>
-            컨텐츠에 사용 중 (수정 불가)
+            In use with content (non-modifiable)
           </div>
         )}
       </div>
 
       {/* 별점 */}
       <div className={styles.ratingSection}>
-        <strong className={styles.ratingLabel}>별점:</strong>
+        <strong className={styles.ratingLabel}>Rating:</strong>
         <span className={styles.stars}>{renderStars(rating)}</span>
         {rating != null ? (
           <span className={styles.ratingValue}>({rating}/5)</span>
@@ -117,7 +117,6 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
       {images?.length > 0 && (
         <div className={styles.imagesSection}>
           <strong className={styles.sectionTitle}>
-            사진
           </strong>
           <div
             className={`${styles.imageGrid} ${
@@ -142,26 +141,17 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
         </div>
       )}
 
-      {/* 카테고리 및 아이템 정보 */}
-      {reviewCategories.length > 0 && (
-        <div className={styles.categoriesSection}>
+      {/* 아이템 정보 (카테고리 없이 아이템만 표시) */}
+      {reviewItems.length > 0 && (
+        <div className={styles.itemsSection}>
           <strong className={styles.sectionTitle}>
-            제한 사항 / 알레르기 정보
+            Restrictions / Allergy Information
           </strong>
-          <div className={styles.categoryList}>
-            {reviewCategories.map((cat) => (
-              <div key={cat.category_id} className={styles.categoryCard}>
-                <div className={styles.categoryLabel}>
-                  {cat.category_label_ko || cat.category_label_en || `Category #${cat.category_id}`}
-                </div>
-                <div className={styles.itemTags}>
-                  {cat.matchedItems.map((item) => (
-                    <span key={item.item_id} className={styles.itemTag}>
-                      {item.item_label_ko || item.item_label_en || `Item #${item.item_id}`}
-                    </span>
-                  ))}
-                </div>
-              </div>
+          <div className={styles.itemTags}>
+            {reviewItems.map((item) => (
+              <span key={item.id} className={styles.itemTag}>
+                {item.label}
+              </span>
             ))}
           </div>
         </div>
@@ -171,7 +161,7 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
       {menuName && (
         <div className={styles.menuSection}>
           <strong className={styles.sectionTitle}>
-            영수증 메뉴
+            Menu
           </strong>
           <div className={styles.menuTags}>
             {(Array.isArray(menuName)
@@ -179,7 +169,7 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
               : menuName.split(',')
             ).map((m, idx) => (
               <span key={`${m}-${idx}`} className={styles.menuTag}>
-                🍽️ {String(m).replace(/["[\]]/g, '').trim()}
+                {String(m).replace(/["[\]]/g, '').trim()}
               </span>
             ))}
           </div>
@@ -189,7 +179,7 @@ export function ReviewDetail({ review, onEdit, canEdit = true, isUsedInContent =
       {/* 리뷰 내용 */}
       <div className={styles.contentSection}>
         <strong className={styles.sectionTitle}>
-          리뷰 내용
+          Content
         </strong>
         <div className={styles.contentBox}>
           {content || "-"}

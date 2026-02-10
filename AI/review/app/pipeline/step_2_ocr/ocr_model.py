@@ -113,7 +113,6 @@ def get_ocr(config: Optional[OCRConfig] = None) -> Any:
         config = OCRConfig()
 
     if _ocr_singleton is None or _loaded_config is None or asdict(config) != asdict(_loaded_config):
-        print("🔥 Loading OCR model...", config)
         _ocr_singleton = build_paddleocr(config)
         _loaded_config = config
 

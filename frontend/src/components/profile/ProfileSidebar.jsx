@@ -1,9 +1,10 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./ProfileSidebar.module.css";
 
 import { MemberContext } from "../../context/MemberContext";
 import { AuthContext } from "../../context/AuthContext";
+import { MetaContext } from "../../context/MetaContext";
 import { MemberAPI } from "../../api/memberApi";
 
 /**
@@ -14,8 +15,41 @@ export default function ProfileSidebar({ member }) {
   const nav = useNavigate();
   const { memberActions } = useContext(MemberContext);
   const { authActions } = useContext(AuthContext);
+  const { stateMeta, metaActions } = useContext(MetaContext);
 
   const [withdrawing, setWithdrawing] = useState(false);
+
+  // Load categories and items
+  useEffect(() => {
+    if (!stateMeta?.loading && (!stateMeta?.restrictions || stateMeta.restrictions.length === 0)) {
+      metaActions?.refresh?.({ force: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Get selected item IDs from member
+  const selectedIds = useMemo(() => (member?.item_ids ? member.item_ids : []), [member]);
+
+  // Get restriction items that match selected IDs
+  const restrictionItems = useMemo(() => {
+    const categories = stateMeta?.restrictions || [];
+    const items = [];
+
+    categories.forEach(cat => {
+      if (cat.items) {
+        cat.items.forEach(item => {
+          if (selectedIds.includes(item.item_id)) {
+            items.push({
+              id: item.item_id,
+              label: item.item_label_en || item.item_label_ko || `Item #${item.item_id}`
+            });
+          }
+        });
+      }
+    });
+
+    return items;
+  }, [stateMeta?.restrictions, selectedIds]);
 
   if (!member) {
     return (
@@ -29,7 +63,7 @@ export default function ProfileSidebar({ member }) {
     if (withdrawing) return;
 
     const ok = window.confirm(
-      "정말 회원 탈퇴하시겠습니까?\n탈퇴 시 작성한 데이터가 삭제될 수 있습니다."
+      "Are you sure you want to leave the membership?\nData created may be deleted when you leave."
     );
     if (!ok) return;
 
@@ -45,7 +79,7 @@ export default function ProfileSidebar({ member }) {
       // 멤버 상태 초기화
       memberActions.clear?.();
 
-      alert("회원 탈퇴가 완료되었습니다.");
+      alert("Your membership withdrawal has been completed.");
       nav("/");
     } catch (e) {
       alert(e?.message || "회원 탈퇴 실패");
@@ -87,6 +121,20 @@ export default function ProfileSidebar({ member }) {
             )}
           </div>
         </div>
+
+        {/* Restriction Items */}
+        {restrictionItems.length > 0 && (
+          <div className={styles.infoItem}>
+            <p className={styles.infoLabel}>Dietary</p>
+            <div className={styles.restrictionItemsList}>
+              {restrictionItems.map((item) => (
+                <span key={item.id} className={styles.restrictionItemTag}>
+                  {item.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className={styles.actions}>
@@ -103,7 +151,7 @@ export default function ProfileSidebar({ member }) {
             marginTop: 10,
             width: "100%",
             padding: "10px 12px",
-            borderRadius: 10,
+            borderRadius: 7,
             border: "1px solid #ffb4b4",
             background: "#fff5f5",
             color: "#c00",
@@ -111,7 +159,7 @@ export default function ProfileSidebar({ member }) {
             fontWeight: 700,
           }}
         >
-          {withdrawing ? "탈퇴 처리 중..." : "회원 탈퇴"}
+          {withdrawing ? "Processing withdrawal..." : "Membership Withdrawal"}
         </button>
       </div>
     </div>

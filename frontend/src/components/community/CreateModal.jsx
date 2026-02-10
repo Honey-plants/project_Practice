@@ -57,9 +57,8 @@ export default function CreateModal({
       return;
     }
 
-    // ✅ 내 리스트가 비어있으면 /review/me 호출
-    if (myReviews.length === 0 && !stateReview.loading) {
-      // ⚠️ ReviewContext에 fetchMyList가 있어야 함
+    // ✅ 모달이 열릴 때마다 /review/me 호출 (다른 유저 리뷰가 list에 남아있을 수 있으므로)
+    if (!stateReview.loading) {
       reviewActions.fetchMyList();
     }
 

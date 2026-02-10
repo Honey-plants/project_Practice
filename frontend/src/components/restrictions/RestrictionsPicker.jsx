@@ -48,13 +48,13 @@ export default function RestrictionsPicker({
       {filtered.map((c) => (
         <div key={c.category_id} className="restrictions-category-card">
           <div className="restrictions-category-title">
-            {c.category_label_ko ?? c.category_label_en ?? `Category#${c.category_id}`}
+            {c.category_label_en ?? c.category_label_en ?? `Category#${c.category_id}`}
           </div>
 
           <div className="restrictions-items-container">
             {(c.items || []).map((it) => {
               const id = it.item_id;
-              const label = it.item_label_ko ?? it.item_label_en ?? `item#${id}`;
+              const label = it.item_label_en ?? it.item_label_en ?? `item#${id}`;
               const checked = selectedSet.has(id);
 
               // view 모드(읽기 전용): 뱃지 형태

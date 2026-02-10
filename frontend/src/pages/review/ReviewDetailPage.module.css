@@ -1,33 +1,37 @@
-/* ReviewDetailPage.module.css */
+/* ReviewDetailPage.module.css (iPhone 16 Pro Max Optimized) */
 
 .container {
-  padding: 20px;
-  max-width: 900px;
+  padding: 16px;
+  max-width: 430px;
   margin: 0 auto;
+  box-sizing: border-box;
+  min-height: calc(100vh - 106px);
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .title {
   margin: 0;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: #333333;
 }
 
 .backButton {
-  padding: 8px 16px;
+  padding: 6px 14px;
   background: #6c757d;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -36,17 +40,18 @@
 }
 
 .error {
-  padding: 12px;
+  padding: 10px;
   background: #f8d7da;
   color: #dc3545;
   border-radius: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   border: 1px solid #dc3545;
+  font-size: 13px;
 }
 
 .loading {
   text-align: center;
-  padding: 40px;
-  font-size: 16px;
+  padding: 32px;
+  font-size: 14px;
   color: #666666;
 }

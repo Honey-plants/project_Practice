@@ -7,7 +7,6 @@ from AI.review.app.domain.schemas import PipelineContext
 from AI.review.app.pipeline.step_2_ocr.ocr_model import OCRConfig
 from AI.review.app.pipeline.step_2_ocr.step_2_ocr import run_step2_ocr
 
-
 def main():
     p = argparse.ArgumentParser("step2-ocr")
     p.add_argument("image", type=str, help="input image path (rectified or raw)")

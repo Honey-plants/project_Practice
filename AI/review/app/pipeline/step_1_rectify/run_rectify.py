@@ -52,12 +52,6 @@ def run_receipt_rectify(image_path: Path, out_dir: Path, cfg: RectifyConfig) -> 
         write_image(out_dir / "11_quad_overlay.jpg", crop_res.overlay_bgr)
         write_image(out_dir / "12_cropped.jpg", crop_res.cropped_bgr)
 
-    # 2.5) deskew (tilt correction)
-    # deskewed_img, deskew_meta = deskew_receipt(crop_res.cropped_bgr, cfg.deskew)
-    # meta["step_1"].append({"deskew": deskew_meta})
-    # if cfg.save_debug:
-    #     write_image(out_dir / "15_deskewed.jpg", deskewed_img)
-
     # 3) post-crop OCR
     final_img, post_meta = postprocess_for_ocr(crop_res.cropped_bgr, cfg.post)
     meta["step_1"].append(post_meta)

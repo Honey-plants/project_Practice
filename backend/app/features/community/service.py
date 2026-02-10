@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select, delete, update
+from sqlalchemy import select, delete, update, func
 from fastapi import HTTPException
 from typing import Any, Dict, Optional, List
 
@@ -143,10 +143,12 @@ async def create_step2(db: Session, total_data: Dict[str, Any]) -> Dict[str, Any
             db.add(community)
             db.flush()
         else:
-            # 기존 글이면 type만 보정 (recommend/댓글 유지)
+            # 기존 글이면 type 보정 + update_at 갱신 (recommend/댓글 유지)
             if community.community_type != community_type:
                 community.community_type = community_type
-                db.flush()
+            # 이미지 덮어쓰기이므로 update_at 명시적 갱신
+            community.update_at = func.now()
+            db.flush()
 
         community_id = community.community_id
 
@@ -283,7 +285,7 @@ def list_community(
             "updated_at": c.update_at.isoformat() if getattr(c, "update_at", None) else None,
             "image_urls": img_map.get(c.community_id, []),
             "latest_comment_text": latest_comment_text,  # 댓글
-            # comment_count/latest_comment 쓰면 여기에 추가 merge
+            "community_type": c.community_type,
         })
     return out
 
@@ -366,16 +368,19 @@ def toggle_recommend(db: Session, *, community_id: int, member_id: int) -> Dict[
         )
     ).scalar_one_or_none()
 
+    # update_at 보존: 좋아요는 정렬 기준에 영향주지 않도록
+    original_update_at = c.update_at
+
     if exists is None:
         # 좋아요 추가(1 row 생성)
         db.add(CommunityRecommend(community_id=int(community_id), member_id=int(member_id)))
         db.flush()
 
-        # 카운트 +1
+        # 카운트 +1 (update_at 원래 값 유지)
         db.execute(
             update(Community)
             .where(Community.community_id == int(community_id))
-            .values(recommend=Community.recommend + 1)
+            .values(recommend=Community.recommend + 1, update_at=original_update_at)
         )
         db.flush()
         db.refresh(c)
@@ -390,11 +395,11 @@ def toggle_recommend(db: Session, *, community_id: int, member_id: int) -> Dict[
             )
         )
 
-        # 카운트 -1 (0 아래 방지)
+        # 카운트 -1 (0 아래 방지, update_at 원래 값 유지)
         db.execute(
             update(Community)
             .where(Community.community_id == int(community_id), Community.recommend > 0)
-            .values(recommend=Community.recommend - 1)
+            .values(recommend=Community.recommend - 1, update_at=original_update_at)
         )
         db.flush()
         db.refresh(c)
@@ -413,11 +418,14 @@ def toggle_active(db: Session, *, community_id: int, member_id: int) -> Dict[str
     if c.member_id != int(member_id):
         raise HTTPException(status_code=403, detail="본인 게시글만 변경할 수 있습니다")
 
+    # update_at 보존: 공개 토글은 정렬 기준에 영향주지 않도록
+    original_update_at = c.update_at
+
     new_active = not c.community_active
     db.execute(
         update(Community)
         .where(Community.community_id == int(community_id))
-        .values(community_active=new_active)
+        .values(community_active=new_active, update_at=original_update_at)
     )
     db.flush()
     db.refresh(c)
