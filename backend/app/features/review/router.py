@@ -45,6 +45,7 @@ async def receipt_verify(
     db: Session = Depends(get_db),
     current=Depends(get_current_member),
 ):
+    print("니 여기 들어옴")
     if (type or "").lower().strip() != "receipt":
         raise HTTPException(status_code=400, detail="type must be 'receipt'")
 
@@ -88,6 +89,7 @@ async def receipt_verify(
 
 @router.get("/receipt/job/{job_id}", response_model=ReviewJobResponse)
 def receipt_job_status(job_id: str, current=Depends(get_current_member)):
+    print("니 여기 두번째 들어옴")
     try:
         r = connect_redis()
     except Exception as e:
