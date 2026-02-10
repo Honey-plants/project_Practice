@@ -1,3 +1,5 @@
+# k8s/charts/api/templates/deployment.yaml
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,51 +16,63 @@ spec:
       labels:
         {{- include "api.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "api.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+
       containers:
         - name: api
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          workingDir: /app
           ports:
             - name: http
               containerPort: 8000
+
           env:
+            - name: PYTHONPATH
+              value: "/app"
             - name: APP_ENV
               value: {{ .Values.env.APP_ENV | quote }}
-            - name: DB_HOST
-              value: {{ .Values.env.DB_HOST | quote }}
-            - name: DB_PORT
-              value: {{ .Values.env.DB_PORT | quote }}
-            - name: DB_NAME
-              value: {{ .Values.env.DB_NAME | quote }}
-            - name: DB_USER
-              value: {{ .Values.env.DB_USER | quote }}
-            - name: DB_PASSWORD_FILE
-              value: "{{ .Values.secretsMount.mountPath }}/{{ .Values.secretsMount.dbPasswordKey }}"
-            - name: JWT_SECRET_KEY_FILE
-              value: "{{ .Values.secretsMount.mountPath }}/{{ .Values.secretsMount.jwtSecretKeyKey }}"
+            {{- if .Values.env.STORAGE_BACKEND }}
+            - name: STORAGE_BACKEND
+              value: {{ .Values.env.STORAGE_BACKEND | quote }}
+            {{- end }}
+            {{- if .Values.env.LOCAL_UPLOAD_ROOT }}
+            - name: LOCAL_UPLOAD_ROOT
+              value: {{ .Values.env.LOCAL_UPLOAD_ROOT | quote }}
+            {{- end }}
+            - name: REDIS_URL
+              value: {{ .Values.env.REDIS_URL | quote }}
+            - name: QUEUE_NAME_MENU_ASSISTANT
+              value: {{ .Values.env.QUEUE_NAME_MENU_ASSISTANT | quote }}
+            - name: QUEUE_NAME_JOURNAL
+              value: {{ .Values.env.QUEUE_NAME_JOURNAL | quote }}
+            - name: QUEUE_NAME_REVIEW
+              value: {{ .Values.env.QUEUE_NAME_REVIEW | quote }}
+
+          envFrom:
+            - secretRef:
+                name: {{ include "api.fullname" . }}-secrets
+
+
           readinessProbe:
             httpGet:
               path: {{ .Values.probes.readinessPath | quote }}
               port: http
             initialDelaySeconds: 5
             periodSeconds: 10
+
           livenessProbe:
             httpGet:
               path: {{ .Values.probes.livenessPath | quote }}
               port: http
             initialDelaySeconds: 15
             periodSeconds: 20
+
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-            {{ if .Values.secretsMount.enabled }}
-          volumeMounts:
-            - name: app-secrets
-              mountPath: {{ .Values.secretsMount.mountPath | quote }}
-              readOnly: true
-                        {{ end }}
-                        {{ if .Values.secretsMount.enabled }}
-      volumes:
-        - name: app-secrets
-          secret:
-            secretName: {{ include "api.fullname" . }}-secrets
-                        {{ end }}
+

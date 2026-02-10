@@ -64,3 +64,43 @@ key 확인 : docker exec -it app_redis redis-cli keys "*"
 - Model: Boolean
 - Schema: bool
 - Front: true/false
+
+# FILE UPLOAD
+- path = /images/{memberId}/{file_key}
+- 형태로 PATH 지정
+- 테이블 문의 ERD CLOUD 확인 필수!
+
+# FILE UPLOAD 파일 구성 안내
+- util.py는 “정책/선택/규칙”만 (factory, validate, path)
+- storage/local, s3는 “구현체”만 (save/store/delete)
+
+# ADMIN 관리자 계정 
+- GET /members/me
+- PATCH /members/me
+- DELETE /members/me
+- (관리자용이 필요하면) GET /members/{member_id} 는 admin만 허용
+
+# docker refresh 확인
+- SCAN 0 MATCH bl:* COUNT 100
+
+# MENU / RECEIPT 로직 순서
+- MENU: 업로드 → AI 분석 → 결과 JSON 반환 → 임시파일 삭제
+- RECEIPT: 업로드 → OCR/검증 AI → Redis에 세션 저장(upload_id) → 프론트 추가입력 + 이미지(0~3) → Review 생성 + ImgFile 영구저장 → 임시파일 삭제 + Redis 세션 삭제
+
+# 이제 이 폴더 정책을 실제 로직에 적용하는 방식
+## MENU 정책 적용
+
+- run_id 생성
+- temp에 input 저장
+- AI 실행 (input 경로)
+- result.json 생성(디버깅용)
+- 응답으로 result JSON 내려줌
+- delete_prefix(menu/{run_id}) 로 폴더 통째 삭제
+- RECEIPT 정책 적용
+- upload_id 생성
+- temp에 input 저장
+- AI(OCR/검증) 실행
+- (선택) ocr.json 저장
+- Redis에 {upload_id, member_id, temp_prefix} 저장 + TTL
+- 2단계 성공 시 delete_prefix(receipt/{upload_id}) 로 삭제
+- 2단계 안 오면 → 로컬 스캔 cleanup으로 TTL 지난 폴더 삭제 / S3는 Lifecycle

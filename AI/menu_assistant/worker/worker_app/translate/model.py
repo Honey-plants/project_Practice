@@ -99,6 +99,8 @@ class GeminiTranslateClient:
             raise ValueError("[translate/model] item_id is missing in final item.")
         if payload["match"] is None:
             raise ValueError("[translate/model] match is missing in final item.")
+        if payload["risk"] is None:
+            raise ValueError("[translate/model] match is missing in final item.")
 
         return payload
 
@@ -120,6 +122,8 @@ class GeminiTranslateClient:
         menu_out = out.get("menu", {}) if isinstance(out, dict) else {}
         risk_out = out.get("risk", {}) if isinstance(out, dict) else {}
 
+        comment_out = out.get("comment", {}) if isinstance(out, dict) else {}
+
         result = {
             "item_id": src["item_id"],
             "match": src["match"],
@@ -131,7 +135,15 @@ class GeminiTranslateClient:
                 "risk_level": src["risk"]["risk_level"],  # 원본 유지
                 "risk_description_en": (risk_out.get("risk_description_en") or "").strip(),
             },
-            "comment_en": (out.get("comment_en") or "").strip() if isinstance(out, dict) else "",
+            "comment": {
+                #  schema에 맞는 경로
+                "comment_en": (comment_out.get("comment_en") or "").strip(),
+                #  LLM이 주면 그거 쓰고, 없으면 원본(=risk.comment) fallback
+                "comment_ko": (
+                        (comment_out.get("comment_ko") or "").strip()
+                        or (src.get("comment_ko") or "").strip()
+                ),
+            },
         }
         return result
 

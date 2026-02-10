@@ -1,0 +1,230 @@
+/* ===================================================
+   Home Container – flex 전체 높이
+   =================================================== */
+
+.home-container {
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  background: #FAFAFA;
+
+  /* app-main이 Header·BottomNav 갭을 전역으로 처리 → 여기서는 남은 영역만 채움 */
+  min-height: calc(100vh - 106px); /* Header(~16px pad) + BottomNav(90px pad) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+
+/* ===================================================
+   로고 영역 – 가용 높이의 약 75%
+   =================================================== */
+
+.home-logo-wrap {
+  width: calc(100% - 32px);   /* 좌우 여백 16px씩 */
+  min-height: 200px;
+  max-height: 540px;
+
+  /* 남은 빈 공간을 로고가 모두 채움 → 버튼이 바로 아래로 붙음 */
+  flex: 1 1 0%;
+
+  border-radius: 24px;
+  overflow: hidden;
+  border: 2px solid #E0E0E0;
+  background: #FFFFFF;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* ===== 이미지 삭제 X 버튼 ===== */
+.home-remove-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.12s ease;
+}
+
+.home-remove-btn:hover {
+  background: rgba(211, 47, 47, 0.85);
+  transform: scale(1.1);
+}
+
+.home-remove-btn:active {
+  transform: scale(0.95);
+}
+
+.home-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.25s ease;
+}
+
+
+/* ===================================================
+   하단 영역 – 남은 공간 (약 25%)
+   =================================================== */
+
+.home-bottom-area {
+  width: calc(100% - 32px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding-top: 16px;
+  flex-shrink: 0;
+}
+
+
+/* ===================================================
+   카메라 / 이미지 파일 – 바 형태
+   =================================================== */
+
+.home-pick-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #FFFFFF;
+  border: 1.5px solid #E0E0E0;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+.home-pick-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  padding: 14px 8px;
+  border: none;
+  background: transparent;
+  color: #2E7D32;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.12s ease;
+}
+
+.home-pick-btn:active {
+  transform: scale(0.94);
+}
+
+.home-pick-btn:hover {
+  background: #F1F8E9;
+}
+
+.home-pick-btn span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* 두 버튼 사이 구분선 */
+.home-pick-divider {
+  width: 1px;
+  height: 42px;
+  background: #E0E0E0;
+  flex-shrink: 0;
+}
+
+
+/* ===================================================
+   메뉴판 분석 버튼 – 크고 직관적
+   =================================================== */
+
+.home-analyze-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 16px 20px;
+  border: none;
+  border-radius: 16px;
+  background: #2E7D32;
+  color: #FFFFFF;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(46,125,50,0.35);
+  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+.home-analyze-btn:hover {
+  background: #1B5E20;
+  box-shadow: 0 6px 18px rgba(46,125,50,0.45);
+}
+
+.home-analyze-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(46,125,50,0.3);
+}
+
+/* ── disabled ── */
+.home-analyze-btn:disabled {
+  background: #E0E0E0;
+  color: #999999;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.home-analyze-btn:disabled svg {
+  opacity: 0.55;
+}
+
+
+/* ===================================================
+   Mobile (≤ 480 px)
+   =================================================== */
+
+@media (max-width: 480px) {
+  .home-logo-wrap {
+    width: calc(100% - 24px);
+    min-height: 180px;
+  }
+
+  .home-bottom-area {
+    width: calc(100% - 24px);
+    gap: 12px;
+    padding-top: 14px;
+  }
+
+  .home-pick-btn {
+    padding: 12px 6px;
+  }
+
+  .home-pick-btn span {
+    font-size: 0.76rem;
+  }
+
+  .home-analyze-btn {
+    padding: 15px 16px;
+    font-size: 1rem;
+  }
+}

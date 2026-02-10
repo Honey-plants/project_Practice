@@ -13,13 +13,17 @@ autoscaling:
 
 
 image:
-  repository: ghcr.io/mingoo684/cicdex1-frontend
-  tag: "sha-REPLACE_ME"
+  repository: 690641653744.dkr.ecr.ap-northeast-2.amazonaws.com/haenet-frontend
+  tag: dev-001
   pullPolicy: IfNotPresent
+
+imagePullSecrets: []
 
 service:
   type: ClusterIP
   port: 80
+
+containerPort: 80
 
 ingress:
   enabled: false
@@ -27,6 +31,7 @@ ingress:
   host: app.local
   path: /
   pathType: Prefix
+  annotations: {}
 
 httpRoute:
   enabled: false

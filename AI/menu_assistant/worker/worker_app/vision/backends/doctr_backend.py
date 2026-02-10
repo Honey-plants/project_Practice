@@ -224,6 +224,8 @@ class DoctrBackend(RectifyBackend):
 
         # predictor가 없으면 passthrough
         if self._orientation_predictor is None:
+            meta["orientation"]["applied"] = False
+            meta["orientation"]["reason"] = "orientation predictor unavailable"
             meta["warning"] = "DocTR orientation predictor unavailable; passthrough."
             meta["output_shape"] = [h, w]
             return RectifyResult(image=image_bgr, meta=meta)

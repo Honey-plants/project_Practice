@@ -101,3 +101,4 @@ class Gemini25FlashClient:
             config=cfg,
         )
         return (resp.text or "").strip()
+

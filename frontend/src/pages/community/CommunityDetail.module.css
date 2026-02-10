@@ -1,0 +1,396 @@
+/* ===== Community Detail Container ===== */
+.container {
+  padding: 30px;
+  max-width: 420px;
+  margin: 0 auto;
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #DDDDDD;
+  border-radius: 40px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 106px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Header Section ===== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  margin: 0;
+  color: #333333;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* ===== Multiple Images ===== */
+.communityDetailImages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ===== Active Toggle ===== */
+.activeToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.activeToggleLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.toggleSwitch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  transition: background 0.3s ease;
+}
+
+.toggleOn {
+  background: #2E7D32;
+}
+
+.toggleOff {
+  background: #ccc;
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggleOn .toggleKnob {
+  left: 22px;
+}
+
+.toggleOff .toggleKnob {
+  left: 2px;
+}
+
+/* ===== Error State ===== */
+.errorBox {
+  padding: 16px;
+  background: #FFFFFF;
+  border: 1px solid #D32F2F;
+  border-radius: 10px;
+  color: #D32F2F;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+/* ===== Detail Card ===== */
+.communityDetailCard {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.communityDetailThumb {
+  width: 100%;
+}
+
+.communityDetailThumb img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.communityCardThumbPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #888;
+  background: #f3f3f3;
+}
+
+.communityDetailMeta {
+  padding: 12px;
+}
+
+.metaTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.metaLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.metaRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.communityCardNickname {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.communityCardDate {
+  font-size: 12px;
+  color: #777;
+  white-space: nowrap;
+}
+
+.likeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ===== Like Button (Instagram-style) ===== */
+.likeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.heartIcon {
+  font-size: 24px;
+  color: #8e8e8e;
+  transition: transform 0.2s ease;
+}
+
+.heartIcon:hover {
+  transform: scale(1.1);
+}
+
+.heartActive {
+  color: #ED4956;
+}
+
+.heartBounce {
+  animation: heartPop 0.6s ease;
+}
+
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.3); }
+  50%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.likeCount {
+  font-size: 14px;
+  font-weight: 600;
+  color: #262626;
+}
+
+/* ===== Comment Section ===== */
+.commentBox {
+  margin-top: 16px;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+}
+
+.commentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.commentHeader h3 {
+  margin: 0;
+}
+
+.commentPager {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.commentPager button {
+  margin: 0;
+  padding: 4px 12px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.commentPager button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.commentPager span {
+  font-size: 12px;
+  color: #666;
+}
+
+.notice {
+  border: 1px solid #eee;
+  background: #f3f3f3;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.commentList {
+  display: grid;
+  gap: 10px;
+}
+
+.commentItem {
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fafafa;
+}
+
+.commentItemMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  gap: 10px;
+}
+
+.commentNick {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.commentDate {
+  font-size: 12px;
+  color: #777;
+  white-space: nowrap;
+}
+
+.commentEditBtn {
+  font-size: 12px;
+  padding: 2px 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.commentText {
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.commentEditArea {
+  display: grid;
+  gap: 8px;
+}
+
+.commentEditArea textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px;
+  resize: vertical;
+}
+
+.commentEditActions {
+  display: flex;
+  gap: 8px;
+}
+
+.commentEditActions button {
+  margin: 0;
+  padding: 4px 12px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.commentForm {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.commentForm textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px;
+  resize: vertical;
+}
+
+.commentFormSubmit {
+  padding: 8px 16px;
+  border: none;
+  background: #2E7D32;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
+}
+
+.commentFormSubmit:disabled {
+  background: #E0E0E0;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.commentHint {
+  font-size: 12px;
+  color: #777;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+    width: 100%;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+  }
+
+}

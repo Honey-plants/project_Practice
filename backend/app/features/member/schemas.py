@@ -9,20 +9,20 @@ class MemberCreate(BaseModel):
     email: str
     password: str
     nickname: str
-    # role: str
-    gender: Optional[str] = None
-    country: Optional[str] = None
+    gender: str
+    country: str
     item_ids: Optional[List[int]] = None
     dislike_tags: Optional[List[str]] = None
 
 # 수정
 class MemberUpdate(BaseModel):
-    nickname: str
+    nickname: Optional[str] = None
     item_ids: Optional[List[int]] = None
     dislike_tags: Optional[List[str]] = None
 
 # response [응답]
 class MemberRead(BaseModel):
+    member_id: int
     email: str
     nickname: str
     gender: str

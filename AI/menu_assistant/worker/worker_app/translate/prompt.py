@@ -20,7 +20,9 @@ _JSON_SCHEMA_HINT = {
     "risk": {
         "risk_description_en": "string",
     },
+    "comment": {
     "comment_en": "string",
+    "comment_ko": "string"}
 }
 
 
@@ -71,14 +73,15 @@ def build_translate_prompts_for_final_item(item: Dict[str, Any]) -> Tuple[str, s
 
     # user prompt는 최대한 구조화 + 강한 출력 제약
     user_payload = {
-        "task": "Translate the following fields from Korean to English.",
+        "task": "Translate the following fields from Korean to English.and leave comment_ko as is korean",
         "source": src,
         "output_schema": _JSON_SCHEMA_HINT,
         "rules": [
             "Return ONLY JSON matching output_schema exactly.",
             "Do NOT include item_id, match, or risk_level in the output JSON (they are handled separately).",
             "menu_name_en should be short (menu name).",
-            "Descriptions should be concise, user-friendly, and preserve safety meaning.",
+            "Descriptions should be concise, user-friendly, and preserve safety meaning."
+            "comment_ko must keep original and after translate put in comment_en",
         ],
     }
 

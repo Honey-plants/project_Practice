@@ -85,7 +85,7 @@ def create_categories_batch(db: Session, payload: CategoriesBatchCreate):
                 "category_active": bool(category.category_active),
                 "items": items_created,
             })
-
+        print("db 커밋 했다.")
         db.commit()
         return created
 

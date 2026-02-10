@@ -1,20 +1,28 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: project-app
+  name: app-platform
   namespace: argocd
 spec:
-  description: "api/frontend GitOps project"
+  description: "App-of-Apps project for app-dev/app-prod (redis/frontend/api/worker)"
+
   sourceRepos:
-    - "*"   # í•„ìš” ì‹œ íŠ¹ì • repoë¡œ ì œí•œ ê¶Œì¥
+    - https://github.com/jjs0224/haenet_project
+    - https://charts.bitnami.com/bitnami
+
   destinations:
-    - namespace: app-dev
-      server: https://kubernetes.default.svc
-    - namespace: app-prod
-      server: https://kubernetes.default.svc
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+    - server: https://kubernetes.default.svc
+      namespace: app-dev
+    - server: https://kubernetes.default.svc
+      namespace: app-prod
+
+  # AppProject ?ì²´??namespace ë¦¬ì†Œ?¤ë? ??„“ê²??ˆìš©(?¨ìˆœ??
   clusterResourceWhitelist:
-    - group: ""
-      kind: Namespace
+    - group: "*"
+      kind: "*"
   namespaceResourceWhitelist:
     - group: "*"
       kind: "*"
+

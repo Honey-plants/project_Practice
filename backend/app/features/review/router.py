@@ -1,110 +1,193 @@
-<<<<<<< HEAD
-=======
-from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException
+import base64
+import json
+import uuid
+from pathlib import Path
+from typing import Any, Dict, List
+from sqlalchemy import select
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from sqlalchemy.orm import Session
+
+from backend.app.common.service.file_upload_service import ensure_local_path, upload_input_file
+from backend.app.core.database import get_db
+from backend.app.core.job_queue import connect_redis, enqueue_task, utc_now_iso
 from backend.app.core.security.deps import get_current_member
-from backend.app.common.service.file_upload_service import (
-    upload_input_file, ensure_local_path, delete_input_file
+from backend.app.common.utils.debug import log_exception
+from backend.app.common.service.receipt_session_service import ReceiptSessionService
+from backend.app.features.review.schemas import (
+    ReviewEnqueueResponse,
+    ReviewJobResponse,
+    ReviewCreateResponse,
+    ReviewContentUpdateResponse,
+    ReviewContentUpdate,
+    ReviewRead,
 )
-from backend.app.common.schemas.file_upload_schema import UploadInputResponse
+from backend.app.features.review.service import create_review_from_receipt, list_reviews, get_review_detail, update_review_content_only
 
 router = APIRouter(prefix="/review", tags=["review"])
 
-# 영수증 검증 및 리뷰 생성
-@router.post("/upload", response_model=UploadInputResponse)
-async def review_upload(type: str = Form("review"), image: UploadFile = File(...), current=Depends(get_current_member), ):
-    obj = await upload_input_file(upload_type=type, member_id=current.member_id, upload=image)
+def _parse_json(value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, (dict, list)):
+        return value
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except Exception:
+            return value
+    return value
 
-    cleanup_download = lambda: None
+
+@router.post("/receipt/verify", response_model=ReviewEnqueueResponse, status_code=202)
+async def receipt_verify(
+    type: str = Form("receipt"),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current=Depends(get_current_member),
+):
+    if (type or "").lower().strip() != "receipt":
+        raise HTTPException(status_code=400, detail="type must be 'receipt'")
+
+    receipt_id = uuid.uuid4().hex
 
     try:
-        local_path, cleanup_download = ensure_local_path(obj)
-
-        # review AI 로직 실행
-        # result = review_service.process(local_path)
-
-        return UploadInputResponse(
-            upload_type=obj.upload_type,
-            member_id=obj.member_id,
-            file_key=obj.file_key,
-            stored_file_name=obj.stored_file_name,
-            org_file_name=obj.org_file_name,
-            mime_type=obj.mime_type,
-            size_bytes=obj.size_bytes,
+        obj = await upload_input_file(
+            upload_type="receipt",
+            member_id=current.member_id,
+            upload=file,
+            scope_id=receipt_id,
+            is_temp=True,
         )
-
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception("review.upload_input", e)
+        raise HTTPException(status_code=400, detail=f"upload failed: {e}")
 
+    local_path, cleanup = ensure_local_path(obj)
+
+    try:
+        image_b64 = base64.b64encode(Path(local_path).read_bytes()).decode("ascii")
+
+        payload: Dict[str, Any] = {
+            "receipt_id": receipt_id,
+            "image_base64": image_b64,
+        }
+
+        try:
+            r = connect_redis()
+        except Exception as e:
+            raise HTTPException(status_code=503, detail=f"redis unavailable: {type(e).__name__}: {e}")
+
+        enqueue_task(r, task="review_receipt_ocr", payload=payload, job_id=receipt_id)
+        return ReviewEnqueueResponse(job_id=receipt_id, status="PENDING", queued_at=utc_now_iso())
+    except Exception as e:
+        log_exception("router.receipt_verify", e)
+        raise HTTPException(status_code=500, detail=f"review enqueue failed: {type(e).__name__}: {e}")
     finally:
-        cleanup_download()
-        delete_input_file(file_key=obj.file_key)
+        cleanup()
 
 
->>>>>>> 2f58d98 (backend update and front update)
-# from fastapi import APIRouter, Depends, HTTPException
-# from sqlalchemy.orm import Session
-#
-# from app.core.database import get_db
-# from . import schemas
-# from ...models.review import model
-#
-# router = APIRouter(prefix="/reviews", tags=["reviews"])
-#
-# @router.post("", response_model=schemas.ReviewRead)
-# def create_review(payload: schemas.ReviewCreate, db: Session = Depends(get_db)):
-#     m = db.query(model).filter(model.member_id == payload.member_id).first()
-#     if not m:
-#         raise HTTPException(status_code=400, detail="Invalid member_id")
-#
-#     r = model(**payload.model_dump())
-#     db.add(r)
-#     db.commit()
-#     db.refresh(r)
-#     return r
-#
-# @router.get("", response_model=list[schemas.ReviewRead])
-# def list_reviews(member_id: int | None = None, db: Session = Depends(get_db)):
-#     q = db.query(model)
-#     if member_id is not None:
-#         q = q.filter(model.member_id == member_id)
-#     return q.order_by(model.review_id.desc()).all()
-#
-# @router.get("/{review_id}", response_model=schemas.ReviewRead)
-# def get_review(review_id: int, db: Session = Depends(get_db)):
-#     r = db.query(model).filter(model.review_id == review_id).first()
-#     if not r:
-#         raise HTTPException(status_code=404, detail="Review not found")
-#     return r
-#
-# @router.delete("/{review_id}")
-# def delete_review(review_id: int, db: Session = Depends(get_db)):
-#     r = db.query(model).filter(model.review_id == review_id).first()
-#     if not r:
-#         raise HTTPException(status_code=404, detail="Review not found")
-#     db.delete(r)
-#     db.commit()
-#     return {"deleted": True, "review_id": review_id}
-#
-#
-# @router.patch("/{review_id}", response_model=schemas.ReviewRead)
-# def update_review(review_id: int, payload: schemas.ReviewUpdate, db: Session = Depends(get_db)):
-#     r = db.query(model).filter(model.review_id == review_id).first()
-#     if not r:
-#         raise HTTPException(status_code=404, detail="Review not found")
-#
-#     data = payload.model_dump(exclude_unset=True)
-#     if not data:
-#         return r
-#
-#     # member_id 변경 시 존재 확인
-#     if "member_id" in data and data["member_id"] is not None:
-#         m = db.query(model).filter(model.member_id == data["member_id"]).first()
-#         if not m:
-#             raise HTTPException(status_code=400, detail="Invalid member_id")
-#
-#     for k, v in data.items():
-#         setattr(r, k, v)
-#
-#     db.commit()
-#     db.refresh(r)
-#     return r
+@router.get("/receipt/job/{job_id}", response_model=ReviewJobResponse)
+def receipt_job_status(job_id: str, current=Depends(get_current_member)):
+    try:
+        r = connect_redis()
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"redis unavailable: {type(e).__name__}: {e}")
+
+    data = r.hgetall(f"cicdex:job:{job_id}")
+    if not data:
+        raise HTTPException(status_code=404, detail="job not found")
+
+    result = _parse_json(data.get("result"))
+    error = _parse_json(data.get("error"))
+    status = data.get("status", "PENDING")
+
+    if status == "DONE":
+        # Store receipt session for later review creation.
+        if not ReceiptSessionService.get(receipt_id=job_id):
+            ReceiptSessionService.put(
+                receipt_id=job_id,
+                member_id=current.member_id,
+                payload=result or {},
+            )
+
+    return ReviewJobResponse(
+        job_id=job_id,
+        status=status,
+        extracted=result if status == "DONE" else None,
+        error=error,
+        queued_at=data.get("queued_at"),
+        updated_at=data.get("updated_at"),
+    )
+
+
+@router.post("/create", response_model=ReviewCreateResponse)
+async def review_create(
+    receipt_id: str = Form(...),
+    title: str = Form(...),
+    content: str = Form(...),
+    rating: int = Form(...),
+    menu_name: str = Form(default=None),
+    images: List[UploadFile] = File(default=[]),
+    db: Session = Depends(get_db),
+    current=Depends(get_current_member),
+):
+    imgs = images or []
+    if len(imgs) > 3:
+        raise HTTPException(status_code=400, detail="images max 3")
+
+    try:
+        out = await create_review_from_receipt(
+            db=db,
+            member_id=current.member_id,
+            receipt_id=receipt_id,
+            title=title,
+            content=content,
+            rating=rating,
+            menu_name_override=menu_name,
+            images=imgs,
+        )
+        return ReviewCreateResponse(review_id=out["review_id"], image_urls=out["image_urls"])
+    except Exception as e:
+        log_exception("router.review_create", e)
+        raise
+
+# active True or 1
+@router.get("", response_model=list[ReviewRead])
+def review_list(db: Session = Depends(get_db)):
+    # return list_reviews(db, member_id=None, active_only=True)
+    return list_reviews(db, member_id=None)
+
+# active 상관없이 내것 전부
+@router.get("/me", response_model=list[ReviewRead])
+def review_my_list(db: Session = Depends(get_db), current=Depends(get_current_member)):
+    print("review list 내것만 조회중")
+    # return list_reviews(db, member_id=current.member_id, active_only=None)
+    return list_reviews(db, member_id=current.member_id)
+
+@router.get("/{review_id}", response_model=ReviewRead)
+def review_detail(
+    review_id: int,
+    db: Session = Depends(get_db),
+    current=Depends(get_current_member),
+):
+    print("review 상세 진입 :: ", current.member_id)
+
+    return get_review_detail(db, review_id)
+
+
+@router.patch("/{review_id}", response_model=ReviewContentUpdateResponse)
+def review_update_content(
+    review_id: int,
+    payload: ReviewContentUpdate,
+    db: Session = Depends(get_db),
+    current=Depends(get_current_member),
+):
+    print("수정 들어옴", payload)
+
+    return update_review_content_only(
+        db,
+        review_id=review_id,
+        current_member_id=current.member_id,
+        current_role=getattr(current, "role", None),
+        new_content=payload.review_content,
+    )

@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "worker.fullname" . }}-config
+  labels:
+    {{- include "worker.labels" . | nindent 4 }}
+data:
+  APP_ENV: {{ .Values.env.APP_ENV | quote }}
+  LOG_LEVEL: {{ .Values.config.LOG_LEVEL | quote }}
+  QUEUE_TYPE: {{ .Values.queue.type | quote }}
+  REDIS_URL: {{ .Values.queue.redisUrl | quote }}
+  QUEUE_NAME: {{ .Values.queue.name | quote }}
+  QUEUE_PROCESSING_NAME: {{ .Values.queue.processingName | quote }}
+  AWS_REGION: {{ .Values.queue.awsRegion | quote }}
+  SQS_QUEUE_URL: {{ .Values.queue.sqsQueueUrl | quote }}
+  S3_BUCKET: {{ .Values.config.S3_BUCKET | quote }}
+  S3_PREFIX: {{ .Values.config.S3_PREFIX | quote }}
+  S3_PREFIX_TMP: {{ .Values.config.S3_PREFIX_TMP | quote }}
+  S3_PREFIX_PERM: {{ .Values.config.S3_PREFIX_PERM | quote }}
+  S3_REGION: {{ .Values.config.S3_REGION | quote }}
+  MENU_ASSISTANT_RUNS_ROOT: {{ default "" .Values.config.MENU_ASSISTANT_RUNS_ROOT | quote }}
+  MENU_ASSISTANT_IMAGE_BASE: {{ default "" .Values.config.MENU_ASSISTANT_IMAGE_BASE | quote }}
+  MENU_ASSISTANT_CHROMA_S3_PREFIX: {{ default "" .Values.config.MENU_ASSISTANT_CHROMA_S3_PREFIX | quote }}
+  MENU_ASSISTANT_MENU_INDEX_S3_URI: {{ default "" .Values.config.MENU_ASSISTANT_MENU_INDEX_S3_URI | quote }}

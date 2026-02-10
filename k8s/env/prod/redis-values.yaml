@@ -1,0 +1,14 @@
+# 목적: 운영 최소 구성
+# - (가능하면) auth 활성
+# - persistence 활성
+# - ClusterIP 내부 전용
+
+auth:
+    enabled: false
+
+persistence:
+    enabled: false
+
+service:
+    type: ClusterIP
+    port: 6379

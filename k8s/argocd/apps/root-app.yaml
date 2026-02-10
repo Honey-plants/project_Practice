@@ -1,18 +1,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: root-app
-  namespace: argocd
-spec:
-  project: project-app
-  source:
-    repoURL: https://github.com/mingoo684/cicdex1.git
-    targetRevision: main
-    path: k8s/argocd/apps
-  destination:
-    server: https://kubernetes.default.svc
+    name: root-app
     namespace: argocd
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+spec:
+    project: app-platform
+
+    source:
+        repoURL: https://github.com/jjs0224/haenet_project
+        targetRevision: development
+        path: k8s/argocd/apps
+        directory:
+            recurse: true
+
+    destination:
+        server: https://kubernetes.default.svc
+        namespace: argocd
+
+    syncPolicy:
+        automated:
+            prune: true
+            selfHeal: true
+        syncOptions:
+            - CreateNamespace=true
+
+

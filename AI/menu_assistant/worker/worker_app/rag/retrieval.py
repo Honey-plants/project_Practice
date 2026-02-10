@@ -45,6 +45,7 @@ JAMO_HARD_CUTOFF = 0.5
 
 # Env overrides
 ENV_CHROMA_DIR = "MENU_ASSISTANT_CHROMA_DIR"
+ENV_CHROMA_S3_PREFIX = "MENU_ASSISTANT_CHROMA_S3_PREFIX"
 ENV_COLLECTION = "MENU_ASSISTANT_COLLECTION"
 ENV_EMBED_MODEL = "MENU_ASSISTANT_EMBED_MODEL"
 
@@ -79,6 +80,43 @@ def _split_csv(v: Any) -> List[str]:
         return out
     parts = [p.strip() for p in str(v).split(",")]
     return [p for p in parts if p]
+
+
+def _parse_s3_uri(uri: str) -> Tuple[str, str]:
+    if not uri.startswith("s3://"):
+        raise ValueError(f"invalid s3 uri: {uri}")
+    parts = uri[5:].split("/", 1)
+    bucket = parts[0]
+    prefix = parts[1] if len(parts) > 1 else ""
+    return bucket, prefix
+
+
+def _download_s3_prefix(uri: str, dest_dir: Path) -> None:
+    # Lazy import to avoid hard dependency if not used
+    import boto3
+
+    bucket, prefix = _parse_s3_uri(uri)
+    client = boto3.client("s3")
+    dest_dir.mkdir(parents=True, exist_ok=True)
+
+    continuation = None
+    while True:
+        kwargs = {"Bucket": bucket, "Prefix": prefix}
+        if continuation:
+            kwargs["ContinuationToken"] = continuation
+        resp = client.list_objects_v2(**kwargs)
+        for obj in resp.get("Contents", []):
+            key = obj.get("Key", "")
+            if key.endswith("/"):
+                continue
+            rel = key[len(prefix):] if key.startswith(prefix) else key
+            rel = rel.lstrip("/")
+            out_path = dest_dir / rel
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            client.download_file(bucket, key, str(out_path))
+        if not resp.get("IsTruncated"):
+            break
+        continuation = resp.get("NextContinuationToken")
 
 
 def _to_similarity(distance: Optional[float]) -> float:
@@ -205,6 +243,10 @@ class ChromaMenuRetriever:
         if self._collection is not None:
             return
 
+        if not self.chroma_dir.exists():
+            s3_prefix = os.environ.get(ENV_CHROMA_S3_PREFIX, "").strip()
+            if s3_prefix:
+                _download_s3_prefix(s3_prefix, self.chroma_dir)
         if not self.chroma_dir.exists():
             raise RuntimeError(f"[RAG] chroma_dir does not exist: {self.chroma_dir}")
 

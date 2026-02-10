@@ -11,49 +11,61 @@ from backend.app.models.restrictions.member_restriction import MemberRestriction
 # password hash 작업
 from backend.app.core.security.password import hash_password
 
+# img_file 삭제 처리
+from backend.app.models.img_file import ImgFile
+import os
+from pathlib import Path
+from backend.app.core import config
+
 import json
 
 # 등록
 def create_member(db: Session, payload) -> None:
-    # db.begin() :: commit, reset 둘중 처리
+    # db.begin() :: commit, rollback 둘중 처리
     print(payload)
 
     # password 변경 작업 추가 예정
 
     try:
-        with db.begin():
-            # item_ids / dislike 제외하고 member 조회
-            member_data = payload.model_dump(exclude={"item_ids", "dislike_tags"})
-            # password hash 추가
-            print("password :: ", member_data["password"])
+        member_data = payload.model_dump(exclude={"item_ids", "dislike_tags"})
+        member_data["password"] = hash_password(member_data["password"])
 
-            member_data["password"] = hash_password(member_data["password"])
-            member = Member(**member_data)
-            db.add(member)
-            db.flush()
+        member = Member(**member_data)
+        db.add(member)
+        db.flush()  # member_id 확보
 
-            member_id = member.member_id
+        member_id = member.member_id
 
-            # item_ids는 None/[]면 스킵
-            if payload.item_ids:
-                req_ids = set(payload.item_ids)
-                found = set(db.execute(
-                    select(Item.item_id).where(Item.item_id.in_(req_ids))
-                ).scalars().all())
-                missing = sorted(req_ids - found)
-                if missing:
-                    raise HTTPException(400, detail={"message": "invalid item_ids", "missing_item_ids": missing})
+        # item_ids
+        if payload.item_ids:
+            req_ids = set(payload.item_ids)
+            found = set(
+                db.execute(select(Item.item_id).where(Item.item_id.in_(req_ids))).scalars().all()
+            )
+            missing = sorted(req_ids - found)
+            if missing:
+                raise HTTPException(400, detail={"message": "invalid item_ids", "missing_item_ids": missing})
 
-                db.add_all([MemberRestrictions(member_id=member_id, item_id=i) for i in sorted(req_ids)])
+            db.add_all([MemberRestrictions(member_id=member_id, item_id=i) for i in sorted(req_ids)])
 
-            # dislike_tag 비선호 추가 부분
-            if payload.dislike_tags is not None and len(payload.dislike_tags) > 0:
-                if isinstance(payload.dislike_tags, list):
-                    tag_json = json.dumps(payload.dislike_tags, ensure_ascii=False)
-                db.add(Dislike(member_id=member_id, dislike_tag=tag_json))
+        # dislike_tags
+        if payload.dislike_tags:
+            tag_json = json.dumps(payload.dislike_tags, ensure_ascii=False)
+            db.add(Dislike(member_id=member_id, dislike_tag=tag_json))
+
+        db.commit()
+        db.refresh(member)
+        return member
 
     except IntegrityError:
+        db.rollback()
         raise HTTPException(409, detail="duplicate key")
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
 # 조회
 def get_member(db: Session, member_id: int) -> dict:
@@ -85,6 +97,7 @@ def get_member(db: Session, member_id: int) -> dict:
             dislike_tags = [tag_raw]  # 혹시 그냥 문자열이면 방어
 
     return {
+        "member_id": m.member_id,
         "email": m.email,
         "nickname": m.nickname,
         "gender": m.gender,
@@ -97,108 +110,154 @@ def get_member(db: Session, member_id: int) -> dict:
 # 수정
 def update_member(db: Session, member_id: int, payload):
 
-    print(payload)
+    print("update member :: ", payload)
 
     try:
-        with db.begin():
-            m = db.get(Member, member_id)
-            if not m:
-                raise HTTPException(404, detail="Member not found")
+        m = db.get(Member, member_id)
+        if not m:
+            raise HTTPException(404, detail="Member not found")
 
-            # nickname 변경(필요 시 유니크 체크)
-            if payload.nickname is not None and payload.nickname != m.nickname:
-                exists = db.execute(
-                    select(Member.member_id).where(Member.nickname == payload.nickname, Member.member_id != member_id)
-                ).scalar_one_or_none()
-                if exists is not None:
-                    raise HTTPException(409, detail="nickname already exists")
-                m.nickname = payload.nickname
+        # nickname 변경(필요 시 유니크 체크)
+        if payload.nickname is not None and payload.nickname != m.nickname:
+            exists = db.execute(
+                select(Member.member_id).where(
+                    Member.nickname == payload.nickname,
+                    Member.member_id != member_id
+                )
+            ).scalar_one_or_none()
+            if exists is not None:
+                raise HTTPException(409, detail="nickname already exists")
+            m.nickname = payload.nickname
 
-            # item_ids: None=변경없음 / []=전체해제 / [..]=replace
-            if payload.item_ids is not None:
-                new_ids = set(payload.item_ids)
-                old_ids = set(db.execute(
+        # item_ids: None=변경없음 / []=전체해제 / [..]=replace
+        if payload.item_ids is not None:
+            new_ids = set(payload.item_ids)
+            old_ids = set(
+                db.execute(
                     select(MemberRestrictions.item_id).where(MemberRestrictions.member_id == member_id)
-                ).scalars().all())
+                ).scalars().all()
+            )
 
-                if new_ids != old_ids:
-                    if new_ids:
-                        found = set(db.execute(
-                            select(Item.item_id).where(Item.item_id.in_(new_ids))
-                        ).scalars().all())
-                        missing = sorted(new_ids - found)
-                        if missing:
-                            raise HTTPException(400, detail={"message": "invalid item_ids", "missing_item_ids": missing})
+            if new_ids != old_ids:
+                if new_ids:
+                    found = set(
+                        db.execute(select(Item.item_id).where(Item.item_id.in_(new_ids))).scalars().all()
+                    )
+                    missing = sorted(new_ids - found)
+                    if missing:
+                        raise HTTPException(
+                            400,
+                            detail={"message": "invalid item_ids", "missing_item_ids": missing},
+                        )
 
-                    db.execute(delete(MemberRestrictions).where(MemberRestrictions.member_id == member_id))
-                    if new_ids:
-                        db.add_all([MemberRestrictions(member_id=member_id, item_id=i) for i in sorted(new_ids)])
+                db.execute(delete(MemberRestrictions).where(MemberRestrictions.member_id == member_id))
+                if new_ids:
+                    db.add_all(
+                        [MemberRestrictions(member_id=member_id, item_id=i) for i in sorted(new_ids)]
+                    )
 
-            # dislike_tags: None=변경없음 / ""=비우기 / 텍스트=업데이트
-            if payload.dislike_tags is not None:
-
-                if len(payload.dislike_tags) == 0:
-                    # []면 dislike row 삭제(있을 때만)
-                    db.execute(delete(Dislike).where(Dislike.member_id == member_id))
-
+        # dislike_tags: None=변경없음 / []=비우기 / [..]=업데이트
+        if payload.dislike_tags is not None:
+            # []면 삭제
+            if len(payload.dislike_tags) == 0:
+                db.execute(delete(Dislike).where(Dislike.member_id == member_id))
+            else:
+                # 리스트 -> JSON 문자열로 저장
                 tag_json = json.dumps(payload.dislike_tags, ensure_ascii=False)
 
-                c = db.execute(
-                    select(Dislike).where(Dislike.member_id == member_id)
-                ).scalar_one_or_none()
+                c = db.execute(select(Dislike).where(Dislike.member_id == member_id)).scalar_one_or_none()
                 if c:
-                    c.dislike_tag = json.dumps(tag_json, ensure_ascii=False)
+                    c.dislike_tag = tag_json
                 else:
                     db.add(Dislike(member_id=member_id, dislike_tag=tag_json))
 
-        # 현재 재조회 아닌 입력받은 payload 사용으로 재조회 로직 사용 x
-
-        # ---- 응답 만들기 (최신값 재조회) ----
-        # item_ids = db.execute(
-        #     select(MemberRestrictions.item_id).where(MemberRestrictions.member_id == member_id)
-        # ).scalars().all()
-        #
-        # comment_raw = db.execute(
-        #     select(Comment.comment_content).where(Comment.member_id == member_id)
-        # ).scalar_one_or_none()
-        #
-        # comment_content = None
-        # if comment_raw is not None:
-        #     # Text 컬럼이므로 JSON 문자열 -> List[str]
-        #     try:
-        #         comment_content = json.loads(comment_raw)
-        #     except Exception:
-        #         comment_content = [comment_raw]
-
+        # commit / refresh
+        db.commit()
+        db.refresh(m)
         return m
 
     except IntegrityError:
+        db.rollback()
         raise HTTPException(409, detail="duplicate key")
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
 
 # 삭제
 def delete_member(db: Session, member_id: int) -> None:
-    with db.begin():
+    try:
         m = db.get(Member, member_id)
         if not m:
             raise HTTPException(status_code=404, detail="Member not found")
 
-        # schema delete 옵션 미 설정시 아래 로직 사용!
+        # 1) member가 업로드한 img_file의 storage_path 전부 조회 후 실제 파일 삭제
+        img_paths = db.execute(
+            select(ImgFile.storage_path).where(ImgFile.member_id == member_id)
+        ).scalars().all()
 
-        # # 1) member_restrictions 삭제
-        # db.execute(
-        #     delete(MemberRestrictions).where(MemberRestrictions.member_id == member_id)
-        # )
-        #
-        # # 2) comment 삭제
-        # db.execute(
-        #     delete(Comment).where(Comment.member_id == member_id)
-        # )
-        #
-        # # 3) member 삭제
+        if config.STORAGE_BACKEND == "local":
+            for sp in img_paths:
+                _try_delete_local_file_by_storage_path(sp)
 
+        # 2) DB 삭제 (FK CASCADE로 review/community/comment/refresh_token/... 연쇄 삭제)
         db.delete(m)
+        db.commit()
+        return
 
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
+
+# 삭제 시 저장소 저장된 이미지 파일 삭제 처리
+def _try_delete_local_file_by_storage_path(storage_path: str) -> None:
+    """
+    storage_path 예: /static/perm/review/10/review_10_0_xxx.jpg
+    FastAPI에서 /static -> LOCAL_UPLOAD_ROOT로 mount 되어있으니,
+    실제 파일 경로는 LOCAL_UPLOAD_ROOT / (storage_path에서 /static/ 제거한 나머지)
+    """
+    if not storage_path:
+        return
+    if not storage_path.startswith("/static/"):
+        return  # local 기준은 /static/... 만 처리
+
+    rel = storage_path[len("/static/"):]  # perm/review/...
+    real_path = (config.LOCAL_UPLOAD_ROOT / rel).resolve()
+
+    # uploads 폴더 바깥 삭제 방지
+    try:
+        root = config.LOCAL_UPLOAD_ROOT.resolve()
+        if root not in real_path.parents and real_path != root:
+            return
+    except Exception:
+        return
+
+    try:
+        if real_path.exists() and real_path.is_file():
+            real_path.unlink(missing_ok=True)
+    except Exception:
+        pass
+
+    # 폴더 정리(비어있으면 위로 올라가며 삭제) - perm까지만
+    try:
+        p = real_path.parent
+        stop = (config.LOCAL_UPLOAD_ROOT / "perm").resolve()
+        while True:
+            if p == stop or p == config.LOCAL_UPLOAD_ROOT.resolve():
+                break
+            if p.exists() and p.is_dir() and not any(p.iterdir()):
+                p.rmdir()
+                p = p.parent
+            else:
+                break
+    except Exception:
+        pass
 
 # NickName 체크 로직 // True / False
 def is_nickname_available(db: Session, nickname: str) -> bool:

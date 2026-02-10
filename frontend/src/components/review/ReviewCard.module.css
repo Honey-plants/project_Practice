@@ -1,0 +1,213 @@
+/* ===== ReviewCard 컨테이너 ===== */
+.reviewCard {
+  cursor: pointer;
+  border: 1px solid #DDDDDD;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  background: #FFFFFF; /* 흰색 배경 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.reviewCard:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.15);
+  border-color: #81C784; /* 라이트 그린 */
+}
+
+/* ===== 이미지 컨테이너 ===== */
+.reviewCardImageContainer {
+  position: relative;
+  width: 100%;
+  height: 200px;
+}
+
+.reviewCardImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.reviewCardNoImage {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); /* 딥 그린 그라데이션 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 48px;
+}
+
+/* ===== 이미지 네비게이션 버튼 ===== */
+.imageNavBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 2;
+}
+
+.imageNavBtn:hover {
+  background: rgba(46, 125, 50, 0.8); /* 딥 그린 반투명 */
+  transform: translateY(-50%) scale(1.1);
+}
+
+.imageNavBtn.prev {
+  left: 10px;
+}
+
+.imageNavBtn.next {
+  right: 10px;
+}
+
+/* ===== 이미지 인디케이터 ===== */
+.imageIndicator {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 2;
+}
+
+/* ===== 카드 컨텐츠 ===== */
+.reviewCardContent {
+  padding: 16px;
+}
+
+/* ===== 메뉴 이름 컨테이너 ===== */
+.menuNamesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* ===== 메뉴 이름 태그 ===== */
+.menuNameTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #2E7D32; /* 딥 그린 */
+  color: white;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(46, 125, 50, 0.3);
+  transition: all 0.2s;
+  width: fit-content;
+}
+
+.menuNameTag:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 8px rgba(46, 125, 50, 0.4);
+  background: #1B5E20; /* 더 진한 그린 */
+}
+
+/* ===== 제목 ===== */
+.reviewCardTitle {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #333333; /* 다크 그레이 */
+}
+
+/* ===== 별점 ===== */
+.reviewCardRating {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ratingText {
+  font-size: 14px;
+  color: #666666; /* 미디엄 그레이 */
+  margin-left: 4px;
+}
+
+/* ===== 내용 미리보기 ===== */
+.reviewCardPreview {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #666666; /* 미디엄 그레이 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== 작성자 식습관 영역 ===== */
+.habitHeader {
+  padding: 10px 14px 8px;
+  background: #F1F8E9;
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.habitTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 6px;
+}
+
+.habitNickname {
+  color: #2E7D32;
+  font-weight: 700;
+}
+
+.habitItemTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.habitItemTag {
+  padding: 4px 10px;
+  background: #FFFFFF;
+  color: #2E7D32;
+  border: 1px solid #C8E6C9;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ===== 작성일 ===== */
+.reviewCardDate {
+  font-size: 11px;
+  color: #999999; /* 라이트 그레이 */
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #F0F0F0;
+}
+
+/* ===== 별점 스타일 ===== */
+.starActive {
+  color: #ffc107;
+  font-size: 16px;
+}
+
+.starInactive {
+  color: #ddd;
+  font-size: 16px;
+}

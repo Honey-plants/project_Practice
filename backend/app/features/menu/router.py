@@ -1,95 +1,131 @@
-from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException
+import base64
+import json
+import uuid
 from pathlib import Path
+from typing import Any, Dict
 
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from sqlalchemy.orm import Session
+
+from backend.app.common.service.ai_member_info import build_user_profile_payload
+from backend.app.common.service.file_upload_service import ensure_local_path, upload_input_file
+from backend.app.common.utils.debug import log_exception
+from backend.app.core.database import get_db
+from backend.app.core.job_queue import connect_redis, enqueue_task, utc_now_iso
 from backend.app.core.security.deps import get_current_member
-from backend.app.common.service.file_upload_service import (
-    upload_input_file, ensure_local_path, delete_input_file
-)
-from backend.app.common.schemas.file_upload_schema import UploadInputResponse
-
-# orchestrator import (subprocess X, Python import 실행)
-from AI.menu_assistant.worker.worker_app.pipeline.orchestrator import (
-    PipelineOrchestrator,
-    _default_runs_root,
-)
+from backend.app.features.menu.schemas import MenuEnqueueResponse, MenuJobResponse
 
 router = APIRouter(prefix="/menu", tags=["menu"])
 
 
-@router.post("/upload", response_model=UploadInputResponse)
-async def menu_upload(
+def _parse_json(value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, (dict, list)):
+        return value
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except Exception:
+            return value
+    return value
+
+
+@router.post("/upload", response_model=MenuEnqueueResponse, status_code=202)
+async def upload_menu(
+    db: Session = Depends(get_db),
     type: str = Form("menu"),
-    image: UploadFile = File(...),
+    file: UploadFile = File(...),
+    user_profile: str = Form(""),
     current=Depends(get_current_member),
 ):
-    """
-    프론트에서 버튼 클릭 → 업로드 시 stored_file_name 생성 → 그 이름으로 run_id 생성 → orchestrator 실행
-    반환: 업로드 메타 + rectified.jpg 경로 + final.json 경로 (+ run_id)
-    """
+    if (type or "").lower().strip() != "menu":
+        raise HTTPException(status_code=400, detail="type must be 'menu'")
 
-    obj = await upload_input_file(upload_type=type, member_id=current.member_id, upload=image)
-    print("obj :: ", obj)
-
-    cleanup_download = lambda: None
+    job_id = uuid.uuid4().hex
 
     try:
-        # local/s3 상관없이 로직이 쓸 '파일 경로' 확보
-        local_path, cleanup_download = ensure_local_path(obj)
-        local_path = Path(local_path)
-
-        if not local_path.exists():
-            raise FileNotFoundError(f"local_path not found: {local_path}")
-
-        # 버튼 클릭 시 서버가 만든 파일명(stored_file_name)을 run_id로 사용
-        # ex) stored_file_name = "menu_20260127_103012_abcd.jpg" -> run_id = "menu_20260127_103012_abcd"
-        run_id = Path(obj.stored_file_name).stem
-
-        # orchestrator 실행
-        runs_root = Path(_default_runs_root())
-        orch = PipelineOrchestrator(runs_root=runs_root)
-
-        run_dir = orch.run(
-            image_path=local_path,
-            run_id=run_id,
-            # orchestrator 기본 옵션 사용 (필요시 여기에 옵션 추가)
+        obj = await upload_input_file(
+            upload_type="menu",
+            member_id=current.member_id,
+            upload=file,
+            scope_id=job_id,
+            is_temp=True,
         )
-
-        # 산출물 경로 (orchestrator.py 기준)
-        rectified_path = run_dir / "rectify" / "rectified.jpg"
-        final_json_path = run_dir / "final" / "final.json"
-
-        if not rectified_path.exists():
-            raise FileNotFoundError(f"rectified.jpg missing: {rectified_path}")
-        if not final_json_path.exists():
-            raise FileNotFoundError(f"final.json missing: {final_json_path}")
-
-        return UploadInputResponse(
-            upload_type=obj.upload_type,
-            member_id=obj.member_id,
-            file_key=obj.file_key,
-            stored_file_name=obj.stored_file_name,
-            org_file_name=obj.org_file_name,
-            mime_type=obj.mime_type,
-            size_bytes=obj.size_bytes,
-
-            # 응답 확장 필드 (스키마에 Optional로 추가 필요)
-            run_id=run_id,
-            rectified_path=str(rectified_path),
-            final_json_path=str(final_json_path),
-        )
-
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception("menu.upload_input", e)
+        raise HTTPException(status_code=400, detail=f"upload failed: {e}")
 
+    local_path, cleanup = ensure_local_path(obj)
+
+    try:
+        # Prefer user_profile from client if provided, otherwise build from DB.
+        profile_payload: Dict[str, Any] | None = None
+        raw_profile = (user_profile or "").strip()
+        if raw_profile:
+            try:
+                parsed = json.loads(raw_profile)
+                if not isinstance(parsed, dict):
+                    raise ValueError("user_profile must be a JSON object")
+                profile_payload = parsed
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"user_profile invalid: {e}")
+
+        if profile_payload is None:
+            try:
+                profile_payload = build_user_profile_payload(db, current.member_id)
+            except Exception as e:
+                log_exception("menu.profile_build", e)
+                profile_payload = {"allergy_tags": [], "avoid_foods": [], "religion": []}
+
+        image_b64 = base64.b64encode(Path(local_path).read_bytes()).decode("ascii")
+
+        payload = {
+            "run_id": job_id,
+            "image_base64": image_b64,
+            "user_profile": profile_payload,
+            "runs_root": "/tmp/ai_runs",
+            "run_step4": True,
+            "run_step5": True,
+            "run_step6": True,
+        }
+
+        try:
+            r = connect_redis()
+        except Exception as e:
+            raise HTTPException(status_code=503, detail=f"redis unavailable: {type(e).__name__}: {e}")
+
+        enqueue_task(r, task="menu_assistant_pipeline", payload=payload, job_id=job_id)
+        return MenuEnqueueResponse(job_id=job_id, status="PENDING", queued_at=utc_now_iso())
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        log_exception("menu.enqueue_failed", e)
+        raise HTTPException(status_code=500, detail=f"menu enqueue failed: {type(e).__name__}: {e}")
     finally:
-        # s3 다운로드 임시 파일 정리
-        try:
-            cleanup_download()
-        except Exception:
-            pass
+        cleanup()
 
-        # 업로드 입력파일 정리 (local: 파일 삭제 / s3: object 삭제)
-        try:
-            delete_input_file(file_key=obj.file_key)
-        except Exception:
-            pass
+
+@router.get("/job/{job_id}", response_model=MenuJobResponse)
+def get_menu_job(job_id: str, current=Depends(get_current_member)):
+    try:
+        r = connect_redis()
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"redis unavailable: {type(e).__name__}: {e}")
+
+    data = r.hgetall(f"cicdex:job:{job_id}")
+    if not data:
+        raise HTTPException(status_code=404, detail="job not found")
+
+    result = _parse_json(data.get("result"))
+    error = _parse_json(data.get("error"))
+
+    return MenuJobResponse(
+        job_id=job_id,
+        status=data.get("status", "PENDING"),
+        result=result if data.get("status") == "DONE" else result,
+        error=error,
+        queued_at=data.get("queued_at"),
+        updated_at=data.get("updated_at"),
+    )
