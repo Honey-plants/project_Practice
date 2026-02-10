@@ -23,6 +23,7 @@ export default function ReviewCreateInline({ onCreated }) {
   //  preview urls
   const [previewUrls, setPreviewUrls] = useState([]);
 
+  const receiptInputRef = useRef(null);
   const imageInputRef = useRef(null);
 
   const [loadingVerify, setLoadingVerify] = useState(false);
@@ -53,8 +54,26 @@ export default function ReviewCreateInline({ onCreated }) {
     setLoadingVerify(true);
     try {
       const r = await ReviewAPI.verifyReceipt(receiptFile);
-      setReceiptId(r.data?.receipt_id);
       const ext = r.data?.extracted || null;
+
+      // location(coords) 검증: 상호 주소가 없으면 재선택 유도
+      const coords = ext?.coords;
+      if (!coords || coords.x == null || coords.y == null) {
+        alert("Please attach the receipt with the store address again");
+        // 이미지 선택 초기화
+        setReceiptFile(null);
+        if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+        setReceiptPreviewUrl(null);
+        setReceiptId(null);
+        setExtracted(null);
+        setMenuList([]);
+        // 같은 파일 다시 선택 가능하도록 input reset
+        if (receiptInputRef.current) receiptInputRef.current.value = "";
+        setLoadingVerify(false);
+        return;
+      }
+
+      setReceiptId(r.data?.receipt_id);
       setExtracted(ext);
       // OCR 결과에서 메뉴 목록 파싱하여 state에 저장
       if (ext?.menu_en) {
@@ -64,9 +83,9 @@ export default function ReviewCreateInline({ onCreated }) {
           : raw.split(',').map((m) => m.replace(/["[\]]/g, '').trim());
         setMenuList(parsed.filter(Boolean));
       }
-      setMsg("영수증 인증 완료. 메뉴를 확인해주세요.");
+      setMsg("Receipt certified. Please check the menu.");
     } catch (e) {
-      setErr(e?.response?.data?.detail || e?.message || "영수증 인증 실패");
+      setErr(e?.response?.data?.detail || e?.message || "Receipt authentication failed");
     } finally {
       setLoadingVerify(false);
     }
@@ -74,7 +93,7 @@ export default function ReviewCreateInline({ onCreated }) {
 
   const confirmMenu = () => {
     setMenuConfirmed(true);
-    setMsg("메뉴 확인 완료. 리뷰를 작성해주세요.");
+    setMsg("Checked the menu. Please write a review.");
   };
 
   const cancelMenu = () => {
@@ -87,6 +106,8 @@ export default function ReviewCreateInline({ onCreated }) {
     setMenuConfirmed(false);
     setMsg("");
     setErr("");
+    // 같은 파일 다시 선택 가능하도록 input reset
+    if (receiptInputRef.current) receiptInputRef.current.value = "";
   };
 
   const removeMenu = (idx) => {
@@ -104,7 +125,7 @@ export default function ReviewCreateInline({ onCreated }) {
     setImages((prev) => {
       const merged = [...prev, ...files];
       if (merged.length > 3) {
-        setErr("이미지는 최대 3장까지 업로드 가능합니다.");
+        setErr("Upload up to three images.");
         return prev; // 기존 유지
       }
       return merged;
@@ -123,10 +144,10 @@ export default function ReviewCreateInline({ onCreated }) {
     setErr("");
     setMsg("");
 
-    if (!receiptId) return setErr("먼저 영수증 인증을 해줘");
-    if (!title.trim()) return setErr("title 입력해줘");
-    if (!content.trim()) return setErr("content 입력해줘");
-    if (images.length > 3) return setErr("이미지는 최대 3장");
+    if (!receiptId) return setErr("Please verify the receipt first");
+    if (!title.trim()) return setErr("Please enter the title");
+    if (!content.trim()) return setErr("Please enter the content");
+    if (images.length > 3) return setErr("upload up to three images.");
 
     setLoadingCreate(true);
     try {
@@ -139,7 +160,7 @@ export default function ReviewCreateInline({ onCreated }) {
         images, //  File[] 그대로
       });
 
-      setMsg("리뷰 생성 완료");
+      setMsg("Completion of review creation");
 
       // 리뷰 페이지로 이동 (내 리뷰만 필터 활성화)
       navigate("/review?mine=true");
@@ -159,7 +180,7 @@ export default function ReviewCreateInline({ onCreated }) {
       setRating(5);
       setImages([]);
     } catch (e) {
-      setErr(e?.response?.data?.detail || e?.message || "리뷰 생성 실패");
+      setErr(e?.response?.data?.detail || e?.message || "Failed to create review");
     } finally {
       setLoadingCreate(false);
     }
@@ -183,6 +204,7 @@ export default function ReviewCreateInline({ onCreated }) {
           <div className={styles.stepHeader}>1) Verify Receipt</div>
           <div className={styles.receiptUpload}>
             <input
+              ref={receiptInputRef}
               type="file"
               accept="image/*"
               disabled={loadingVerify}
@@ -202,7 +224,7 @@ export default function ReviewCreateInline({ onCreated }) {
             <div className={styles.receiptPreview}>
               <img
                 src={receiptPreviewUrl}
-                alt="영수증 미리보기"
+                alt="Preview Receipts"
                 className={styles.receiptPreviewImage}
               />
             </div>
@@ -228,14 +250,14 @@ export default function ReviewCreateInline({ onCreated }) {
                           type="button"
                           onClick={() => removeMenu(idx)}
                           className={styles.btnRemoveMenu}
-                          title="메뉴 삭제"
+                          title="Delete Menu"
                         >
                           ×
                         </button>
                       )}
                     </div>
                   ))
-                : <p className={styles.menuConfirmText}>메뉴가 없습니다.</p>
+                : <p className={styles.menuConfirmText}>There's no menu.</p>
               }
             </div>
             {!menuConfirmed && (
@@ -306,7 +328,7 @@ export default function ReviewCreateInline({ onCreated }) {
                 className={styles.fileInput}
               />
               <div className={styles.imageCount}>
-                추가 이미지 {images.length}/3
+                Additional Images {images.length}/3
               </div>
 
               {previewUrls.length > 0 && (
@@ -322,7 +344,7 @@ export default function ReviewCreateInline({ onCreated }) {
                         type="button"
                         onClick={() => removeImage(idx)}
                         className={styles.btnRemoveImage}
-                        title="삭제"
+                        title="Delete"
                       >
                         ×
                       </button>
@@ -333,7 +355,7 @@ export default function ReviewCreateInline({ onCreated }) {
             </div>
 
             <button onClick={create} disabled={loadingCreate} className={styles.btnSubmit}>
-              {loadingCreate ? "Creating..." : "Review Saved"}
+              {loadingCreate ? "Creating..." : "Save"}
             </button>
           </div>
         </div>

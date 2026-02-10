@@ -71,6 +71,8 @@ export default function Register() {
   const passwordRef = useRef(null);
   const passwordConfirmRef = useRef(null);
   const nicknameRef = useRef(null);
+  const genderRef = useRef(null);
+  const countryRef = useRef(null);
 
   // meta 비어있으면 1회 강제 refresh
   useEffect(() => {
@@ -188,6 +190,24 @@ export default function Register() {
       setMsg("❌ Please check nickname duplication");
       if (nicknameRef.current) {
         nicknameRef.current.focus();
+      }
+      return false;
+    }
+
+    // gender 선택 여부 체크
+    if (!form.gender) {
+      setMsg("❌ Please select your gender.");
+      if (genderRef.current) {
+        genderRef.current.focus();
+      }
+      return false;
+    }
+
+    // country 선택 여부 체크
+    if (!form.country) {
+      setMsg("❌ Please select your country.");
+      if (countryRef.current) {
+        countryRef.current.focus();
       }
       return false;
     }
@@ -315,7 +335,7 @@ export default function Register() {
               name="nickname"
               value={form.nickname}
               onChange={onChange}
-              placeholder="Please write 10 characters or less"
+              placeholder="Upto 10 characters"
               style={{ flex: 1 }}
             />
             <button
@@ -333,32 +353,34 @@ export default function Register() {
 
         <div className="row">
           <label>Gender</label>
-          <select name="gender" value={form.gender} onChange={onChange}>
+          <select ref={genderRef} name="gender" value={form.gender} onChange={onChange}>
             <option value="" disabled>
               Select Gender
-            </option>            
-                    
+            </option>
+
             {GENDER.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
+          {msg.includes("gender") && !form.gender && <div className="errorText">Please select your gender.</div>}
         </div>
 
         <div className="row">
           <label>Country</label>
-          <select name="country" value={form.country} onChange={onChange}>
+          <select ref={countryRef} name="country" value={form.country} onChange={onChange}>
             <option value="" disabled>
               Select Country
-            </option>            
-            
+            </option>
+
             {COUNTRY_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
+          {msg.includes("country") && !form.country && <div className="errorText">Please select your country.</div>}
         </div>
 
         {stateMeta?.loading && <div className="infoBox">Category Loading...</div>}
@@ -449,7 +471,7 @@ export default function Register() {
 
             <button
               type="button"
-              disabled={loading || checkStatus.nickname !== true}
+              disabled={loading}
               onClick={() => openModal("signup")}
             >
               {loading ? "Signing up..." : "Sign Up"}

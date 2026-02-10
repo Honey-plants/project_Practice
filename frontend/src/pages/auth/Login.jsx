@@ -11,7 +11,7 @@ export default function Login() {
 
   // URL param으로 전달된 안내 메시지 처리
   const paramMsg = searchParams.get("msg");
-  const guideMsg = paramMsg === "login_required" ? "로그인을 해주세요" : null;
+  const guideMsg = paramMsg === "login_required" ? "Please Sign in" : null;
 
   const [form, setForm] = useState({
     email: "",
@@ -35,27 +35,27 @@ export default function Login() {
     }
 
     setLoading(true);
-    try {
-      const ok = await authActions.login(form.email.trim(), form.password);
-      if (ok) {
-        // ✅ memberActions.loadMe() 호출 제거
-        // - MemberProvider가 accessToken 변경을 감지해 /member/me를 1회 자동 호출
-        const token = sessionStorage.getItem("access_token");
-        const role = getJwtRole(token);
-        if (role === "ADMIN") {
-          nav("/admin");
+      try {
+        const ok = await authActions.login(form.email.trim(), form.password);
+
+        if (ok) {
+          const token = sessionStorage.getItem("access_token");
+          const role = getJwtRole(token);
+          nav(role === "ADMIN" ? "/admin" : "/");
         } else {
-          nav("/");
+          setError("Please check your email or password");
         }
-      } else {
-        setError("Login failed");
+      } catch (err) {
+        const status = err?.response?.status;
+        if (status === 500 || status === 401 || status === 400) {
+          setError("Please check your email or password");
+        } else {
+          setError("Login failed");
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (e2) {
-      setError(e2.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   return (
     <div className="RegisterPage">
@@ -92,7 +92,7 @@ export default function Login() {
 
         <div className="RegisterActions">
           <button type="button" className="loginActionBtn" onClick={() => nav("/register")}>
-            회원가입
+            Sign up
           </button>
           <button type="submit" disabled={loading}>
             {loading ? "Logging in..." : "Login"}

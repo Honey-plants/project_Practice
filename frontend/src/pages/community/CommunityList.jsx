@@ -12,6 +12,7 @@ function formatDate(v) {
 
 export default function CommunityList() {
   const { stateCommunity, communityActions } = useContext(CommunityContext);
+  const [loginGuide, setLoginGuide] = useState(false); // "로그인을 해주세요" 안내 표시 플래그
 
   useEffect(() => {
     communityActions.fetchList();
@@ -22,21 +23,21 @@ export default function CommunityList() {
   if (stateCommunity.loading) return <div>Loading...</div>;
 
   if (!stateCommunity.list || stateCommunity.list.length === 0) {
-    return <div className="notice">커뮤니티 글이 없습니다.</div>;
+    return <div className="notice">No community posts.</div>;
   }
 
   const onClickRecommend = async (e, id) => {
-    e.preventDefault(); // ✅ 카드 Link 이동 방지
+    e.preventDefault(); // 카드 Link 이동 방지
     e.stopPropagation();
 
     try {
       const out = await communityActions.recommendToggle(id);
       console.log("recommendToggle response:", out);
 
-      // ✅ (핵심) 토글 후 리스트 재조회 -> 화면 반영 100%
+      // 토글 후 리스트 재조회 -> 화면 반영 100%
       await communityActions.fetchList();
     } catch (err) {
-      alert(err?.response?.data?.detail || err?.message || "추천 실패");
+      alert(err?.response?.data?.detail || err?.message || "Failed to recommend");
     }
   };
 
@@ -53,7 +54,7 @@ export default function CommunityList() {
           row.latest_comment ??
           null;
 
-        // ✅ recommend 출력
+        // recommend 출력
         const recommend = row.recommend ?? 0;
 
         return (
@@ -73,9 +74,9 @@ export default function CommunityList() {
               </div>
 
               <div className="communityCardComment">
-                <span className="communityCardCommentLabel">댓글</span>
+                <span className="communityCardCommentLabel">Comments</span>
                 <span className="communityCardCommentText">
-                  {latestComment ? latestComment : "없습니다"}
+                  {latestComment ? latestComment : "There isn't."}
                 </span>
               </div>
 
@@ -89,13 +90,13 @@ export default function CommunityList() {
                     border: "1px solid #ddd",
                     background: "#fff",
                     cursor: "pointer",
-                    fontSize: 14,          // ✅ 강제
-                    color: "#111",         // ✅ 강제
-                    lineHeight: "18px",    // ✅ 강제
-                    minWidth: 60,          // ✅ 강제
-                    textIndent: 0,         // ✅ 강제
-                    overflow: "visible",   // ✅ 강제
-                    whiteSpace: "nowrap",  // ✅ 강제
+                    fontSize: 14,          //  강제
+                    color: "#111",         //  강제
+                    lineHeight: "18px",    //  강제
+                    minWidth: 60,          //  강제
+                    textIndent: 0,         //  강제
+                    overflow: "visible",   //  강제
+                    whiteSpace: "nowrap",  //  강제
                   }}
                 >
                   👍 {recommend}

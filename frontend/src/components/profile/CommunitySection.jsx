@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import styles from "./Section.module.css";
 
@@ -18,17 +17,17 @@ export default function CommunitySection({ communities, currentPage, onPageChang
     <div className={styles.section}>
       <div className={styles.header}>
         <h3 className={styles.title}>
-          내가 작성한 커뮤니티 글 ({communities.length})
+          A Written Community ({communities.length})
         </h3>
         <Link to="/community" className={styles.link}>
-          전체보기 →
+          All community
         </Link>
       </div>
 
       {communitiesToShow.length === 0 ? (
         <div className={styles.emptyState}>
           <p className={styles.emptyIcon}>💬</p>
-          <p className={styles.emptyText}>작성한 커뮤니티 글이 없습니다.</p>
+          <p className={styles.emptyText}>No community posts have been created.</p>
         </div>
       ) : (
         <>
@@ -44,7 +43,7 @@ export default function CommunitySection({ communities, currentPage, onPageChang
                   className={`${styles.item} ${styles.communityItem}`}
                 >
                   <p className={styles.itemContent}>
-                    게시글 {postNumber}
+                    Post {postNumber}
                   </p>
                   <div className={styles.itemFooter}>
                     <span>🧡 {community.recommend || 0}</span>

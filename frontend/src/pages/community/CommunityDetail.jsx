@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CommunityContext } from "../../context/CommunityContext";
 import { MemberContext } from "../../context/MemberContext";
@@ -58,7 +58,7 @@ export default function CommunityDetail() {
             setCommentError("");
           }
         } else {
-          if (mounted) setCommentError(e.message || "댓글 조회 실패");
+          if (mounted) setCommentError(e.message || "Failed to view comments");
         }
       } finally {
         if (mounted) setCommentLoading(false);
@@ -78,7 +78,7 @@ export default function CommunityDetail() {
       await CommunityAPI.toggleActive(id);
       await communityActions.fetchDetail(id);
     } catch (e) {
-      alert(e?.response?.data?.detail || e?.message || "공개 설정 변경 실패");
+      alert(e?.response?.data?.detail || e?.message || "Failed to change public settings");
     } finally {
       setActiveToggling(false);
     }
@@ -96,9 +96,7 @@ export default function CommunityDetail() {
     } catch (e) {
       const status = e?.response?.status;
       if (status === 404 || status === 501) {
-        alert("댓글 등록 API가 아직 준비되지 않았습니다. (백엔드 구현 후 연결)");
-      } else {
-        alert(e.message || "댓글 등록 실패");
+        alert(e.message || "Failed to register comments");
       }
     }
   };
@@ -133,7 +131,7 @@ export default function CommunityDetail() {
 
       cancelEdit();
     } catch (e) {
-      alert(e.message || "댓글 수정 실패");
+      alert(e.message || "Failed to edit comments");
       setEditingSaving(false);
     }
   };
@@ -167,14 +165,14 @@ export default function CommunityDetail() {
       }
       await communityActions.fetchDetail(id);
     } catch (e) {
-      alert(e?.response?.data?.detail || e?.message || "추천 실패");
+      alert(e?.response?.data?.detail || e?.message || "Failed to recommend");
     }
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>{d ? `${nickname}님의 게시글` : "로딩 중..."}</h1>
+        <h1>{d ? `${nickname}'s post` : "Loading..."}</h1>
       </div>
 
       {stateCommunity.error && <div className={styles.errorBox}>{stateCommunity.error}</div>}
@@ -212,7 +210,7 @@ export default function CommunityDetail() {
                       onClick={onToggleActive}
                       style={{ cursor: activeToggling ? "not-allowed" : "pointer" }}
                     >
-                      <span className={styles.activeToggleLabel}>공개</span>
+                      <span className={styles.activeToggleLabel}>Public</span>
                       <div className={`${styles.toggleSwitch} ${communityActive ? styles.toggleOn : styles.toggleOff}`}>
                         <div className={styles.toggleKnob} />
                       </div>
@@ -232,7 +230,7 @@ export default function CommunityDetail() {
                   </span>
                 </button>
                 <span className={styles.likeCount}>
-                  {recommend > 0 ? `좋아요 ${recommend}개` : ""}
+                  {recommend > 0 ? `Like ${recommend}` : ""}
                 </span>
               </div>
             </div>
@@ -240,33 +238,33 @@ export default function CommunityDetail() {
 
           <div className={styles.commentBox}>
             <div className={styles.commentHeader}>
-              <h3>댓글</h3>
+              <h3>Comments</h3>
               <div className={styles.commentPager}>
                 <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
-                  이전
+                  Previous
                 </button>
                 <span>{page + 1}</span>
                 <button
                   onClick={() => setPage((p) => p + 1)}
                   disabled={commentLoading || comments.length < limit}
                 >
-                  다음
+                  Next
                 </button>
               </div>
             </div>
 
             {commentError && <div className={styles.errorBox}>{commentError}</div>}
-            {commentLoading && <div>댓글 불러오는 중...</div>}
+            {commentLoading && <div>Loading...</div>}
 
             {!commentLoading && !commentError && comments.length === 0 && (
-              <div className={styles.notice}>댓글이 없습니다.</div>
+              <div className={styles.notice}>no comments.</div>
             )}
 
             <div className={styles.commentList}>
               {comments.map((c) => {
                 const cid = c.comment_id ?? c.id;
                 const cnick = c.nickname ?? "-";
-                const cdate = formatDate(c.created_at ?? c.createdAt);
+                const cdate = formatDate(c.update_at ?? c.updateAt);
                 const ctext = c.content ?? "";
 
                 const ownerId = c.member_id ?? c.memberId ?? null;
@@ -284,7 +282,7 @@ export default function CommunityDetail() {
 
                         {isMine && !isEditing && (
                           <button type="button" onClick={() => startEdit(c)} className={styles.commentEditBtn}>
-                            수정
+                            Edit
                           </button>
                         )}
                       </div>
@@ -299,14 +297,14 @@ export default function CommunityDetail() {
                         />
                         <div className={styles.commentEditActions}>
                           <button type="button" onClick={cancelEdit} disabled={editingSaving}>
-                            취소
+                            Cancel
                           </button>
                           <button
                             type="button"
                             onClick={saveEdit}
                             disabled={editingSaving || !editingText.trim()}
                           >
-                            {editingSaving ? "저장 중..." : "저장"}
+                            {editingSaving ? "Saving..." : "save"}
                           </button>
                         </div>
                       </div>
@@ -323,7 +321,7 @@ export default function CommunityDetail() {
                 rows={3}
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                placeholder="댓글을 입력하세요"
+                placeholder="Please comments"
                 disabled={editingId != null}
               />
               <button
@@ -331,9 +329,9 @@ export default function CommunityDetail() {
                 disabled={!commentText.trim() || editingId != null}
                 className={styles.commentFormSubmit}
               >
-                댓글 등록
+                Register for comments
               </button>
-              <div className={styles.commentHint}>* 본인 댓글은 수정 가능합니다.</div>
+              <div className={styles.commentHint}>* You can only edit your comments.</div>
             </div>
           </div>
         </>

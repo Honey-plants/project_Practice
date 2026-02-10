@@ -12,7 +12,7 @@ function ReviewItem({ review }) {
 
   // 데이터 정규화 (API 응답 형식이 다를 수 있으므로)
   const reviewId = review.review_id || review.id;
-  const title = review.review_title || review.title || review.subject || "(제목 없음)";
+  const title = review.review_title || review.title || review.subject || "(No title)";
   const content = review.review_content || review.content || "";
   const rating = review.rating || 0;
   const imageUrls = review.image_urls || (review.image_url ? [review.image_url] : []);
@@ -55,7 +55,7 @@ function ReviewItem({ review }) {
     return itemIds
       .map(id => {
         const item = allItems.find(it => it.item_id === id);
-        return item ? (item.item_label_ko || item.item_label_en || `Item #${id}`) : null;
+        return item ? (item.item_label_en || item.item_label_ko || `Item #${id}`) : null;
       })
       .filter(Boolean);
   }, [review.review_items, stateMeta.restrictions]);
@@ -95,7 +95,7 @@ function ReviewItem({ review }) {
           <div className={styles.habitHeader}>
             {authorNickname && (
               <div className={styles.habitTitle}>
-                <span className={styles.habitNickname}>{authorNickname}</span>님의 식습관
+                <span className={styles.habitNickname}>{authorNickname}</span>'s Dietary Habits
               </div>
             )}
             {itemLabels.length > 0 && (
@@ -179,7 +179,7 @@ function ReviewItem({ review }) {
         {/* 작성일 */}
         {createdAt && (
           <div className={styles.reviewCardDate}>
-            {new Date(createdAt).toLocaleDateString('ko-KR')}
+            {new Date(createdAt).toLocaleDateString('en-KR')}
           </div>
         )}
       </div>

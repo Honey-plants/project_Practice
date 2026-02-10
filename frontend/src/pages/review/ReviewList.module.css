@@ -1,8 +1,12 @@
 /* ===== Review List Container ===== */
 .container {
   padding: 20px;
-  max-width: 1200px;
+  max-width: 420px;
   margin: 0 auto;
+  box-sizing: border-box;
+  min-height: calc(100vh - 106px);
+  display: flex;
+  flex-direction: column;
 }
 
 /* ===== Header Section ===== */
@@ -270,6 +274,6 @@
 /* ===== Review Grid ===== */
 .reviewGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: 1fr;
   gap: 24px;
 }
