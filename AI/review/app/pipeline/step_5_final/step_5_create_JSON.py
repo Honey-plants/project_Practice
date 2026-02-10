@@ -1,4 +1,3 @@
-# ai/review/app/pipeline/steps/build_json/run.py
 from __future__ import annotations
 
 from AI.review.app.domain.schemas import PipelineContext, FinalReceiptResponse

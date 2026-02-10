@@ -9,11 +9,7 @@ def _y_key(it: Dict[str, Any]) -> int:
 
 
 def normalize_lines(items: List[Dict[str, Any]], y_threshold: int = 10) -> List[str]:
-    """
-    items(bbox 기반) -> 라인 문자열 리스트
-    ✔ 기존 로직 유지
-    ✔ y_min → center_y만 변경
-    """
+
     if not items:
         return []
 

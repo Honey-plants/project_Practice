@@ -5,11 +5,7 @@ from typing import Any, Dict, List
 # 결과 파싱 (PaddleOCR raw -> items)
 # -----------------------------
 def parse_paddleocr_raw(raw: Any) -> List[Dict[str, Any]]:
-    """
-    PaddleOCR output을 안정적인 schema로 변환:
-      [{text, score, poly(4pts), bbox[x1,y1,x2,y2]}, ...]
-    PaddleOCR 버전에 따라 raw 구조가 달라서 방어적으로 처리.
-    """
+
     items: List[Dict[str, Any]] = []
 
     def add_item(text: str, score: float, poly_pts) -> None:

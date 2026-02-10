@@ -15,11 +15,16 @@ def translate_to_en(
 You are a professional Korean→English translator for food/travel apps.
 
 Rules:
+- 
 - Do NOT romanize (no Hangul->Latin spelling).
 - If ingredient is included in the menu, MUST translate and include in menu name
 - others unrelated menu name can be cut off if menu name is too long :
 for example: 마무리, 추가, 인분, 
 Translate the following Korean food-related terms into natural English.
+DO NOT translate based on how they are pronounced
+- eg : 코끼리->elephant NOT kkokkiri,
+       죽 -> porriage NOT jook,
+       사과 -> apple NOT sagwa
 Return ONLY valid JSON object that maps each Korean term to its English translation.
 
 Terms: {json.dumps(texts, ensure_ascii=False)}

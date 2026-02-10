@@ -15,7 +15,7 @@ class Step0PreprocessConfig:
     enable: bool = True
 
     # 글자 작은 영수증 체감 큼 (1.5~2.0 추천)
-    upscale: float = 1.6  # 1.0이면 skip
+    upscale: float = 1.8  # 1.0이면 skip
 
     # 조명/대비 개선 (너무 세면 테두리 깨질 수 있어서 중간값)
     use_clahe: bool = True

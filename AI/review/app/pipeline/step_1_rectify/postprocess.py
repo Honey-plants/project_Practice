@@ -9,14 +9,16 @@ class PostprocessConfig:
     enable: bool = True
 
     # Prefer gray-based processing for receipts
-    denoise_strength: int = 3        # 0이면 skip
-    use_clahe: bool = True
+    denoise_strength: int = 0      # 0이면 skip
+    use_clahe: bool = False
     clahe_clip: float = 2.0         # 낮춤 (기존 3.0)
     clahe_grid: int = 8
 
+    upscale: float = 1.8  # 1.0이면 skip
+
     # Brightness protection
     preserve_brightness: bool = True
-    max_dark_drop: float = 0.06     # 평균 밝기 6% 이상 떨어지면 보정
+    max_dark_drop: float = 0.03     # 평균 밝기 6% 이상 떨어지면 보정
     gamma: float = 0.85             # <1 이면 밝아짐 (0.85~0.95 추천)
 
     sharpen: bool = True
@@ -42,6 +44,11 @@ def postprocess_for_ocr(image_bgr: np.ndarray, cfg: PostprocessConfig) -> Tuple[
     L0 = lab0[:, :, 0]
     mean0 = float(np.mean(L0))
     meta["mean_L_before"] = mean0
+
+    # 0) Upscale first (OCR 인식률에 가장 도움)
+    if cfg.upscale and cfg.upscale > 1.0:
+        h, w = out.shape[:2]
+        out = cv2.resize(out, (int(w * cfg.upscale), int(h * cfg.upscale)), interpolation=cv2.INTER_CUBIC)
 
     # 1) Denoise (gray-based is usually better for receipts)
     if cfg.denoise_strength > 0:

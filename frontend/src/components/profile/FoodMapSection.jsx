@@ -72,7 +72,7 @@ export default function FoodMapSection({ communities = [] }) {
       <div className={mapStyles.mapImageWrap}>
         <img
           src={imageUrl}
-          alt="먹거리 지도"
+          alt="Food Map"
           className={mapStyles.mapImage}
         />
       </div>
