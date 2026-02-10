@@ -230,7 +230,7 @@ export default function CommunityDetail() {
                   </span>
                 </button>
                 <span className={styles.likeCount}>
-                  {recommend > 0 ? `Like ${recommend}개` : ""}
+                  {recommend > 0 ? `Like ${recommend}` : ""}
                 </span>
               </div>
             </div>
@@ -264,7 +264,7 @@ export default function CommunityDetail() {
               {comments.map((c) => {
                 const cid = c.comment_id ?? c.id;
                 const cnick = c.nickname ?? "-";
-                const cdate = formatDate(c.created_at ?? c.createdAt);
+                const cdate = formatDate(c.update_at ?? c.updateAt);
                 const ctext = c.content ?? "";
 
                 const ownerId = c.member_id ?? c.memberId ?? null;
@@ -297,7 +297,7 @@ export default function CommunityDetail() {
                         />
                         <div className={styles.commentEditActions}>
                           <button type="button" onClick={cancelEdit} disabled={editingSaving}>
-                            취소
+                            Cancel
                           </button>
                           <button
                             type="button"
@@ -321,7 +321,7 @@ export default function CommunityDetail() {
                 rows={3}
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                placeholder="comments"
+                placeholder="Please comments"
                 disabled={editingId != null}
               />
               <button
@@ -329,7 +329,7 @@ export default function CommunityDetail() {
                 disabled={!commentText.trim() || editingId != null}
                 className={styles.commentFormSubmit}
               >
-                댓글 등록
+                Register for comments
               </button>
               <div className={styles.commentHint}>* You can only edit your comments.</div>
             </div>
