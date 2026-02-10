@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import PreviewPage from './PreviewPage';
 import { CameraService } from '../../components/camera/CameraService';
 
 const GUIDE_MESSAGE = {
@@ -173,20 +172,20 @@ export default function CameraUploadPage({ onCapture }) {
      Preview
      ========================= */
 
-  if (previewStep) {
-    return (
-      <PreviewPage
-        file={capturedImage}
-        goBack={() => {
-          setCapturedImage(null);
-          setPreviewStep(false);
-          setStarted(false);
-          setGuide(null);
-          setCameraClosed(false);
-        }}
-      />
-    );
-  }
+  // if (previewStep) {
+  //   return (
+  //     <PreviewPage
+  //       file={capturedImage}
+  //       goBack={() => {
+  //         setCapturedImage(null);
+  //         setPreviewStep(false);
+  //         setStarted(false);
+  //         setGuide(null);
+  //         setCameraClosed(false);
+  //       }}
+  //     />
+  //   );
+  // }
 
   /* =========================
      Render
