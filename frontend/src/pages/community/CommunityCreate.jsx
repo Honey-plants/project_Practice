@@ -4,7 +4,6 @@ import { CommunityContext } from "../../context/CommunityContext";
 import CreateModal from "../../components/community/CreateModal";
 import { ReviewContext } from "../../context/ReviewContext";
 
-
 export default function CommunityCreate() {
   const nav = useNavigate();
   const { communityActions } = useContext(CommunityContext);
@@ -35,6 +34,7 @@ export default function CommunityCreate() {
     }
   };
 
+  
   return (
     <div style={{ padding: 16, maxWidth: 720 }}>
       <h2>New Community Post</h2>

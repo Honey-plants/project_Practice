@@ -99,7 +99,7 @@ function ReviewItem({ review, categories }) {
           <div className={styles.habitHeader}>
             {authorNickname && (
               <div className={styles.habitTitle}>
-                <span className={styles.habitNickname}>{authorNickname}</span>'s Dietary Habits
+                <span className={styles.habitNickname}>{authorNickname}</span>'s dietary restriction
               </div>
             )}
             {itemLabels.length > 0 && (

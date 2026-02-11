@@ -335,7 +335,7 @@ export default function Register() {
               name="nickname"
               value={form.nickname}
               onChange={onChange}
-              placeholder="Please write 10 characters or less"
+              placeholder="Upto 10 characters"
               style={{ flex: 1 }}
             />
             <button

@@ -26,7 +26,6 @@ import ReviewCreate from "./pages/review/ReviewCreate";
 import ReviewEdit from "./pages/review/ReviewEdit";
 
 // test
-import CameraUploadPage from "./pages/menuscan/CameraUploadPage";
 import Register from "./pages/auth/Register";
 
 // admin 추가
@@ -43,8 +42,8 @@ export default function App() {
         <Routes>
           {/* 공개 페이지 (로그인 불필요) */}
           <Route path="/" element={<Home />} />
-          <Route path="/result" element={<ResultPage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/result" element={<ResultPage />} />
           <Route path="/register" element={<Register />} />
 
           {/* 커뮤니티 - 목록/상세 공개, 작성/수정은 로그인 필수 */}
@@ -89,15 +88,6 @@ export default function App() {
           />
 
 
-          {/* upload */}
-          <Route
-            path="/menu/upload"
-            element={
-              <ProtectedRoute>
-                <CameraUploadPage />
-              </ProtectedRoute>
-            }
-          />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
