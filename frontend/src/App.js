@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/common.css";
 
@@ -17,7 +16,6 @@ import EditProfile from "./pages/member/EditProfile";
 
 import CommunityDetail from "./pages/community/CommunityDetail";
 import CommunityCreate from "./pages/community/CommunityCreate";
-// import CommunityEdit from "./pages/community/CommunityEdit";
 import Community from "./pages/community/Community";
 
 import ReviewList from "./pages/review/ReviewList";

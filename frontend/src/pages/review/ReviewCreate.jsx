@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ReviewAPI } from "../../api/reviewApi";
 import { useNavigate } from "react-router-dom";
 import CaptureFlow from "../../components/camera/CaptureFlow"; // ✅ add
@@ -45,7 +45,7 @@ export default function ReviewCreateInline({ onCreated }) {
   const verify = async () => {
     setErr("");
     setMsg("");
-    if (!receiptFile) return setErr("영수증 이미지를 선택해줘");
+    if (!receiptFile) return setErr("Please select the image of the receipt");
 
     setLoadingVerify(true);
     try {
@@ -197,7 +197,7 @@ export default function ReviewCreateInline({ onCreated }) {
       {/* Step 1 */}
       {!receiptId && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>1) Verify Receipt</div>
+          <div className={styles.stepHeader}>Verify Receipt</div>
 
           {/* ✅ camera page */}
           {showCamera && !receiptFile && (
