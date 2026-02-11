@@ -97,12 +97,12 @@ export default function CreateModal({
 
   const handleConfirm = () => {
 
-      console.log("나 버튼 눌렀다.")
+      // console.log("나 버튼 눌렀다.")
 
     if (!canSubmit || saving) return;
 
     const reviewIds = templateId === 2 ? allIds : selectedIds;
-    console.log("버튼 클릭 :: ", reviewIds)
+    // console.log("버튼 클릭 :: ", reviewIds)
     onConfirm?.({ templateId, reviewIds });
   };
 

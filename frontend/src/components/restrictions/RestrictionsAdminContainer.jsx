@@ -119,6 +119,24 @@ export default function RestrictionsAdminContainer() {
     }
   };
 
+  const addItemToCategory = async (category_id, payload) => {
+    setMsg("");
+    try {
+      await RestrictionsAdminAPI.addItemToCategory(category_id, {
+        item_label_ko: payload.item_label_ko,
+        item_label_en: payload.item_label_en,
+        item_active: true,
+      });
+
+      if (metaActions?.refresh) await metaActions.refresh({ force: true });
+
+      await loadAll();
+      setMsg(` 아이템 추가 완료 (Category #${category_id})`);
+    } catch (e) {
+      setMsg(`❌ ${e?.response?.data?.detail || e?.message || "아이템 추가 실패"}`);
+    }
+  };
+
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     if (!needle) return data;
@@ -173,6 +191,7 @@ export default function RestrictionsAdminContainer() {
           onChangeItem={updateItemLocal}
           onSaveCategory={saveCategory}
           onSaveItem={saveItem}
+          onAddItem={addItemToCategory}
         />
       </div>
     </div>

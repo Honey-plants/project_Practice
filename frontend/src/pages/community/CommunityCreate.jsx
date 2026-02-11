@@ -22,11 +22,10 @@ export default function CommunityCreate() {
       review_ids: reviewIds,
     }
 
-    console.log("community create payload:", payload);
 
     try {
       const created = await communityActions.create(payload);
-      console.log("[CommunityCreate] create response:", created);
+      // console.log("[CommunityCreate] create response:", created);
 
 
       setIsOpen(false);     // 모달 닫기

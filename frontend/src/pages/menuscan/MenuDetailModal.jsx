@@ -40,7 +40,7 @@ export default function MenuDetailModal({ item, onClose }) {
               {menuNameEn || menuNameKo || "Menu details"}
             </h3>
             {menuNameKo && menuNameEn && (
-              <div className="ms-mdm__subline">KO: {menuNameKo}</div>
+              <div className="ms-mdm__subline">{menuNameKo}</div>
             )}
           </div>
 
@@ -53,16 +53,6 @@ export default function MenuDetailModal({ item, onClose }) {
         <section className="ms-mdm__section">
           <h4 className="ms-mdm__sectionTitle">User risk match</h4>
           <div className="ms-mdm__riskBox">
-            <p className="ms-mdm__riskText" style={{ marginBottom: 10 }}>
-              <b>has_any_risk:</b> {String(hasAnyRisk)}
-              {riskDifficulty !== null && riskDifficulty !== undefined && (
-                <>
-                  {" "}
-                  · <b>risk_difficulty:</b> {String(riskDifficulty)}
-                </>
-              )}
-            </p>
-
             {allergyHits.length > 0 && (
               <div style={{ marginBottom: 8 }}>
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>
@@ -121,7 +111,7 @@ export default function MenuDetailModal({ item, onClose }) {
         {/* English description */}
         {menuDescEn && (
           <section className="ms-mdm__section">
-            <h4 className="ms-mdm__sectionTitle">English description</h4>
+            <h4 className="ms-mdm__sectionTitle">Food description</h4>
             <p className="ms-mdm__text">{menuDescEn}</p>
           </section>
         )}
@@ -143,7 +133,6 @@ export default function MenuDetailModal({ item, onClose }) {
           <section className="ms-mdm__section">
             <div className="ms-mdm__commentHeader">
               <h4 className="ms-mdm__sectionTitle">Show this to staff</h4>
-              <span className="ms-mdm__badge">show it to the staff</span>
             </div>
 
             <div className="ms-mdm__commentBox">
@@ -163,10 +152,7 @@ export default function MenuDetailModal({ item, onClose }) {
                 </div>
               )}
             </div>
-
-            <div className="ms-mdm__hint">
-              Show the above sentence to the staff and check for allergy/food restriction related materials.
-            </div>
+            
           </section>
         )}
       </div>

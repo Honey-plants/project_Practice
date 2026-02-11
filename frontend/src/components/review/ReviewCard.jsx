@@ -4,11 +4,14 @@ import { useContext, useMemo, useState } from "react";
 import { MetaContext } from "../../context/MetaContext";
 import { MemberContext } from "../../context/MemberContext";
 
-function ReviewItem({ review }) {
+function ReviewItem({ review, categories }) {
   const nav = useNavigate();
   const { stateMeta } = useContext(MetaContext);
   const { stateMember } = useContext(MemberContext);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // categories prop이 있으면 사용, 없으면 MetaContext 사용
+  const restrictionsData = categories || stateMeta?.restrictions || [];
 
   // 데이터 정규화 (API 응답 형식이 다를 수 있으므로)
   const reviewId = review.review_id || review.id;
@@ -18,10 +21,6 @@ function ReviewItem({ review }) {
   const imageUrls = review.image_urls || (review.image_url ? [review.image_url] : []);
 
   // menu_name이 배열이면 join, 문자열이면 그대로, 없으면 빈 문자열
-  const menuName = Array.isArray(review.menu_name)
-    ? review.menu_name.join(',')
-    : (review.menu_name || "");
-
   const createdAt = review.created_at || review.create_at || "";
 
   // 작성자 닉네임 결정:
@@ -49,19 +48,21 @@ function ReviewItem({ review }) {
       ? reviewItems.map(id => Number(id))
       : [];
 
-    if (!itemIds.length || !stateMeta.restrictions.length) return [];
+    if (!itemIds.length || !restrictionsData.length) return [];
 
-    const allItems = stateMeta.restrictions.flatMap(cat => cat.items || []);
-    return itemIds
+    const allItems = restrictionsData.flatMap(cat => cat.items || []);
+    const labels = itemIds
       .map(id => {
         const item = allItems.find(it => it.item_id === id);
         return item ? (item.item_label_en || item.item_label_ko || `Item #${id}`) : null;
       })
       .filter(Boolean);
-  }, [review.review_items, stateMeta.restrictions]);
+
+    return labels;
+  }, [review.review_items, restrictionsData, reviewId]);
 
   const handleClick = () => {
-      console.log("클릭 reviewId :: ", {reviewId})
+      // console.log("클릭 reviewId :: ", {reviewId})
       nav(`/review/${reviewId}`);
   };
 
