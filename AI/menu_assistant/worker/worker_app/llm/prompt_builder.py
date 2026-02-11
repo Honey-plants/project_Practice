@@ -93,7 +93,8 @@ def build_step05_prompt(*, run_id: str, user_profile: Dict[str, Any], items: Lis
         "- If match_status=='exact', risk_difficulty MUST be 0|1|2 (NOT 3).\n\n"
 
         "NON-EMPTY REQUIRED TEXT FIELDS:\n"
-        "- menu_description_ko: non-empty Korean string.\n"
+        "- menu_description_ko: 1~2 Korean sentences (minimum 1 sentence, maximum 2).\n"
+        "- If is_menu='yes': describe what the dish is (ingredients/cooking style) in 1~2 sentences.\n"
         "- risk_description_ko: non-empty Korean string.\n"
         "- comment_ko: non-empty Korean question ending with '?'.\n"
         "- If insufficient information, use conservative generic text.\n\n"

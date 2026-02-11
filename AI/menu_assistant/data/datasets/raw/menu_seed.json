@@ -26601,7 +26601,6 @@
     "menu_description_ko": "흰밥은 대표 재료를 활용한 메뉴입니다.",
     "ingredients": []
   },
-
   {
     "id": "rep_2018",
     "menu": "샤브고기",
@@ -26743,6 +26742,120 @@
     "ingredients": [
       "Wheat",
       "Buckwheat"
+    ]
+  },
+  {
+    "id": "rep_2028",
+    "menu": "오리탕",
+    "variants": [
+      "오리탕",
+      "오리 탕"
+    ],
+    "alg_tags": [],
+    "menu_description_ko": "오리탕은 오리고기를 무, 파, 마늘 등과 함께 푹 끓여낸 담백한 탕(국물) 요리입니다.",
+    "ingredients": [
+      "Duck",
+      "Garlic",
+      "Green onion",
+      "Radish"
+    ]
+  },
+  {
+    "id": "rep_2029",
+    "menu": "돼지주물럭",
+    "variants": [
+      "돼지주물럭",
+      "돼지주물력",
+      "돼지 주물럭"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ],
+    "menu_description_ko": "돼지주물럭은 돼지고기를 고추장/간장 등 양념에 재워 센 불에 볶거나 구워 먹는 매콤달콤한 볶음/구이 요리입니다.",
+    "ingredients": [
+      "Pork",
+      "Soybean",
+      "Garlic",
+      "Chili pepper"
+    ]
+  },
+  {
+    "id": "rep_2030",
+    "menu": "생삼겹살",
+    "variants": [
+      "생삼겹살",
+      "생 삼겹살"
+    ],
+    "alg_tags": [],
+    "menu_description_ko": "생삼겹살은 양념하지 않은 돼지 삼겹 부위를 두툼하게 구워 먹는 대표적인 고기구이 메뉴입니다.",
+    "ingredients": [
+      "Pork"
+    ]
+  },
+  {
+    "id": "rep_2031",
+    "menu": "오리주물럭",
+    "variants": [
+      "오리주물럭",
+      "오리 주물럭"
+    ],
+    "alg_tags": [
+      "ALG_SOY"
+    ],
+    "menu_description_ko": "오리주물럭은 오리고기를 고추장/간장 등 양념에 재워 볶거나 구워 먹는 주물럭(볶음/구이) 요리입니다.",
+    "ingredients": [
+      "Duck",
+      "Soybean",
+      "Garlic",
+      "Chili pepper"
+    ]
+  },
+  {
+    "id": "rep_2032",
+    "menu": "오리로스",
+    "variants": [
+      "오리로스",
+      "오리 로스",
+      "로스구이"
+    ],
+    "alg_tags": [],
+    "menu_description_ko": "오리로스는 오리고기를 얇게 썰어 불판에 구워 먹는 오리구이(로스) 메뉴입니다.",
+    "ingredients": [
+      "Duck"
+    ]
+  },
+  {
+    "id": "rep_2033",
+    "menu": "공기밥",
+    "variants": [
+      "공기밥",
+      "공기 밥",
+      "백미밥"
+    ],
+    "alg_tags": [],
+    "menu_description_ko": "공기밥은 기본으로 제공되는 흰쌀밥(한 공기) 메뉴입니다.",
+    "ingredients": [
+      "Rice"
+    ]
+  },
+  {
+    "id": "rep_2034",
+    "menu": "맥주",
+    "variants": [
+      "맥주",
+      "생맥주",
+      "병맥주",
+      "캔맥주",
+      "beer"
+    ],
+    "alg_tags": [
+      "ALG_CEREALS_GLUTEN"
+    ],
+    "menu_description_ko": "맥주는 보리(또는 밀) 등을 발효해 만든 알코올 음료입니다.",
+    "ingredients": [
+      "Beer",
+      "Barley",
+      "Wheat"
     ]
   }
 ]
