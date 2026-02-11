@@ -6,6 +6,7 @@ import AppProviders from "./app/AppProviders";
 import Header from "./components/layout/Header";
 import BottomNav from "./components/layout/BottomNav";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import ScrollToTop from "./components/common/ScrollToTop";
 
 import Home from "./pages/Home";
 import ResultPage from "./pages/menuscan/ResultPage";
@@ -35,6 +36,7 @@ export default function App() {
   return (
     <AppProviders>
       <BrowserRouter>
+        <ScrollToTop />
         <Header />
 
         <main className="app-main">

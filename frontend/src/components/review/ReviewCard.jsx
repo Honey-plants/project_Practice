@@ -10,8 +10,11 @@ function ReviewItem({ review, categories }) {
   const { stateMember } = useContext(MemberContext);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // categories prop이 있으면 사용, 없으면 MetaContext 사용
-  const restrictionsData = categories || stateMeta?.restrictions || [];
+  // categories prop이 있으면 사용, 없으면 MetaContext 사용 - useMemo로 최적화
+  const restrictionsData = useMemo(
+    () => categories || stateMeta?.restrictions || [],
+    [categories, stateMeta?.restrictions]
+  );
 
   // 데이터 정규화 (API 응답 형식이 다를 수 있으므로)
   const reviewId = review.review_id || review.id;
@@ -59,7 +62,7 @@ function ReviewItem({ review, categories }) {
       .filter(Boolean);
 
     return labels;
-  }, [review.review_items, restrictionsData, reviewId]);
+  }, [review.review_items, restrictionsData]);
 
   const handleClick = () => {
       // console.log("클릭 reviewId :: ", {reviewId})

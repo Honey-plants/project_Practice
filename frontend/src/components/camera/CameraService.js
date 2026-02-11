@@ -59,7 +59,9 @@ export class CameraService {
 
   async start() {
     if (!navigator.mediaDevices?.getUserMedia) {
-      throw { code: 'UNSUPPORTED_BROWSER' };
+      const error = new Error('Unsupported browser');
+      error.code = 'UNSUPPORTED_BROWSER';
+      throw error;
     }
 
     try {

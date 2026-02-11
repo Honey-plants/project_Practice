@@ -114,7 +114,7 @@ export default function ReviewList() {
       // 필터가 없으면 전체 표시
       return true;
     });
-  }, [stateReview.list, selectedCategory, selectedItemIds]);
+  }, [stateReview.list, selectedItemIds]);
 
   const displayList = filteredReviews;
   const displayLoading = stateReview.loading;

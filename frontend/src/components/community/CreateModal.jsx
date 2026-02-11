@@ -28,7 +28,7 @@ export default function CreateModal({
   // 0/1, true/false, "1"/"0" 등 다 커버
   const toBool = (v) => v === true || v === 1 || v === "1" || v === "true";
 
-  // temp1
+  // temp1 - 함수를 useMemo 밖에서 정의
   const isReviewActive = (r) =>
     toBool(r.available ?? r.is_active ?? r.isActive) === true;
 
@@ -40,12 +40,7 @@ export default function CreateModal({
   }, [myReviews]);
 
   // active도 내 리뷰(myList) 기준 temp1사용
-  const activeReviews = useMemo(() => myReviews.filter(isReviewActive), [myReviews]);
-
-  const activeIds = useMemo(
-    () => activeReviews.map((r) => r.review_id ?? r.id).filter(Boolean),
-    [activeReviews]
-  );
+  const activeReviews = useMemo(() => myReviews.filter(isReviewActive), [myReviews, isReviewActive]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -67,16 +62,18 @@ export default function CreateModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, myMemberId]);
 
+  // allIds를 string으로 변환하여 의존성으로 사용
+  const allIdsKey = allIds.join(",");
+
   useEffect(() => {
     if (!isOpen) return;
 
     if (templateId === 2) {
-
         setSelectedIds(allIds);
     } else {
         setSelectedIds([]);
     }
-  }, [templateId, allIds.join(","), isOpen]);
+  }, [templateId, allIdsKey, isOpen, allIds]);
 
   const toggleSelect = (id, isActive) => {
     if (!isActive) return;

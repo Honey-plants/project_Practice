@@ -32,17 +32,11 @@ export default function RestrictionsAdminContainer() {
   const [data, setData] = useState([]);
   const [q, setQ] = useState("");
 
-  //  디버그용 raw 저장
-  const [raw, setRaw] = useState(null);
-
   const loadAll = async () => {
     setMsg("");
     setLoading(true);
     try {
       const res = await RestrictionsAdminAPI.list({ onlyActive: false });
-
-      //  디버그: 원본 payload 저장
-      setRaw(res?.data ?? res);
 
       const list = normalizeRestrictions(res);
       setData(list);
@@ -54,7 +48,6 @@ export default function RestrictionsAdminContainer() {
     } catch (e) {
       setMsg(`❌ ${e?.response?.data?.detail || e?.message || "조회 실패"}`);
       setData([]);
-      setRaw(e?.response?.data ?? null);
       console.error("[ADMIN] list error:", e?.response?.data || e);
     } finally {
       setLoading(false);

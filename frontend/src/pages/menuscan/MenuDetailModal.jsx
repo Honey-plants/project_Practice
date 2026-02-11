@@ -1,9 +1,4 @@
-import React from "react";
 import "./MenuDetailModal.css";
-
-function safeArr(v) {
-  return Array.isArray(v) ? v : [];
-}
 
 function safeArr(v) {
   return Array.isArray(v) ? v : [];
