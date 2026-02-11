@@ -18,21 +18,21 @@ export default function ReviewCreateInline({ onCreated }) {
   // ✅ camera toggle
   const [showCamera, setShowCamera] = useState(false);
 
-  // Step2
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [rating, setRating] = useState(5);
+    // Step2
+    const [title, setTitle] = useState("");
+    const [content, setContent] = useState("");
+    const [rating, setRating] = useState(5);
 
   const [images, setImages] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
 
-  const receiptInputRef = useRef(null);
-  const imageInputRef = useRef(null);
+    const receiptInputRef = useRef(null);
+    const imageInputRef = useRef(null);
 
-  const [loadingVerify, setLoadingVerify] = useState(false);
-  const [loadingCreate, setLoadingCreate] = useState(false);
-  const [msg, setMsg] = useState("");
-  const [err, setErr] = useState("");
+    const [loadingVerify, setLoadingVerify] = useState(false);
+    const [loadingCreate, setLoadingCreate] = useState(false);
+    const [msg, setMsg] = useState("");
+    const [err, setErr] = useState("");
 
   useEffect(() => {
     previewUrls.forEach((u) => URL.revokeObjectURL(u));
@@ -42,10 +42,10 @@ export default function ReviewCreateInline({ onCreated }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [images]);
 
-  const verify = async () => {
-    setErr("");
-    setMsg("");
-    if (!receiptFile) return setErr("Please select the image of the receipt");
+    const verify = async () => {
+        setErr("");
+        setMsg("");
+        if (!receiptFile) return setErr("Please select the image of the receipt");
 
     setLoadingVerify(true);
     try {
@@ -92,10 +92,10 @@ export default function ReviewCreateInline({ onCreated }) {
     }
   };
 
-  const confirmMenu = () => {
-    setMenuConfirmed(true);
-    setMsg("Checked the menu. Please write a review.");
-  };
+    const confirmMenu = () => {
+        setMenuConfirmed(true);
+        setMsg("Checked the menu. Please write a review.");
+    };
 
   const cancelMenu = () => {
     setReceiptId(null);
@@ -111,16 +111,16 @@ export default function ReviewCreateInline({ onCreated }) {
     if (receiptInputRef.current) receiptInputRef.current.value = "";
   };
 
-  const removeMenu = (idx) => {
-    setMenuList((prev) => prev.filter((_, i) => i !== idx));
-  };
+    const removeMenu = (idx) => {
+        setMenuList((prev) => prev.filter((_, i) => i !== idx));
+    };
 
   const onPickImages = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    setErr("");
-    setMsg("");
+        setErr("");
+        setMsg("");
 
     setImages((prev) => {
       const merged = [...prev, ...files];
@@ -138,14 +138,14 @@ export default function ReviewCreateInline({ onCreated }) {
     setImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const create = async () => {
-    setErr("");
-    setMsg("");
+    const create = async () => {
+        setErr("");
+        setMsg("");
 
-    if (!receiptId) return setErr("Please verify the receipt first");
-    if (!title.trim()) return setErr("Please enter the title");
-    if (!content.trim()) return setErr("Please enter the content");
-    if (images.length > 3) return setErr("upload up to three images.");
+        if (!receiptId) return setErr("Please verify the receipt first");
+        if (!title.trim()) return setErr("Please enter the title");
+        if (!content.trim()) return setErr("Please enter the content");
+        if (images.length > 3) return setErr("upload up to three images.");
 
     setLoadingCreate(true);
     try {
@@ -400,8 +400,14 @@ export default function ReviewCreateInline({ onCreated }) {
         </div>
       )}
 
-      {msg && <div className={`${styles.message} ${styles.success}`}>{msg}</div>}
-      {err && <div className={`${styles.message} ${styles.error}`}>{err}</div>}
-    </div>
-  );
+            {msg && (
+                <div className={`${styles.message} ${styles.success}`}>
+                    {msg}
+                </div>
+            )}
+            {err && (
+                <div className={`${styles.message} ${styles.error}`}>{err}</div>
+            )}
+        </div>
+    );
 }
