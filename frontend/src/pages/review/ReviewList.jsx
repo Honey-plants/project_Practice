@@ -274,6 +274,7 @@ export default function ReviewList() {
           <ReviewItem
             key={review.review_id || review.id}
             review={review}
+            categories={categories}
           />
         ))}
       </div>

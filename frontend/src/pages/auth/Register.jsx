@@ -2,7 +2,7 @@ import "../../styles/Register.css";
 import Modal from "../../components/common/Modal";
 import { COUNTRY_OPTIONS, GENDER } from "../../contents/register";
 import { useContext, useEffect, useMemo, useState, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate} from "react-router-dom";
 import { MetaContext } from "../../context/MetaContext";
 import { MemberAPI } from "../../api/memberApi";
 import api from "../../api/axiosInstance";

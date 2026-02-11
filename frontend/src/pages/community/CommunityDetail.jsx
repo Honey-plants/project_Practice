@@ -156,7 +156,6 @@ export default function CommunityDetail() {
   const onRecommend = async () => {
     try {
       const out = await communityActions.recommendToggle(id);
-      console.log("recommendToggle response(detail):", out);
       const nowLiked = out?.data?.recommended ?? !liked;
       setLiked(nowLiked);
       if (nowLiked) {
