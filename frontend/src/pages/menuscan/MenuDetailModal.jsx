@@ -5,6 +5,10 @@ function safeArr(v) {
   return Array.isArray(v) ? v : [];
 }
 
+function safeArr(v) {
+  return Array.isArray(v) ? v : [];
+}
+
 export default function MenuDetailModal({ item, onClose }) {
   if (!item) return null;
 
@@ -43,6 +47,7 @@ export default function MenuDetailModal({ item, onClose }) {
           <div className="ms-mdm__titleWrap">
             <div className="ms-mdm__subtitle">Menu details (EN)</div>
             <h3 className="ms-mdm__title">
+              {menuNameEn || menuNameKo || "Menu details"}
               {menuNameEn || menuNameKo || "Menu details"}
             </h3>
             {menuNameKo && menuNameEn && (

@@ -16,6 +16,8 @@ class NormalizeConfig:
 
 # 영어+숫자 제거 (fullwidth 포함)
 _RE_REMOVE_EN_DIGIT = re.compile(r"[A-Za-z0-9Ａ-Ｚａ-ｚ０-９]+", re.UNICODE)
+# 한글 제외 특수기호 제거 (·, •, -, _, | 등)
+_RE_REMOVE_SYMBOLS = re.compile(r"[^\uAC00-\uD7A3]+", re.UNICODE)
 
 
 def _safe_poly(poly: Any) -> Optional[List[List[float]]]:
@@ -31,6 +33,10 @@ def _safe_poly(poly: Any) -> Optional[List[List[float]]]:
             return None
     return out
 
+def remove_symbols_except_korean(text: str) -> str:
+    if not text:
+        return ""
+    return _RE_REMOVE_SYMBOLS.sub("", text)
 
 def _poly_bbox(poly: List[List[float]]) -> Tuple[float, float, float, float]:
     xs = [float(p[0]) for p in poly]
@@ -106,10 +112,19 @@ def normalize_spacing(text: str) -> str:
 def strip_parts(parts: List[str]) -> List[str]:
     out: List[str] = []
     for p in parts:
+        # 1) part 내부 공백 제거
         s = normalize_spacing(p)
+
+        # 2) part 내부 특수기호 제거 (스플릿 이후에만!)
+        s = remove_symbols_except_korean(s)
+
+        # 3) 최종 공백/길이 정리 (안전)
+        s = normalize_spacing(s)
+
         if s:
             out.append(s)
     return out
+
 
 
 def split_poly_by_text_lengths(base_poly: List[List[float]], parts: List[str]) -> List[List[List[float]]]:
@@ -166,7 +181,8 @@ def run_step_03_normalize(ocr_json_path: Path, out_json_path: Path, cfg: Normali
             continue
 
         t1 = remove_english_and_digits(text_in)
-        parts = strip_parts(split_by_policy(t1))
+        parts = strip_parts(split_by_policy(t1))  # strip_parts 내부에서 기호 제거 수행
+
         if not parts:
             continue
 
