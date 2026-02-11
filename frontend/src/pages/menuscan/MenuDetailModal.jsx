@@ -1,5 +1,6 @@
 import React from "react";
-import "./MenuDetailModal.css";
+// import "./MenuDetailModal.css";
+import './menuscan.css';
 
 export default function MenuDetailModal({ item, onClose }) {
   if (!item) return null;
@@ -57,7 +58,7 @@ export default function MenuDetailModal({ item, onClose }) {
           <section className="ms-mdm__section">
             <div className="ms-mdm__commentHeader">
               <h4 className="ms-mdm__sectionTitle">Show this to staff</h4>
-              <span className="ms-mdm__badge">show it to the staff</span>
+              <span className="ms-mdm__badge">직원에게 보여주세요</span>
             </div>
 
             <div className="ms-mdm__commentBox">
@@ -81,7 +82,7 @@ export default function MenuDetailModal({ item, onClose }) {
             </div>
 
             <div className="ms-mdm__hint">
-              Show the above sentence to the staff and check for allergy/food restriction related materials.
+              직원에게 위 문장을 보여주고 알레르기/식이 제한 관련 재료 포함 여부를 확인하세요.
             </div>
           </section>
         )}

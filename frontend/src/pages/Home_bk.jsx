@@ -1,10 +1,9 @@
 import React, { useContext, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import CaptureFlow from "../components/camera/CaptureFlow";
 import "./Home.css";
 
-const LOGO_SRC = "/food_ray_logo.png";
+const LOGO_SRC = "/example_logo.png";
 
 /* ── SVG 아이콘 ── */
 const CameraIcon = () => (
@@ -39,7 +38,6 @@ const AnalyzeIcon = () => (
 export default function Home() {
   const navigate = useNavigate();
   const { stateAuth } = useContext(AuthContext);
-  const [mode, setMode] = useState("idle"); // "idle" | "camera"
   const [selectedImage, setSelectedImage] = useState(null);
   const [logoSrc, setLogoSrc] = useState(LOGO_SRC);
   const fileInputRef = useRef(null);
@@ -49,43 +47,22 @@ export default function Home() {
     if (file) {
       setSelectedImage(file);
       setLogoSrc(URL.createObjectURL(file));
-      setMode("idle");
     }
   };
 
   const handleCameraClick = () => {
-    if (!stateAuth.accessToken) {
-      navigate("/login?msg=login_required");
-      return;
+    if (fileInputRef.current) {
+      fileInputRef.current.setAttribute("capture", "environment");
+      fileInputRef.current.click();
     }
-    setMode("camera");
   };
 
   const handleFileSelectClick = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.onchange = (e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        setSelectedImage(file);
-        setLogoSrc(URL.createObjectURL(file));
-      }
-    };
-    input.click(); // 다이얼로그 열기
+    if (fileInputRef.current) {
+      fileInputRef.current.removeAttribute("capture");
+      fileInputRef.current.click();
+    }
   };
-  
-  {mode === "camera" && (
-    <CaptureFlow
-      onDone={(file) => {
-        setSelectedImage(file);
-        setLogoSrc(URL.createObjectURL(file));
-        setMode("idle"); // 촬영 끝나면 홈 화면으로
-      }}
-      onCancel={() => setMode("idle")} // 취소 버튼 구현 가능
-    />
-  )}
-
 
   const handleRemoveImage = () => {
     setSelectedImage(null);
@@ -93,52 +70,44 @@ export default function Home() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  
-  
   const handleAnalyze = () => {
     if (!selectedImage) return;
+    // 로그인 안된 경우 로그인 페이지로 안내
     if (!stateAuth.accessToken) {
       navigate("/login?msg=login_required");
       return;
     }
-    navigate("/result", { state: { file: selectedImage } });
+    window.__menuFile = selectedImage;
+    navigate("/result");
   };
 
   return (
     <div className="home-container">
       {/* 로고 영역 (화면의 ~75%) */}
       <div className="home-logo-wrap">
-        {mode === "camera" ? (
-          <CaptureFlow
-            onDone={(file) => {
-              setSelectedImage(file);
-              setLogoSrc(URL.createObjectURL(file));
-              setMode("idle");
-            }}
-            onCancel={() => setMode("idle")}
-          />
-        ) : (
-          <>
-            <img src={logoSrc} alt="로고" className="home-logo" />
-            {selectedImage && (
-              <button
-                onClick={handleRemoveImage}
-                className="home-remove-btn"
-                aria-label="이미지 삭제"
-              >
-                ×
-              </button>
-            )}
-          </>
+        <img src={logoSrc} alt="로고" className="home-logo" />
+        {selectedImage && (
+          <button onClick={handleRemoveImage} className="home-remove-btn" aria-label="이미지 삭제">
+            ×
+          </button>
         )}
       </div>
-      
+
+      {/* 숨겨진 파일 입력 */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageSelect}
+        style={{ display: "none" }}
+      />
+
       {/* 하단 영역 (~25%): 카메라·파일 바 + 분석 버튼 */}
       <div className="home-bottom-area">
 
         {/* 카메라 / 이미지 파일 → 바 형태 */}
         <div className="home-pick-bar">
-          <button onClick={handleCameraClick} className="home-pick-btn">
+          <button onClick={()=>navigate('menu/upload')} className="home-pick-btn">
             <CameraIcon />
             <span>Camera</span>
           </button>
