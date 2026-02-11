@@ -23,7 +23,7 @@ export default function CreateModal({
 
   // 여기서부터 list로 사용 (서버에서 내것만 내려줌)
   const myReviews = useMemo(() => stateReview.list ?? [], [stateReview.list]);
-  console.log("community :: ", myReviews)
+  // console.log("community :: ", myReviews)
 
   // 0/1, true/false, "1"/"0" 등 다 커버
   const toBool = (v) => v === true || v === 1 || v === "1" || v === "true";

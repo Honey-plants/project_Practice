@@ -16,7 +16,7 @@ export default function MenuDetailModal({ item, onClose }) {
   const riskDescEn =
     item?.risk_description_en || item?.risk?.risk_description_en || "";
 
-  const riskDifficulty = item?.risk_difficulty ?? item?.risk?.risk_difficulty ?? null;
+  // const riskDifficulty = item?.risk_difficulty ?? item?.risk?.risk_difficulty ?? null;
 
   const commentKo = item?.comment_ko || item?.comment?.comment_ko || "";
   const commentEn = item?.comment_en || item?.comment?.comment_en || "";
@@ -27,7 +27,13 @@ export default function MenuDetailModal({ item, onClose }) {
   const allergyHits = safeArr(urm?.allergy_tag_hits);
   const avoidHits = safeArr(urm?.avoid_food_hits);
   const religionHits = safeArr(urm?.religion_hits);
-  const hasAnyRisk = Boolean(urm?.has_any_risk);
+  // const hasAnyRisk = Boolean(urm?.has_any_risk);
+
+  // alg_ 접두사 제거 함수
+  const removeAlgPrefix = (label) => {
+    if (typeof label !== 'string') return label;
+    return label.replace(/^alg_/i, '');
+  };
 
   return (
     <div className="ms-mdm__overlay" onClick={onClose}>
@@ -56,12 +62,12 @@ export default function MenuDetailModal({ item, onClose }) {
             {allergyHits.length > 0 && (
               <div style={{ marginBottom: 8 }}>
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>
-                  allergy_tag_hits
+                  Allergy Tags
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {allergyHits.map((t) => (
                     <span key={t} className="ms-mdm__chip">
-                      {t}
+                      {removeAlgPrefix(t)}
                     </span>
                   ))}
                 </div>
@@ -71,12 +77,12 @@ export default function MenuDetailModal({ item, onClose }) {
             {avoidHits.length > 0 && (
               <div style={{ marginBottom: 8 }}>
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>
-                  avoid_food_hits
+                  Foods to Avoid
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {avoidHits.map((t) => (
                     <span key={t} className="ms-mdm__chip">
-                      {t}
+                      {removeAlgPrefix(t)}
                     </span>
                   ))}
                 </div>
@@ -86,12 +92,12 @@ export default function MenuDetailModal({ item, onClose }) {
             {religionHits.length > 0 && (
               <div>
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>
-                  religion_hits
+                  Religious Restrictions
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {religionHits.map((t) => (
                     <span key={t} className="ms-mdm__chip">
-                      {t}
+                      {removeAlgPrefix(t)}
                     </span>
                   ))}
                 </div>

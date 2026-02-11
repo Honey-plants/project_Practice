@@ -201,7 +201,7 @@ export default function ReviewCreateInline({ onCreated }) {
       {/* Step 1: 영수증 인증 */}
       {!receiptId && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>1) Certificate of Receipt</div>
+          <div className={styles.stepHeader}> Certificate of Receipt</div>
           <div className={styles.receiptUpload}>
             <input
               ref={receiptInputRef}
@@ -235,7 +235,7 @@ export default function ReviewCreateInline({ onCreated }) {
       {/* Step 2: 메뉴 확인 */}
       {receiptId && extracted && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>2) Check the menu</div>
+          <div className={styles.stepHeader}>Check the menu</div>
           <div className={styles.menuConfirmSection}>
             {!menuConfirmed && <p className={styles.menuConfirmText}>Are these the menus correct?</p>}
             <div className={styles.menuList}>
@@ -262,10 +262,10 @@ export default function ReviewCreateInline({ onCreated }) {
             {!menuConfirmed && (
               <div className={styles.menuConfirmButtons}>
                 <button onClick={confirmMenu} disabled={menuList.length === 0} className={styles.btnConfirm}>
-                  확인
+                  Comfirm
                 </button>
                 <button onClick={cancelMenu} className={styles.btnCancel}>
-                  취소
+                  Cancel
                 </button>
               </div>
             )}
@@ -276,7 +276,7 @@ export default function ReviewCreateInline({ onCreated }) {
       {/* Step 3: 리뷰 작성 */}
       {receiptId && menuConfirmed && (
         <div className={styles.stepSection}>
-          <div className={styles.stepHeader}>3) Create a review</div>
+          <div className={styles.stepHeader}>Create a review</div>
 
           <div className={styles.reviewForm}>
             <div className={styles.formGroup}>

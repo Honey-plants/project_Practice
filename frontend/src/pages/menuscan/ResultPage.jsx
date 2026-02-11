@@ -98,10 +98,10 @@ function ResultContent({ result }) {
   const imageUrl = result?.result_image_url || normalized?.imageDataUrl;
   const resolvedImageSrc = !imgBroken ? imageUrl : (normalized?.imageDataUrl || imageUrl);
 
-  const jsonText = (() => {
-    try { return JSON.stringify(result ?? {}, null, 2); }
-    catch (e) { return String(result); }
-  })();
+  // const jsonText = (() => {
+  //   try { return JSON.stringify(result ?? {}, null, 2); }
+  //   catch (e) { return String(result); }
+  // })();
 
   const getItemLabel = (item) =>
     item?.menu?.menu_name_en || item?.menu?.menu_name_ko || item?.menu_name_en || item?.menu_name_ko || "(no name)";

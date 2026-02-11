@@ -24316,9 +24316,9 @@
     "variants": [
       "추어탕"
     ],
-    "alg_tags": [],
+    "alg_tags": ["ALG_FISH", "ALG_TREE_NUTS"],
     "menu_description_ko": "추어탕은 국물에 재료를 넣어 끓인 탕/국 요리입니다.",
-    "ingredients": []
+    "ingredients": ["fish"]
   },
   {
     "id": "rep_1826",
@@ -24358,6 +24358,18 @@
     ],
     "alg_tags": [],
     "menu_description_ko": "돼지곱창은 대표 재료를 활용한 메뉴입니다.",
+    "ingredients": [
+      "Pork"
+    ]
+  },
+    {
+    "id": "rep_1829",
+    "menu": "돼지주물럭",
+    "variants": [
+      "돼지주물럭"
+    ],
+    "alg_tags": ["Vegan"],
+    "menu_description_ko": "돼지주물럭은 대표 재료를 활용한 메뉴입니다.",
     "ingredients": [
       "Pork"
     ]
@@ -25718,6 +25730,21 @@
     "ingredients": [
       "Crab",
       "Shrimp"
+    ]
+  },
+    {
+    "id": "rep_1944",
+    "menu": "오리탕",
+    "variants": [
+      "오리탕"
+    ],
+    "alg_tags": [
+      "ALG_CRUSTACEANS"
+    ],
+    "menu_description_ko": "오리탕은 재료를 넣어 끓여먹는 요리입니다.",
+    "ingredients": [
+      "duck",
+      ""
     ]
   },
   {
