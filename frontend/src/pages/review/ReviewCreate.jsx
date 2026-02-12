@@ -13,6 +13,7 @@ export default function ReviewCreateInline({ onCreated }) {
   const [receiptId, setReceiptId] = useState(null);
   const [extracted, setExtracted] = useState(null);
   const [menuList, setMenuList] = useState([]);
+  const [selectedMenus, setSelectedMenus] = useState(new Set());
   const [menuConfirmed, setMenuConfirmed] = useState(false);
 
   // ✅ camera toggle
@@ -77,7 +78,10 @@ export default function ReviewCreateInline({ onCreated }) {
         const parsed = Array.isArray(raw)
           ? raw.map((m) => String(m).replace(/["[\]]/g, "").trim())
           : raw.split(",").map((m) => m.replace(/["[\]]/g, "").trim());
-        setMenuList(parsed.filter(Boolean));
+        const filtered = parsed.filter(Boolean);
+        setMenuList(filtered);
+        // 기본적으로 모든 메뉴 선택
+        setSelectedMenus(new Set(filtered.map((_, i) => i)));
       }
 
       setMsg("Receipt certified. Please check the menu.");
@@ -101,6 +105,7 @@ export default function ReviewCreateInline({ onCreated }) {
     setReceiptId(null);
     setExtracted(null);
     setMenuList([]);
+    setSelectedMenus(new Set());
     setReceiptFile(null);
     if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
     setReceiptPreviewUrl(null);
@@ -111,8 +116,16 @@ export default function ReviewCreateInline({ onCreated }) {
     if (receiptInputRef.current) receiptInputRef.current.value = "";
   };
 
-  const removeMenu = (idx) => {
-    setMenuList((prev) => prev.filter((_, i) => i !== idx));
+  const toggleMenuSelection = (idx) => {
+    setSelectedMenus((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) {
+        next.delete(idx);
+      } else {
+        next.add(idx);
+      }
+      return next;
+    });
   };
 
   const onPickImages = (e) => {
@@ -149,12 +162,14 @@ export default function ReviewCreateInline({ onCreated }) {
 
     setLoadingCreate(true);
     try {
+      // 선택된 메뉴만 필터링
+      const selectedMenuList = menuList.filter((_, i) => selectedMenus.has(i));
       const r = await ReviewAPI.createFromReceipt({
         receipt_id: receiptId,
         title,
         content,
         rating,
-        menu_name: JSON.stringify(menuList),
+        menu_name: JSON.stringify(selectedMenuList),
         images,
       });
 
@@ -168,6 +183,7 @@ export default function ReviewCreateInline({ onCreated }) {
       setReceiptId(null);
       setExtracted(null);
       setMenuList([]);
+      setSelectedMenus(new Set());
       setMenuConfirmed(false);
       setShowCamera(false);
       setTitle("");
@@ -281,19 +297,13 @@ export default function ReviewCreateInline({ onCreated }) {
             <div className={styles.menuList}>
               {menuList.length > 0 ? (
                 menuList.map((menu, idx) => (
-                  <div key={idx} className={styles.menuItem}>
+                  <div
+                    key={idx}
+                    className={`${styles.menuItem} ${!selectedMenus.has(idx) ? styles.deselected : ''}`}
+                    onClick={() => !menuConfirmed && toggleMenuSelection(idx)}
+                  >
                     <span className={styles.menuIcon}>🍽️</span>
                     <span className={styles.menuName}>{menu}</span>
-                    {!menuConfirmed && (
-                      <button
-                        type="button"
-                        onClick={() => removeMenu(idx)}
-                        className={styles.btnRemoveMenu}
-                        title="Delete Menu"
-                      >
-                        ×
-                      </button>
-                    )}
                   </div>
                 ))
               ) : (
