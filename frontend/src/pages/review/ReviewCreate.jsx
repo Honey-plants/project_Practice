@@ -251,6 +251,13 @@ export default function ReviewCreateInline({ onCreated }) {
                   onClick={() => {
                     setErr("");
                     setMsg("");
+                    // 기존 파일이 있으면 초기화
+                    if (receiptFile) {
+                      setReceiptFile(null);
+                      if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+                      setReceiptPreviewUrl(null);
+                      if (receiptInputRef.current) receiptInputRef.current.value = "";
+                    }
                     setShowCamera(true);
                   }}
                   disabled={loadingVerify}
