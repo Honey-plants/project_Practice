@@ -13,7 +13,7 @@ export default function PreviewLayer({
 
       <div className="preview-controls">
         <button onClick={onRetry}>
-          
+          Retry
         </button>
 
         <button onClick={onConfirm}>
