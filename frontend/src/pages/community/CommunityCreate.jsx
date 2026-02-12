@@ -40,7 +40,7 @@ export default function CommunityCreate() {
       <h2>New Community Post</h2>
 
       <button type="button" onClick={() => setIsOpen(true)} disabled={saving}>
-        review choice
+        리뷰선택
       </button>
 
       <CreateModal

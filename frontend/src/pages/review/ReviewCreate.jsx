@@ -13,27 +13,26 @@ export default function ReviewCreateInline({ onCreated }) {
   const [receiptId, setReceiptId] = useState(null);
   const [extracted, setExtracted] = useState(null);
   const [menuList, setMenuList] = useState([]);
-  const [selectedMenus, setSelectedMenus] = useState(new Set());
   const [menuConfirmed, setMenuConfirmed] = useState(false);
 
   // ✅ camera toggle
   const [showCamera, setShowCamera] = useState(false);
 
-    // Step2
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
-    const [rating, setRating] = useState(5);
+  // Step2
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [rating, setRating] = useState(5);
 
   const [images, setImages] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
 
-    const receiptInputRef = useRef(null);
-    const imageInputRef = useRef(null);
+  const receiptInputRef = useRef(null);
+  const imageInputRef = useRef(null);
 
-    const [loadingVerify, setLoadingVerify] = useState(false);
-    const [loadingCreate, setLoadingCreate] = useState(false);
-    const [msg, setMsg] = useState("");
-    const [err, setErr] = useState("");
+  const [loadingVerify, setLoadingVerify] = useState(false);
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
 
   useEffect(() => {
     previewUrls.forEach((u) => URL.revokeObjectURL(u));
@@ -43,10 +42,10 @@ export default function ReviewCreateInline({ onCreated }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [images]);
 
-    const verify = async () => {
-        setErr("");
-        setMsg("");
-        if (!receiptFile) return setErr("Please select the image of the receipt");
+  const verify = async () => {
+    setErr("");
+    setMsg("");
+    if (!receiptFile) return setErr("Please select the image of the receipt");
 
     setLoadingVerify(true);
     try {
@@ -78,9 +77,7 @@ export default function ReviewCreateInline({ onCreated }) {
         const parsed = Array.isArray(raw)
           ? raw.map((m) => String(m).replace(/["[\]]/g, "").trim())
           : raw.split(",").map((m) => m.replace(/["[\]]/g, "").trim());
-        const filtered = parsed.filter(Boolean);
-        setMenuList(filtered);
-        setSelectedMenus(new Set(filtered.map((_, i) => i)));
+        setMenuList(parsed.filter(Boolean));
       }
 
       setMsg("Receipt certified. Please check the menu.");
@@ -95,16 +92,15 @@ export default function ReviewCreateInline({ onCreated }) {
     }
   };
 
-    const confirmMenu = () => {
-        setMenuConfirmed(true);
-        setMsg("Checked the menu. Please write a review.");
-    };
+  const confirmMenu = () => {
+    setMenuConfirmed(true);
+    setMsg("Checked the menu. Please write a review.");
+  };
 
   const cancelMenu = () => {
     setReceiptId(null);
     setExtracted(null);
     setMenuList([]);
-    setSelectedMenus(new Set());
     setReceiptFile(null);
     if (receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
     setReceiptPreviewUrl(null);
@@ -115,24 +111,16 @@ export default function ReviewCreateInline({ onCreated }) {
     if (receiptInputRef.current) receiptInputRef.current.value = "";
   };
 
-  const toggleMenuSelection = (idx) => {
-    setSelectedMenus((prev) => {
-      const next = new Set(prev);
-      if (next.has(idx)) {
-        next.delete(idx);
-      } else {
-        next.add(idx);
-      }
-      return next;
-    });
+  const removeMenu = (idx) => {
+    setMenuList((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const onPickImages = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-        setErr("");
-        setMsg("");
+    setErr("");
+    setMsg("");
 
     setImages((prev) => {
       const merged = [...prev, ...files];
@@ -150,24 +138,23 @@ export default function ReviewCreateInline({ onCreated }) {
     setImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
-    const create = async () => {
-        setErr("");
-        setMsg("");
+  const create = async () => {
+    setErr("");
+    setMsg("");
 
-        if (!receiptId) return setErr("Please verify the receipt first");
-        if (!title.trim()) return setErr("Please enter the title");
-        if (!content.trim()) return setErr("Please enter the content");
-        if (images.length > 3) return setErr("upload up to three images.");
+    if (!receiptId) return setErr("Please verify the receipt first");
+    if (!title.trim()) return setErr("Please enter the title");
+    if (!content.trim()) return setErr("Please enter the content");
+    if (images.length > 3) return setErr("upload up to three images.");
 
     setLoadingCreate(true);
     try {
-      const selectedMenuList = menuList.filter((_, i) => selectedMenus.has(i));
       const r = await ReviewAPI.createFromReceipt({
         receipt_id: receiptId,
         title,
         content,
         rating,
-        menu_name: JSON.stringify(selectedMenuList),
+        menu_name: JSON.stringify(menuList),
         images,
       });
 
@@ -181,7 +168,6 @@ export default function ReviewCreateInline({ onCreated }) {
       setReceiptId(null);
       setExtracted(null);
       setMenuList([]);
-      setSelectedMenus(new Set());
       setMenuConfirmed(false);
       setShowCamera(false);
       setTitle("");
@@ -295,13 +281,19 @@ export default function ReviewCreateInline({ onCreated }) {
             <div className={styles.menuList}>
               {menuList.length > 0 ? (
                 menuList.map((menu, idx) => (
-                  <div
-                    key={idx}
-                    className={`${styles.menuItem} ${!selectedMenus.has(idx) ? styles.deselected : ''}`}
-                    onClick={() => !menuConfirmed && toggleMenuSelection(idx)}
-                  >
+                  <div key={idx} className={styles.menuItem}>
                     <span className={styles.menuIcon}>🍽️</span>
                     <span className={styles.menuName}>{menu}</span>
+                    {!menuConfirmed && (
+                      <button
+                        type="button"
+                        onClick={() => removeMenu(idx)}
+                        className={styles.btnRemoveMenu}
+                        title="Delete Menu"
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
                 ))
               ) : (
@@ -408,14 +400,8 @@ export default function ReviewCreateInline({ onCreated }) {
         </div>
       )}
 
-            {msg && (
-                <div className={`${styles.message} ${styles.success}`}>
-                    {msg}
-                </div>
-            )}
-            {err && (
-                <div className={`${styles.message} ${styles.error}`}>{err}</div>
-            )}
-        </div>
-    );
+      {msg && <div className={`${styles.message} ${styles.success}`}>{msg}</div>}
+      {err && <div className={`${styles.message} ${styles.error}`}>{err}</div>}
+    </div>
+  );
 }

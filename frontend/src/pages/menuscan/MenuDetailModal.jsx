@@ -25,14 +25,15 @@ export default function MenuDetailModal({ item, onClose }) {
   const urm = item?.user_risk_match || {};
   const allergyHits = safeArr(urm?.allergy_tag_hits);
   const avoidHits = safeArr(urm?.avoid_food_hits);
-    // religion_hit: string (e.g., "PORK_SUSPECT,ALCOHOL_SUSPECT") or religion_hit: array
-  const religionHits = Array.isArray(urm?.religion_hit)
-    ? urm.religion_hit
-    : typeof urm?.religion_hit === "string" && urm.religion_hit.trim()
-    ? urm.religion_hit.split(",").map((s) => s.trim()).filter(Boolean)
-    : [];
-    // has_any_match: step05 output / has_any_risk: legacy UI field
-  const hasAnyRisk = Boolean(urm?.has_any_risk ?? urm?.has_any_match);
+  const religionHits = safeArr(urm?.religion_hits);
+  // const hasAnyRisk = Boolean(urm?.has_any_risk);
+
+  // alg_ 접두사 제거 함수
+  const removeAlgPrefix = (label) => {
+    if (typeof label !== 'string') return label;
+    return label.replace(/^alg_/i, '');
+  };
+
   return (
     <div className="ms-mdm__overlay" onClick={onClose}>
       <div className="ms-mdm__modal" onClick={(e) => e.stopPropagation()}>
@@ -58,16 +59,6 @@ export default function MenuDetailModal({ item, onClose }) {
         <section className="ms-mdm__section">
           <h4 className="ms-mdm__sectionTitle">User risk match</h4>
           <div className="ms-mdm__riskBox">
-            <p className="ms-mdm__riskText" style={{ marginBottom: 10 }}>
-              <b>has_any_match:</b> {String(hasAnyRisk)}
-              {riskDifficulty !== null && riskDifficulty !== undefined && (
-                <>
-                  {" "}
-                  · <b>risk_difficulty:</b> {String(riskDifficulty)}
-                </>
-              )}
-            </p>
-
             {allergyHits.length > 0 && (
               <div style={{ marginBottom: 8 }}>
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>
