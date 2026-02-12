@@ -13,11 +13,11 @@ export default function PreviewLayer({
 
       <div className="preview-controls">
         <button onClick={onRetry}>
-          다시 촬영
+          
         </button>
 
         <button onClick={onConfirm}>
-          확인
+          Comfirm
         </button>
       </div>
     </div>
