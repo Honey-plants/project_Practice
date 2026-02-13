@@ -66,7 +66,6 @@ export default function ReviewCreateInline({ onCreated }) {
         setMenuList([]);
         setShowCamera(false);
         if (receiptInputRef.current) receiptInputRef.current.value = "";
-        setLoadingVerify(false);
         return;
       }
 
@@ -86,11 +85,18 @@ export default function ReviewCreateInline({ onCreated }) {
 
       setMsg("Receipt certified. Please check the menu.");
     } catch (e) {
-      setErr(
-        e?.response?.data?.detail ||
-          e?.message ||
-          "Receipt authentication failed"
-      );
+      console.error("Receipt verification error:", e);
+
+      // 401 에러 처리
+      if (e?.response?.status === 401) {
+        setErr("Session expired. Please log in again and try again.");
+      } else {
+        setErr(
+          e?.response?.data?.detail ||
+            e?.message ||
+            "Receipt authentication failed"
+        );
+      }
     } finally {
       setLoadingVerify(false);
     }
@@ -215,7 +221,7 @@ export default function ReviewCreateInline({ onCreated }) {
         <div className={styles.stepSection}>
           <div className={styles.stepHeader}>Verify Receipt</div>
 
-          {/* ✅ camera page */}
+          {/* camera page */}
           {showCamera && !receiptFile && (
             <CaptureFlow
               onDone={(file) => {
@@ -227,7 +233,7 @@ export default function ReviewCreateInline({ onCreated }) {
             />
           )}
 
-          {/* ✅ normal upload UI (your original) */}
+          {/* normal upload UI (your original) */}
           {!showCamera && (
             <>
               <div className={styles.receiptUpload}>
